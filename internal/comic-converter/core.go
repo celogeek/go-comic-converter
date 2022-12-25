@@ -2,7 +2,6 @@ package comicconverter
 
 import (
 	"image"
-	"image/color"
 	"image/jpeg"
 	"os"
 
@@ -34,7 +33,10 @@ func (c *ComicConverter) Load(file string) *ComicConverter {
 		panic(err)
 	}
 
-	c.img = img
+	newImg := image.NewRGBA(img.Bounds())
+	draw.Draw(newImg, newImg.Bounds(), img, image.Point{}, draw.Src)
+
+	c.img = newImg
 
 	return c
 }
@@ -44,13 +46,18 @@ func (c *ComicConverter) GrayScale() *ComicConverter {
 		panic("load image first")
 	}
 
-	grayImg := image.NewGray16(c.img.Bounds())
+	newImg := image.NewGray(c.img.Bounds())
 
-	draw.Draw(grayImg, grayImg.Bounds(), c.img, image.Point{}, draw.Src)
+	draw.Draw(newImg, newImg.Bounds(), c.img, image.Point{}, draw.Src)
 
-	c.img = grayImg
+	c.img = newImg
 
 	return c
+}
+
+func (c *ComicConverter) isBlank(x, y int) bool {
+	r, g, b, _ := c.img.At(x, y).RGBA()
+	return r > 60000 && g > 60000 && b > 60000
 }
 
 func (c *ComicConverter) CropMarging() *ComicConverter {
@@ -59,13 +66,11 @@ func (c *ComicConverter) CropMarging() *ComicConverter {
 	}
 
 	imgArea := c.img.Bounds()
-	colorLimit := uint(color.Gray16{60000}.Y)
 
 LEFT:
 	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
-			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
-			if cc < uint32(colorLimit) {
+			if !c.isBlank(x, y) {
 				break LEFT
 			}
 		}
@@ -75,8 +80,7 @@ LEFT:
 UP:
 	for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
-			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
-			if cc < uint32(colorLimit) {
+			if !c.isBlank(x, y) {
 				break UP
 			}
 		}
@@ -86,8 +90,7 @@ UP:
 RIGHT:
 	for x := imgArea.Max.X - 1; x >= imgArea.Min.X; x-- {
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
-			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
-			if cc < uint32(colorLimit) {
+			if !c.isBlank(x, y) {
 				break RIGHT
 			}
 		}
@@ -97,22 +100,21 @@ RIGHT:
 BOTTOM:
 	for y := imgArea.Max.Y - 1; y >= imgArea.Min.Y; y-- {
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
-			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
-			if cc < uint32(colorLimit) {
+			if !c.isBlank(x, y) {
 				break BOTTOM
 			}
 		}
 		imgArea.Max.Y--
 	}
 
-	grayImg := image.NewGray16(image.Rectangle{
+	newImg := image.NewRGBA(image.Rectangle{
 		Min: image.Point{0, 0},
 		Max: image.Point{imgArea.Dx(), imgArea.Dy()},
 	})
 
-	draw.Draw(grayImg, grayImg.Bounds(), c.img, imgArea.Min, draw.Src)
+	draw.Draw(newImg, newImg.Bounds(), c.img, imgArea.Min, draw.Src)
 
-	c.img = grayImg
+	c.img = newImg
 
 	return c
 }
@@ -135,14 +137,14 @@ func (c *ComicConverter) Resize(w, h int) *ComicConverter {
 		heigth = h
 	}
 
-	imgGray := image.NewGray16(image.Rectangle{
+	newImg := image.NewRGBA(image.Rectangle{
 		Min: image.Point{0, 0},
 		Max: image.Point{width, heigth},
 	})
 
-	draw.BiLinear.Scale(imgGray, imgGray.Bounds(), c.img, c.img.Bounds(), draw.Src, nil)
+	draw.BiLinear.Scale(newImg, newImg.Bounds(), c.img, c.img.Bounds(), draw.Src, nil)
 
-	c.img = imgGray
+	c.img = newImg
 
 	return c
 }

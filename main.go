@@ -10,9 +10,9 @@ func main() {
 			Quality: 90,
 		}).
 		Load("/Users/vincent/Downloads/00001.jpg").
-		GrayScale().
 		CropMarging().
 		Resize(1860, 2480).
+		GrayScale().
 		Save("/Users/vincent/Downloads/00001_gray.jpg")
 
 }
