@@ -1,7 +1,6 @@
 package comicconverter
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -13,7 +12,6 @@ import (
 type ComicConverter struct {
 	Options ComicConverterOptions
 	img     image.Image
-	grayImg *image.Gray16
 }
 
 type ComicConverterOptions struct {
@@ -46,25 +44,28 @@ func (c *ComicConverter) GrayScale() *ComicConverter {
 		panic("load image first")
 	}
 
-	c.grayImg = image.NewGray16(c.img.Bounds())
+	grayImg := image.NewGray16(c.img.Bounds())
 
-	draw.Draw(c.grayImg, c.grayImg.Bounds(), c.img, image.Point{}, draw.Src)
+	draw.Draw(grayImg, grayImg.Bounds(), c.img, image.Point{}, draw.Src)
+
+	c.img = grayImg
 
 	return c
 }
 
 func (c *ComicConverter) CropMarging() *ComicConverter {
-	if c.grayImg == nil {
-		panic("grayscale first")
+	if c.img == nil {
+		panic("load image first")
 	}
 
-	imgArea := c.grayImg.Bounds()
-	colorLimit := color.Gray16{60000}
+	imgArea := c.img.Bounds()
+	colorLimit := uint(color.Gray16{60000}.Y)
 
 LEFT:
 	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
-			if c.grayImg.Gray16At(x, y).Y < colorLimit.Y {
+			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
+			if cc < uint32(colorLimit) {
 				break LEFT
 			}
 		}
@@ -74,7 +75,8 @@ LEFT:
 UP:
 	for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
-			if c.grayImg.Gray16At(x, y).Y < colorLimit.Y {
+			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
+			if cc < uint32(colorLimit) {
 				break UP
 			}
 		}
@@ -84,7 +86,8 @@ UP:
 RIGHT:
 	for x := imgArea.Max.X - 1; x >= imgArea.Min.X; x-- {
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
-			if c.grayImg.Gray16At(x, y).Y < colorLimit.Y {
+			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
+			if cc < uint32(colorLimit) {
 				break RIGHT
 			}
 		}
@@ -94,37 +97,42 @@ RIGHT:
 BOTTOM:
 	for y := imgArea.Max.Y - 1; y >= imgArea.Min.Y; y-- {
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
-			if c.grayImg.Gray16At(x, y).Y < colorLimit.Y {
+			cc, _, _, _ := color.Gray16Model.Convert(c.img.At(x, y)).RGBA()
+			if cc < uint32(colorLimit) {
 				break BOTTOM
 			}
 		}
 		imgArea.Max.Y--
 	}
 
-	fmt.Println("CROP", imgArea)
+	grayImg := image.NewGray16(image.Rectangle{
+		Min: image.Point{0, 0},
+		Max: image.Point{imgArea.Dx(), imgArea.Dy()},
+	})
 
-	c.grayImg = c.grayImg.SubImage(imgArea).(*image.Gray16)
+	draw.Draw(grayImg, grayImg.Bounds(), c.img, imgArea.Min, draw.Src)
+
+	c.img = grayImg
 
 	return c
 }
 
 func (c *ComicConverter) Resize(w, h int) *ComicConverter {
-	if c.grayImg == nil {
-		panic("grayscale first")
+	if c.img == nil {
+		panic("load image first")
 	}
 
-	dim := c.grayImg.Bounds()
+	dim := c.img.Bounds()
 	origWidth := dim.Dx()
 	origHeight := dim.Dy()
 
 	width, heigth := origWidth*h/origHeight, origHeight*w/origWidth
 
-	fmt.Println("W:", origWidth, width, h)
-	fmt.Println("H:", origHeight, heigth, w)
-	if width > origWidth {
-		width = origWidth
-	} else if heigth > origHeight {
-		heigth = origHeight
+	if width > w {
+		width = w
+	}
+	if heigth > h {
+		heigth = h
 	}
 
 	imgGray := image.NewGray16(image.Rectangle{
@@ -132,18 +140,16 @@ func (c *ComicConverter) Resize(w, h int) *ComicConverter {
 		Max: image.Point{width, heigth},
 	})
 
-	fmt.Println("RESIZE", imgGray.Bounds())
+	draw.BiLinear.Scale(imgGray, imgGray.Bounds(), c.img, c.img.Bounds(), draw.Src, nil)
 
-	draw.BiLinear.Scale(imgGray, imgGray.Bounds(), c.grayImg, c.grayImg.Bounds(), draw.Src, nil)
-
-	c.grayImg = imgGray
+	c.img = imgGray
 
 	return c
 }
 
 func (c *ComicConverter) Save(output string) *ComicConverter {
-	if c.grayImg == nil {
-		panic("grayscale first")
+	if c.img == nil {
+		panic("load image first")
 	}
 	o, err := os.Create(output)
 	if err != nil {
@@ -156,7 +162,7 @@ func (c *ComicConverter) Save(output string) *ComicConverter {
 		quality = c.Options.Quality
 	}
 
-	err = jpeg.Encode(o, c.grayImg, &jpeg.Options{Quality: quality})
+	err = jpeg.Encode(o, c.img, &jpeg.Options{Quality: quality})
 	if err != nil {
 		panic(err)
 	}
