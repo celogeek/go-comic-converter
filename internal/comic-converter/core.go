@@ -10,7 +10,7 @@ import (
 
 type ComicConverter struct {
 	Options ComicConverterOptions
-	img     image.Image
+	img     *image.Gray
 }
 
 type ComicConverterOptions struct {
@@ -33,24 +33,14 @@ func (c *ComicConverter) Load(file string) *ComicConverter {
 		panic(err)
 	}
 
-	newImg := image.NewRGBA(img.Bounds())
-	draw.Draw(newImg, newImg.Bounds(), img, image.Point{}, draw.Src)
-
-	c.img = newImg
-
-	return c
-}
-
-func (c *ComicConverter) GrayScale() *ComicConverter {
-	if c.img == nil {
-		panic("load image first")
+	switch imgt := img.(type) {
+	case *image.Gray:
+		c.img = imgt
+	default:
+		newImg := image.NewGray(img.Bounds())
+		draw.Draw(newImg, newImg.Bounds(), img, image.Point{}, draw.Src)
+		c.img = newImg
 	}
-
-	newImg := image.NewGray(c.img.Bounds())
-
-	draw.Draw(newImg, newImg.Bounds(), c.img, image.Point{}, draw.Src)
-
-	c.img = newImg
 
 	return c
 }
@@ -107,14 +97,14 @@ BOTTOM:
 		imgArea.Max.Y--
 	}
 
-	newImg := image.NewRGBA(image.Rectangle{
+	newImg := image.NewGray(image.Rectangle{
 		Min: image.Point{0, 0},
 		Max: image.Point{imgArea.Dx(), imgArea.Dy()},
 	})
 
 	draw.Draw(newImg, newImg.Bounds(), c.img, imgArea.Min, draw.Src)
 
-	c.img = newImg
+	c.img = c.img.SubImage(imgArea).(*image.Gray)
 
 	return c
 }
@@ -128,18 +118,22 @@ func (c *ComicConverter) Resize(w, h int) *ComicConverter {
 	origWidth := dim.Dx()
 	origHeight := dim.Dy()
 
-	width, heigth := origWidth*h/origHeight, origHeight*w/origWidth
+	width, height := 1, 1
+
+	if origHeight > 0 && origWidth > 0 {
+		width, height = origWidth*h/origHeight, origHeight*w/origWidth
+	}
 
 	if width > w {
 		width = w
 	}
-	if heigth > h {
-		heigth = h
+	if height > h {
+		height = h
 	}
 
-	newImg := image.NewRGBA(image.Rectangle{
+	newImg := image.NewGray(image.Rectangle{
 		Min: image.Point{0, 0},
-		Max: image.Point{width, heigth},
+		Max: image.Point{width, height},
 	})
 
 	draw.BiLinear.Scale(newImg, newImg.Bounds(), c.img, c.img.Bounds(), draw.Src, nil)
