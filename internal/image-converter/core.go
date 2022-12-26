@@ -7,7 +7,6 @@ import (
 	"image/jpeg"
 	"os"
 
-	"github.com/vincent-petithory/dataurl"
 	"golang.org/x/image/draw"
 )
 
@@ -123,8 +122,7 @@ func Get(img *image.Gray, quality int) string {
 	if err != nil {
 		panic(err)
 	}
-	du := dataurl.EncodeBytes(b.Bytes())
-	return du
+	return string(b.Bytes())
 }
 
 func Save(img *image.Gray, output string, quality int) {
@@ -144,11 +142,11 @@ func Save(img *image.Gray, output string, quality int) {
 	}
 }
 
-func Convert(path string, crop bool, w, h int, quality int) string {
+func Convert(path string, crop bool, w, h int, quality int) (string, int, int) {
 	img := Load(path)
 	if crop {
 		img = CropMarging(img)
 	}
 	img = Resize(img, w, h)
-	return Get(img, quality)
+	return Get(img, quality), img.Bounds().Dx(), img.Bounds().Dy()
 }

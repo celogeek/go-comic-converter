@@ -33,7 +33,7 @@
 <spine page-progression-direction="ltr" toc="ncx">
 {{ range .Images }}
 {{ if mod .Id 2 }}
-<itemref idref="page_{{ .Id }} " linear="yes" properties="page-spread-left"/>
+<itemref idref="page_{{ .Id }}" linear="yes" properties="page-spread-left"/>
 {{ else }}
 <itemref idref="page_{{ .Id }}" linear="yes" properties="page-spread-right"/>
 {{ end }}

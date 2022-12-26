@@ -13,12 +13,14 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/yosssi/gohtml"
+
+	imageconverter "go-comic-converter/internal/image-converter"
 )
 
 type Images struct {
 	Id     int
 	Title  string
-	Data   []byte
+	Data   string
 	Width  int
 	Height int
 }
@@ -135,10 +137,15 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 	sort.Strings(images)
 
 	titleFormat := fmt.Sprintf("%%0%dd", len(fmt.Sprint(len(images)-1)))
-	for i := range images {
+	for i, path := range images {
+		fmt.Printf("Processing %d / %d\n", i+1, len(images))
+		data, w, h := imageconverter.Convert(path, true, e.ViewWidth, e.ViewHeight, e.Quality)
 		e.Images = append(e.Images, Images{
-			Id:    i,
-			Title: fmt.Sprintf(titleFormat, i),
+			Id:     i,
+			Title:  fmt.Sprintf(titleFormat, i),
+			Data:   data,
+			Width:  w,
+			Height: h,
 		})
 	}
 	e.FirstImageTitle = e.Images[0].Title
@@ -164,8 +171,10 @@ func (e *EPub) Write() error {
 		{"OEBPS/Text/style.css", TEMPLATE_STYLE},
 	}
 	for _, img := range e.Images {
-		filename := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
-		zipContent = append(zipContent, []string{filename, e.Render(TEMPLATE_TEXT, img)})
+		text := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
+		image := fmt.Sprintf("OEBPS/Images/%s.jpg", img.Title)
+		zipContent = append(zipContent, []string{text, e.Render(TEMPLATE_TEXT, img)})
+		zipContent = append(zipContent, []string{image, img.Data})
 	}
 
 	wz := zip.NewWriter(w)
