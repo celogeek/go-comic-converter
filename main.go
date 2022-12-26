@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go-comic-converter/internal/epub"
 	imageconverter "go-comic-converter/internal/image-converter"
 	"io/fs"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bmaupin/go-epub"
+	epub2 "github.com/bmaupin/go-epub"
 )
 
 type File struct {
@@ -21,7 +22,7 @@ type File struct {
 	InternalPath string
 }
 
-func addImages(doc *epub.Epub, imagesPath []string) {
+func addImages(doc *epub2.Epub, imagesPath []string) {
 	wg := &sync.WaitGroup{}
 	todos := make(chan string, runtime.NumCPU())
 	imageResult := make(chan *File)
@@ -95,10 +96,10 @@ func getImages(dirname string) []string {
 	return images
 }
 
-func main() {
+func main2() {
 	imagesPath := getImages("/Users/vincent/Downloads/Bleach T01 (Tite KUBO) [eBook officiel 1920]")
 
-	doc := epub.NewEpub("Bleach T01 (Tite KUBO) [eBook officiel 1920]")
+	doc := epub2.NewEpub("Bleach T01 (Tite KUBO) [eBook officiel 1920]")
 	doc.SetAuthor("Bachelier Vincent")
 
 	addImages(doc, imagesPath)
@@ -107,4 +108,18 @@ func main() {
 		panic(err)
 	}
 
+}
+
+func main() {
+	err := epub.NewEpub("/Users/vincent/Downloads/test.epub").
+		SetSize(1860, 2480).
+		SetQuality(75).
+		SetTitle("Bleach T01 (Tite KUBO) [eBook officiel 1920]").
+		SetAuthor("Bachelier Vincent").
+		LoadDir("/Users/vincent/Downloads/Bleach T01 (Tite KUBO) [eBook officiel 1920]").
+		Write()
+
+	if err != nil {
+		panic(err)
+	}
 }
