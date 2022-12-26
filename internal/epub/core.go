@@ -16,8 +16,6 @@ import (
 
 type Images struct {
 	Id     int
-	Path   string
-	Name   string
 	Title  string
 	Data   []byte
 	Width  int
@@ -36,8 +34,9 @@ type EPub struct {
 	ViewHeight int
 	Quality    int
 
-	Images []Images
-	Error  error
+	Images          []Images
+	FirstImageTitle string
+	Error           error
 }
 
 func NewEpub(path string) *EPub {
@@ -107,6 +106,7 @@ func (e *EPub) Render(templateString string, data any) string {
 }
 
 func (e *EPub) LoadDir(dirname string) *EPub {
+	images := make([]string, 0)
 	err := filepath.WalkDir(dirname, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -118,27 +118,28 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 		if strings.ToLower(ext) != ".jpg" {
 			return nil
 		}
-		name := filepath.Base(path)
-		title := name[0 : len(name)-len(ext)]
 
-		e.Images = append(e.Images, Images{
-			Path:  path,
-			Name:  name,
-			Title: title,
-		})
+		images = append(images, path)
 		return nil
 	})
 	if err != nil {
 		e.Error = err
 		return e
 	}
-	sort.SliceStable(e.Images, func(i, j int) bool {
-		return strings.Compare(e.Images[i].Path, e.Images[j].Path) < 0
-	})
-
-	for i := range e.Images {
-		e.Images[i].Id = i
+	if len(images) == 0 {
+		e.Error = fmt.Errorf("no images found")
+		return e
 	}
+	sort.Strings(images)
+
+	titleFormat := fmt.Sprintf("%%0%dd", len(fmt.Sprint(len(images)-1)))
+	for i := range images {
+		e.Images = append(e.Images, Images{
+			Id:    i,
+			Title: fmt.Sprintf(titleFormat, i),
+		})
+	}
+	e.FirstImageTitle = e.Images[0].Title
 
 	return e
 }
@@ -161,7 +162,7 @@ func (e *EPub) Write() error {
 		{"OEBPS/Text/style.css", TEMPLATE_STYLE},
 	}
 	for _, img := range e.Images {
-		filename := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
+		filename := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
 		zipContent = append(zipContent, []string{filename, e.Render(TEMPLATE_TEXT, img)})
 	}
 

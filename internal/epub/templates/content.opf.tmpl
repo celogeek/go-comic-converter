@@ -24,10 +24,10 @@
 <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
 {{ range .Images }}
 {{ if eq .Id 0 }}
-<item id="cover" href="Images/{{ .Id }}.jpg" media-type="image/jpeg" properties="cover-image"/>
+<item id="cover" href="Images/{{ .Title }}.jpg" media-type="image/jpeg" properties="cover-image"/>
 {{ end }}
-<item id="page_{{ .Id }}" href="Text/{{ .Id }}.xhtml" media-type="application/xhtml+xml"/>
-<item id="img_{{ .Id }}" href="Images/{{ .Id }}.jpg" media-type="image/jpeg"/>
+<item id="page_{{ .Id }}" href="Text/{{ .Title }}.xhtml" media-type="application/xhtml+xml"/>
+<item id="img_{{ .Id }}" href="Images/{{ .Title }}.jpg" media-type="image/jpeg"/>
 {{ end }}
 </manifest>
 <spine page-progression-direction="ltr" toc="ncx">
