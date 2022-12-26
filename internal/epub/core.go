@@ -6,8 +6,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -37,7 +39,7 @@ type EPub struct {
 	ViewHeight int
 	Quality    int
 
-	Images          []Images
+	Images          []*Images
 	FirstImageTitle string
 	Error           error
 }
@@ -58,8 +60,6 @@ func NewEpub(path string) *EPub {
 		ViewWidth:  0,
 		ViewHeight: 0,
 		Quality:    75,
-
-		Images: make([]Images, 0),
 	}
 }
 
@@ -137,17 +137,54 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 	sort.Strings(images)
 
 	titleFormat := fmt.Sprintf("%%0%dd", len(fmt.Sprint(len(images)-1)))
-	for i, path := range images {
-		fmt.Printf("Processing %d / %d\n", i+1, len(images))
-		data, w, h := imageconverter.Convert(path, true, e.ViewWidth, e.ViewHeight, e.Quality)
-		e.Images = append(e.Images, Images{
-			Id:     i,
-			Title:  fmt.Sprintf(titleFormat, i),
-			Data:   data,
-			Width:  w,
-			Height: h,
-		})
+
+	wg := &sync.WaitGroup{}
+	wg.Add(runtime.NumCPU())
+
+	type todoStruct struct {
+		Id   int
+		Path string
 	}
+	type resultStruct struct {
+		Id     int
+		Data   string
+		Width  int
+		Height int
+	}
+
+	todo := make(chan *todoStruct)
+	result := make(chan *resultStruct)
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go func() {
+			defer wg.Done()
+			for task := range todo {
+				data, w, h := imageconverter.Convert(task.Path, true, e.ViewWidth, e.ViewHeight, e.Quality)
+				result <- &resultStruct{task.Id, data, w, h}
+			}
+		}()
+	}
+	go func() {
+		for id, path := range images {
+			todo <- &todoStruct{id, path}
+		}
+		close(todo)
+		wg.Wait()
+		close(result)
+	}()
+
+	e.Images = make([]*Images, len(images))
+	for res := range result {
+		fmt.Printf("%d done\n", res.Id)
+		e.Images[res.Id] = &Images{
+			Id:     res.Id,
+			Title:  fmt.Sprintf(titleFormat, res.Id),
+			Data:   res.Data,
+			Width:  res.Width,
+			Height: res.Height,
+		}
+	}
+
 	e.FirstImageTitle = e.Images[0].Title
 
 	return e
