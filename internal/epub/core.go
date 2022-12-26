@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/yosssi/gohtml"
 )
 
 type Images struct {
@@ -102,7 +103,8 @@ func (e *EPub) Render(templateString string, data any) string {
 	if err := tmpl.Execute(result, data); err != nil {
 		panic(err)
 	}
-	return result.String()
+
+	return gohtml.Format(result.String())
 }
 
 func (e *EPub) LoadDir(dirname string) *EPub {
@@ -155,7 +157,7 @@ func (e *EPub) Write() error {
 
 	zipContent := [][]string{
 		{"mimetype", TEMPLATE_MIME_TYPE},
-		{"META-INF/container.xml", TEMPLATE_CONTAINER},
+		{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
 		{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, e)},
 		{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, e)},
 		{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, e)},
