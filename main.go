@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	comicconverter "go-comic-converter/internal/comic-converter"
+	imageconverter "go-comic-converter/internal/image-converter"
 	"io/fs"
 	"path/filepath"
 	"runtime"
@@ -13,51 +13,69 @@ import (
 	"github.com/bmaupin/go-epub"
 )
 
-type Todo struct {
-	Input  string
-	Output string
+type File struct {
+	Path         string
+	Name         string
+	Title        string
+	Data         string
+	InternalPath string
 }
 
-func addImages(doc *epub.Epub, imagesPath string) {
+func addImages(doc *epub.Epub, imagesPath []string) {
 	wg := &sync.WaitGroup{}
-	todos := make(chan Todo, runtime.NumCPU())
+	todos := make(chan string, runtime.NumCPU())
+	imageResult := make(chan *File)
 
 	wg.Add(runtime.NumCPU())
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
 			defer wg.Done()
-			for todo := range todos {
-				fmt.Printf("Processing %s\n", todo.Input)
-				comicconverter.Save(
-					comicconverter.Resize(
-						comicconverter.CropMarging(
-							comicconverter.Load(todo.Input),
-						), 1860, 2480), todo.Output, 75,
-				)
+			for imagePath := range todos {
+				name := filepath.Base(imagePath)
+				ext := filepath.Ext(name)
+				title := name[0 : len(name)-len(ext)]
+				imageResult <- &File{
+					Path:  imagePath,
+					Name:  name,
+					Title: title,
+					Data:  imageconverter.Convert(imagePath, true, 1860, 2480, 75),
+				}
 			}
 		}()
 	}
-
-	dirname := "/Users/vincent/Downloads/Bleach T01 (Tite KUBO) [eBook officiel 1920]"
-	filepath.WalkDir(dirname, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
+	go func() {
+		for _, imagePath := range imagesPath {
+			todos <- imagePath
 		}
-		input := path
-		ext := filepath.Ext(path)
-		if strings.ToLower(ext) != ".jpg" {
-			return nil
-		}
-		output := fmt.Sprintf("%s_gray%s", input[0:len(input)-len(ext)], ext)
+		close(todos)
+		wg.Wait()
+		close(imageResult)
+	}()
 
-		todos <- Todo{input, output}
-
-		return nil
+	results := make([]*File, 0)
+	for result := range imageResult {
+		fmt.Println(result.Name)
+		internalPath, _ := doc.AddImage(result.Data, result.Name)
+		result.InternalPath = internalPath
+		results = append(results, result)
+	}
+	sort.SliceStable(results, func(i, j int) bool {
+		return strings.Compare(
+			results[i].Path, results[j].Path,
+		) < 0
 	})
-
-	close(todos)
-
-	wg.Wait()
+	for i, result := range results {
+		if i == 0 {
+			doc.SetCover(result.InternalPath, "")
+		} else {
+			doc.AddSection(
+				fmt.Sprintf("<img src=\"%s\" />", result.InternalPath),
+				result.Title,
+				fmt.Sprintf("%s.xhtml", result.Title),
+				"../css/cover.css",
+			)
+		}
+	}
 }
 
 func getImages(dirname string) []string {
@@ -83,20 +101,7 @@ func main() {
 	doc := epub.NewEpub("Bleach T01 (Tite KUBO) [eBook officiel 1920]")
 	doc.SetAuthor("Bachelier Vincent")
 
-	for i, imagePath := range imagesPath {
-		fmt.Printf("%04d / %04d\n", i+1, len(imagesPath))
-		name := filepath.Base(imagePath)
-		ext := filepath.Ext(name)
-		title := name[0 : len(name)-len(ext)]
-
-		img := comicconverter.Convert(imagePath, true, 1860, 2480, 75)
-		if i == 0 {
-			doc.SetCover(img, "")
-		} else {
-			imgPath, _ := doc.AddImage(img, name)
-			doc.AddSection(fmt.Sprintf("<img src=\"%s\" />", imgPath), title, fmt.Sprintf("%s.xhtml", title), "../css/cover.css")
-		}
-	}
+	addImages(doc, imagesPath)
 
 	if err := doc.Write("/Users/vincent/Downloads/test.epub"); err != nil {
 		panic(err)
