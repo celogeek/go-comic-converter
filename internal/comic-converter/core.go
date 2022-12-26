@@ -1,11 +1,13 @@
 package comicconverter
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	"image/jpeg"
 	"os"
 
+	"github.com/vincent-petithory/dataurl"
 	"golang.org/x/image/draw"
 )
 
@@ -115,6 +117,16 @@ func Resize(img *image.Gray, w, h int) *image.Gray {
 	return newImg
 }
 
+func Get(img *image.Gray, quality int) string {
+	b := bytes.NewBuffer([]byte{})
+	err := jpeg.Encode(b, img, &jpeg.Options{Quality: quality})
+	if err != nil {
+		panic(err)
+	}
+	du := dataurl.EncodeBytes(b.Bytes())
+	return du
+}
+
 func Save(img *image.Gray, output string, quality int) {
 	o, err := os.Create(output)
 	if err != nil {
@@ -130,4 +142,13 @@ func Save(img *image.Gray, output string, quality int) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func Convert(path string, crop bool, w, h int, quality int) string {
+	img := Load(path)
+	if crop {
+		img = CropMarging(img)
+	}
+	img = Resize(img, w, h)
+	return Get(img, quality)
 }
