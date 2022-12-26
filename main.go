@@ -1,112 +1,97 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"go-comic-converter/internal/epub"
+	"path/filepath"
+	"strings"
 )
 
-// type File struct {
-// 	Path         string
-// 	Name         string
-// 	Title        string
-// 	Data         string
-// 	InternalPath string
-// }
+type Profile struct {
+	Width  int
+	Height int
+}
 
-// func addImages(doc *epub2.Epub, imagesPath []string) {
-// 	wg := &sync.WaitGroup{}
-// 	todos := make(chan string, runtime.NumCPU())
-// 	imageResult := make(chan *File)
+var Profiles = map[string]Profile{
+	"KS": {1860, 2480},
+}
 
-// 	wg.Add(runtime.NumCPU())
-// 	for i := 0; i < runtime.NumCPU(); i++ {
-// 		go func() {
-// 			defer wg.Done()
-// 			for imagePath := range todos {
-// 				name := filepath.Base(imagePath)
-// 				ext := filepath.Ext(name)
-// 				title := name[0 : len(name)-len(ext)]
-// 				imageResult <- &File{
-// 					Path:  imagePath,
-// 					Name:  name,
-// 					Title: title,
-// 					Data:  imageconverter.Convert(imagePath, true, 1860, 2480, 75),
-// 				}
-// 			}
-// 		}()
-// 	}
-// 	go func() {
-// 		for _, imagePath := range imagesPath {
-// 			todos <- imagePath
-// 		}
-// 		close(todos)
-// 		wg.Wait()
-// 		close(imageResult)
-// 	}()
+type Option struct {
+	Input   string
+	Output  string
+	Profile string
+	Author  string
+	Title   string
+	Quality int
+}
 
-// 	results := make([]*File, 0)
-// 	for result := range imageResult {
-// 		fmt.Println(result.Name)
-// 		internalPath, _ := doc.AddImage(result.Data, result.Name)
-// 		result.InternalPath = internalPath
-// 		results = append(results, result)
-// 	}
-// 	sort.SliceStable(results, func(i, j int) bool {
-// 		return strings.Compare(
-// 			results[i].Path, results[j].Path,
-// 		) < 0
-// 	})
-// 	for i, result := range results {
-// 		if i == 0 {
-// 			doc.SetCover(result.InternalPath, "")
-// 		} else {
-// 			doc.AddSection(
-// 				fmt.Sprintf("<img src=\"%s\" />", result.InternalPath),
-// 				result.Title,
-// 				fmt.Sprintf("%s.xhtml", result.Title),
-// 				"../css/cover.css",
-// 			)
-// 		}
-// 	}
-// }
+func (o *Option) String() string {
+	var width, height int
+	profile, profileMatch := Profiles[o.Profile]
+	if profileMatch {
+		width = profile.Width
+		height = profile.Height
+	}
 
-// func getImages(dirname string) []string {
-// 	images := make([]string, 0)
-// 	filepath.WalkDir(dirname, func(path string, d fs.DirEntry, err error) error {
-// 		if d.IsDir() {
-// 			return nil
-// 		}
-// 		ext := filepath.Ext(path)
-// 		if strings.ToLower(ext) != ".jpg" {
-// 			return nil
-// 		}
-// 		images = append(images, path)
-// 		return nil
-// 	})
-// 	sort.Strings(images)
-// 	return images
-// }
-
-// func main2() {
-// 	imagesPath := getImages("/Users/vincent/Downloads/Bleach T01 (Tite KUBO) [eBook officiel 1920]")
-
-// 	doc := epub2.NewEpub("Bleach T01 (Tite KUBO) [eBook officiel 1920]")
-// 	doc.SetAuthor("Bachelier Vincent")
-
-// 	addImages(doc, imagesPath)
-
-// 	if err := doc.Write("/Users/vincent/Downloads/test.epub"); err != nil {
-// 		panic(err)
-// 	}
-
-// }
+	return fmt.Sprintf(`Options:
+	Input  : %s
+	Output : %s
+	Profile: %s (%dx%d)
+	Author : %s
+	Title  : %s
+	Quality: %d
+`,
+		o.Input,
+		o.Output,
+		o.Profile,
+		width,
+		height,
+		o.Author,
+		o.Title,
+		o.Quality,
+	)
+}
 
 func main() {
-	err := epub.NewEpub("/Users/vincent/Downloads/test.epub").
-		SetSize(1860, 2480).
-		SetQuality(75).
-		SetTitle("Bleach T01 (Tite KUBO) [eBook officiel 1920]").
-		SetAuthor("Bachelier Vincent").
-		LoadDir("/Users/vincent/Downloads/Bleach T01 (Tite KUBO) [eBook officiel 1920]").
+	availableProfiles := make([]string, 0)
+	for k := range Profiles {
+		availableProfiles = append(availableProfiles, k)
+	}
+
+	opt := &Option{}
+	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert")
+	flag.StringVar(&opt.Output, "output", "", "Output of the epub")
+	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: %s", strings.Join(availableProfiles, ", ")))
+	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
+	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
+	flag.IntVar(&opt.Quality, "quality", 75, "Quality of the image: Default 75")
+	flag.Parse()
+
+	if opt.Input == "" || opt.Output == "" {
+		fmt.Println("Missing input or output!")
+		flag.Usage()
+		return
+	}
+	profile, profileMatch := Profiles[opt.Profile]
+	if !profileMatch {
+		fmt.Println("Profile doesn't exists!")
+		flag.Usage()
+		return
+	}
+
+	if opt.Title == "" {
+		opt.Title = filepath.Base(opt.Input)
+	}
+
+	fmt.Println(opt)
+
+	err := epub.NewEpub(opt.Output).
+		SetSize(profile.Width, profile.Height).
+		SetQuality(opt.Quality).
+		SetTitle(opt.Input).
+		SetAuthor(opt.Author).
+		LoadDir(opt.Input).
 		Write()
 
 	if err != nil {
