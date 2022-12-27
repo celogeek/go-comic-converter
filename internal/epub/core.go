@@ -3,7 +3,6 @@ package epub
 import (
 	"archive/zip"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -21,16 +20,11 @@ import (
 	imageconverter "go-comic-converter/internal/image-converter"
 )
 
-type ImageDetails struct {
-	*Images
-	Data   io.Reader
+type Images struct {
+	Id     int
+	Data   []byte
 	Width  int
 	Height int
-}
-
-type Images struct {
-	Id    int
-	Title string
 }
 
 type EPub struct {
@@ -47,11 +41,11 @@ type EPub struct {
 	Crop       bool
 	LimitMb    int
 
-	Images          []*Images
-	FirstImageTitle string
-	Error           error
+	Error error
 
-	ProcessingImages func() chan *ImageDetails
+	ImagesCount       int
+	ProcessingImages  func() chan *Images
+	TemplateProcessor *template.Template
 }
 
 func NewEpub(path string) *EPub {
@@ -59,6 +53,12 @@ func NewEpub(path string) *EPub {
 	if err != nil {
 		panic(err)
 	}
+
+	tmpl := template.New("parser")
+	tmpl.Funcs(template.FuncMap{
+		"mod":  func(i, j int) bool { return i%j == 0 },
+		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
+	})
 
 	return &EPub{
 		Path: path,
@@ -71,6 +71,8 @@ func NewEpub(path string) *EPub {
 		ViewWidth:  0,
 		ViewHeight: 0,
 		Quality:    75,
+
+		TemplateProcessor: tmpl,
 	}
 }
 
@@ -105,11 +107,17 @@ func (e *EPub) SetLimitMb(l int) *EPub {
 	return e
 }
 
-func (e *EPub) WriteString(wz *zip.Writer, file string, content string) error {
-	return e.WriteBuffer(wz, file, strings.NewReader(content))
-}
+func (e *EPub) WriteFile(wz *zip.Writer, file string, data any) error {
+	var content []byte
+	switch b := data.(type) {
+	case string:
+		content = []byte(b)
+	case []byte:
+		content = b
+	default:
+		return fmt.Errorf("support string of []byte")
+	}
 
-func (e *EPub) WriteBuffer(wz *zip.Writer, file string, content io.Reader) error {
 	m, err := wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),
@@ -117,15 +125,12 @@ func (e *EPub) WriteBuffer(wz *zip.Writer, file string, content io.Reader) error
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(m, content)
+	_, err = m.Write(content)
 	return err
 }
 
 func (e *EPub) Render(templateString string, data any) string {
-	tmpl := template.New("parser")
-	tmpl.Funcs(template.FuncMap{"mod": func(i, j int) bool { return i%j == 0 }})
-	tmpl.Funcs(template.FuncMap{"zoom": func(s int, z float32) int { return int(float32(s) * z) }})
-	tmpl, err := tmpl.Parse(templateString)
+	tmpl, err := e.TemplateProcessor.Parse(templateString)
 	if err != nil {
 		panic(err)
 	}
@@ -164,38 +169,40 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 	}
 	sort.Strings(images)
 
-	titleFormat := fmt.Sprintf("%%0%dd", len(fmt.Sprint(len(images)-1)))
-
-	for i := range images {
-		e.Images = append(e.Images, &Images{
-			Id:    i,
-			Title: fmt.Sprintf(titleFormat, i),
-		})
-	}
+	e.ImagesCount = len(images)
 
 	type Todo struct {
-		*Images
+		Id   int
 		Path string
 	}
 
 	todo := make(chan *Todo)
 
-	e.ProcessingImages = func() chan *ImageDetails {
+	e.ProcessingImages = func() chan *Images {
 		wg := &sync.WaitGroup{}
-		results := make(chan *ImageDetails)
+		results := make(chan *Images)
 		for i := 0; i < runtime.NumCPU(); i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
 				for task := range todo {
 					data, w, h := imageconverter.Convert(task.Path, e.Crop, e.ViewWidth, e.ViewHeight, e.Quality)
-					results <- &ImageDetails{task.Images, data, w, h}
+					results <- &Images{
+						task.Id,
+						data,
+						w,
+						h,
+					}
 				}
 			}()
 		}
 		go func() {
 			for i, path := range images {
-				todo <- &Todo{e.Images[i], path}
+				if i == 0 {
+					todo <- &Todo{i, path}
+				} else {
+					todo <- &Todo{i, path}
+				}
 			}
 			close(todo)
 			wg.Wait()
@@ -203,8 +210,6 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 		}()
 		return results
 	}
-
-	e.FirstImageTitle = e.Images[0].Title
 
 	return e
 }
@@ -219,35 +224,59 @@ func (e *EPub) Write() error {
 		return err
 	}
 
-	zipContent := [][]string{
+	images := make([]*Images, e.ImagesCount)
+	totalSize := 0
+	bar := progressbar.Default(int64(e.ImagesCount), "Processing")
+	for img := range e.ProcessingImages() {
+		images[img.Id] = img
+		totalSize += len(img.Data)
+		bar.Add(1)
+	}
+	bar.Close()
+
+	cover := images[0]
+	images = images[1:]
+
+	fmt.Println(len(images))
+	fmt.Println("Total Size:", totalSize)
+
+	type ZipContent struct {
+		Name    string
+		Content any
+	}
+
+	zipContent := []ZipContent{
 		{"mimetype", TEMPLATE_MIME_TYPE},
 		{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
-		{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, e)},
-		{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, e)},
-		{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, e)},
+		{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, map[string]any{"Info": e, "Images": images})},
+		{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": images})},
+		{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": images})},
 		{"OEBPS/Text/style.css", TEMPLATE_STYLE},
+		{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
+			"Id":     "cover",
+			"Width":  cover.Width,
+			"Height": cover.Height,
+		})},
+		{"OEBPS/Images/cover.jpg", cover.Data},
 	}
 
 	wz := zip.NewWriter(w)
 	defer wz.Close()
 	for _, content := range zipContent {
-		if err := e.WriteString(wz, content[0], content[1]); err != nil {
+		if err := e.WriteFile(wz, content.Name, content.Content); err != nil {
 			return err
 		}
 	}
 
-	bar := progressbar.Default(int64(len(e.Images)), "Processing")
-	defer bar.Close()
-	for img := range e.ProcessingImages() {
-		text := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
-		image := fmt.Sprintf("OEBPS/Images/%s.jpg", img.Title)
-		if err := e.WriteString(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
+	for _, img := range images {
+		text := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
+		image := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
+		if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
 			return err
 		}
-		if err := e.WriteBuffer(wz, image, img.Data); err != nil {
+		if err := e.WriteFile(wz, image, img.Data); err != nil {
 			return err
 		}
-		bar.Add(1)
 	}
 
 	return nil

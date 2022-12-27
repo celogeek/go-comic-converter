@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="3.0" unique-identifier="BookID" xmlns="http://www.idpf.org/2007/opf">
 <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:title>{{ .Title }}</dc:title>
+<dc:title>{{ .Info.Title }}</dc:title>
 <dc:language>en-US</dc:language>
-<dc:identifier id="BookID">urn:uuid:{{ .UID }}</dc:identifier>
+<dc:identifier id="BookID">urn:uuid:{{ .Info.UID }}</dc:identifier>
 <dc:contributor id="contributor">GO Comic Converter</dc:contributor>
 <dc:creator>GO Comic Converter</dc:creator>
-<meta property="dcterms:modified">{{ .UpdatedAt }}</meta>
+<meta property="dcterms:modified">{{ .Info.UpdatedAt }}</meta>
 <meta name="cover" content="cover"/>
 <meta name="fixed-layout" content="true"/>
-<meta name="original-resolution" content="{{ .ViewWidth }}x{{ .ViewHeight }}"/>
+<meta name="original-resolution" content="{{ .Info.ViewWidth }}x{{ .Info.ViewHeight }}"/>
 <meta name="book-type" content="comic"/>
 <meta name="primary-writing-mode" content="horizontal-lr"/>
 <meta name="zero-gutter" content="true"/>
@@ -22,20 +22,20 @@
 <manifest>
 <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
 <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
+<item id="page_cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>
+<item id="img_cover" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
 {{ range .Images }}
-{{ if eq .Id 0 }}
-<item id="cover" href="Images/{{ .Title }}.jpg" media-type="image/jpeg" properties="cover-image"/>
-{{ end }}
-<item id="page_{{ .Id }}" href="Text/{{ .Title }}.xhtml" media-type="application/xhtml+xml"/>
-<item id="img_{{ .Id }}" href="Images/{{ .Title }}.jpg" media-type="image/jpeg"/>
+<item id="page_{{ .Id }}" href="Text/{{ .Id }}.xhtml" media-type="application/xhtml+xml"/>
+<item id="img_{{ .Id }}" href="Images/{{ .Id }}.jpg" media-type="image/jpeg"/>
 {{ end }}
 </manifest>
 <spine page-progression-direction="ltr" toc="ncx">
-{{ range .Images }}
-{{ if mod .Id 2 }}
-<itemref idref="page_{{ .Id }}" linear="yes" properties="page-spread-left"/>
+<itemref idref="page_cover" linear="yes" properties="page-spread-left"/>
+{{ range $idx, $ := .Images }}
+{{ if mod $idx 2 }}
+<itemref idref="page_{{ $.Id }}" linear="yes" properties="page-spread-right"/>
 {{ else }}
-<itemref idref="page_{{ .Id }}" linear="yes" properties="page-spread-right"/>
+<itemref idref="page_{{ $.Id }}" linear="yes" properties="page-spread-left"/>
 {{ end }}
 {{ end }}
 </spine>

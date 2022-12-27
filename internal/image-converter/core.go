@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
-	"io"
 	"os"
 
 	"golang.org/x/image/draw"
@@ -117,13 +116,13 @@ func Resize(img *image.Gray, w, h int) *image.Gray {
 	return newImg
 }
 
-func Get(img *image.Gray, quality int) io.Reader {
+func Get(img *image.Gray, quality int) []byte {
 	b := bytes.NewBuffer([]byte{})
 	err := jpeg.Encode(b, img, &jpeg.Options{Quality: quality})
 	if err != nil {
 		panic(err)
 	}
-	return b
+	return b.Bytes()
 }
 
 func Save(img *image.Gray, output string, quality int) {
@@ -143,7 +142,7 @@ func Save(img *image.Gray, output string, quality int) {
 	}
 }
 
-func Convert(path string, crop bool, w, h int, quality int) (io.Reader, int, int) {
+func Convert(path string, crop bool, w, h int, quality int) ([]byte, int, int) {
 	img := Load(path)
 	if crop {
 		img = CropMarging(img)
