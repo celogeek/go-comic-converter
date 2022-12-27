@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/schollz/progressbar/v3"
 	"github.com/yosssi/gohtml"
 
 	imageconverter "go-comic-converter/internal/image-converter"
@@ -192,6 +193,7 @@ func (e *EPub) Write() error {
 	if e.Error != nil {
 		return e.Error
 	}
+
 	w, err := os.Create(e.Path)
 	if err != nil {
 		return err
@@ -214,6 +216,8 @@ func (e *EPub) Write() error {
 		}
 	}
 
+	bar := progressbar.Default(int64(len(e.Images)), "Processing")
+	defer bar.Close()
 	for img := range e.ProcessingImages() {
 		text := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
 		image := fmt.Sprintf("OEBPS/Images/%s.jpg", img.Title)
@@ -223,6 +227,7 @@ func (e *EPub) Write() error {
 		if err := e.WriteFile(wz, image, img.Data); err != nil {
 			return err
 		}
+		bar.Add(1)
 	}
 
 	return nil
