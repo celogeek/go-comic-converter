@@ -9,12 +9,13 @@ import (
 )
 
 type Profile struct {
-	Width  int
-	Height int
+	Description string
+	Width       int
+	Height      int
 }
 
 var Profiles = map[string]Profile{
-	"KS": {1860, 2480},
+	"KS": {"Kindle Scribe", 1860, 2480},
 }
 
 type Option struct {
@@ -27,9 +28,10 @@ type Option struct {
 }
 
 func (o *Option) String() string {
+	var desc string
 	var width, height int
-	profile, profileMatch := Profiles[o.Profile]
-	if profileMatch {
+	if profile, ok := Profiles[o.Profile]; ok {
+		desc = profile.Description
 		width = profile.Width
 		height = profile.Height
 	}
@@ -37,7 +39,7 @@ func (o *Option) String() string {
 	return fmt.Sprintf(`Options:
 	Input  : %s
 	Output : %s
-	Profile: %s (%dx%d)
+	Profile: %s - %s - %dx%d
 	Author : %s
 	Title  : %s
 	Quality: %d
@@ -45,6 +47,7 @@ func (o *Option) String() string {
 		o.Input,
 		o.Output,
 		o.Profile,
+		desc,
 		width,
 		height,
 		o.Author,
