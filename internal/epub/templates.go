@@ -20,5 +20,8 @@ var TEMPLATE_NAV string
 //go:embed "templates/style.css.tmpl"
 var TEMPLATE_STYLE string
 
+//go:embed "templates/part.xhtml.tmpl"
+var TEMPLATE_PART string
+
 //go:embed "templates/text.xhtml.tmpl"
 var TEMPLATE_TEXT string

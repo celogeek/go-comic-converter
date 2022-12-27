@@ -307,6 +307,7 @@ func (e *EPub) Write() error {
 			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/Text/style.css", TEMPLATE_STYLE},
+			{"OEBPS/Text/part.xhtml", e.Render(TEMPLATE_PART, map[string]any{"Info": e, "Part": part})},
 			{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
 				"Id":     "cover",
 				"Width":  part.Cover.Width,
