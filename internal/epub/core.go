@@ -45,6 +45,7 @@ type EPub struct {
 	ViewHeight int
 	Quality    int
 	Crop       bool
+	LimitMb    int
 
 	Images          []*Images
 	FirstImageTitle string
@@ -96,6 +97,11 @@ func (e *EPub) SetQuality(q int) *EPub {
 
 func (e *EPub) SetCrop(c bool) *EPub {
 	e.Crop = c
+	return e
+}
+
+func (e *EPub) SetLimitMb(l int) *EPub {
+	e.LimitMb = l
 	return e
 }
 

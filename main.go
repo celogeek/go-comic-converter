@@ -26,6 +26,7 @@ type Option struct {
 	Title   string
 	Quality int
 	NoCrop  bool
+	LimitMb int
 }
 
 func (o *Option) String() string {
@@ -36,15 +37,20 @@ func (o *Option) String() string {
 		width = profile.Width
 		height = profile.Height
 	}
+	limitmb := "nolimit"
+	if o.LimitMb > 0 {
+		limitmb = fmt.Sprintf("%d Mb", o.LimitMb)
+	}
 
 	return fmt.Sprintf(`Options:
-	Input  : %s
-	Output : %s
-	Profile: %s - %s - %dx%d
-	Author : %s
-	Title  : %s
-	Quality: %d
-	Crop   : %v
+    Input  : %s
+    Output : %s
+    Profile: %s - %s - %dx%d
+    Author : %s
+    Title  : %s
+    Quality: %d
+    Crop   : %v
+    LimitMb: %s
 `,
 		o.Input,
 		o.Output,
@@ -56,6 +62,7 @@ func (o *Option) String() string {
 		o.Title,
 		o.Quality,
 		!o.NoCrop,
+		limitmb,
 	)
 }
 
@@ -73,6 +80,7 @@ func main() {
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image: Default 75")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping: Default false")
+	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit")
 	flag.Parse()
 
 	if opt.Input == "" || opt.Output == "" {
