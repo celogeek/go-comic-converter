@@ -301,17 +301,12 @@ func (e *EPub) Write() error {
 			{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
 			{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": part.Images})},
-			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Image": part.Images[0]})},
 			{"OEBPS/Text/style.css", TEMPLATE_STYLE},
 			{"OEBPS/Text/part.xhtml", e.Render(TEMPLATE_PART, map[string]any{
 				"Info":  e,
 				"Part":  i + 1,
 				"Total": totalParts,
-			})},
-			{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
-				"Id":     "cover",
-				"Width":  part.Cover.Width,
-				"Height": part.Cover.Height,
 			})},
 			{"OEBPS/Images/cover.jpg", part.Cover.Data},
 		}

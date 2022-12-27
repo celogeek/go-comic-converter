@@ -22,8 +22,7 @@
 <manifest>
 <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
 <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
-<item id="page_cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>
-<item id="img_cover" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
+<item id="cover" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
 <item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
 {{ range .Images }}
 <item id="page_{{ .Id }}" href="Text/{{ .Id }}.xhtml" media-type="application/xhtml+xml"/>
@@ -31,7 +30,6 @@
 {{ end }}
 </manifest>
 <spine page-progression-direction="ltr" toc="ncx">
-<itemref idref="page_cover" linear="yes" properties="page-spread-left"/>
 <itemref idref="page_part" linear="yes" properties="page-spread-right"/>
 {{ range $idx, $ := .Images }}
 {{ if mod $idx 2 }}
