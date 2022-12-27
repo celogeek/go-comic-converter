@@ -3,6 +3,7 @@ package epub
 import (
 	"archive/zip"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ import (
 
 type ImageDetails struct {
 	*Images
-	Data   string
+	Data   io.Reader
 	Width  int
 	Height int
 }
@@ -98,7 +99,11 @@ func (e *EPub) SetCrop(c bool) *EPub {
 	return e
 }
 
-func (e *EPub) WriteFile(wz *zip.Writer, file, content string) error {
+func (e *EPub) WriteString(wz *zip.Writer, file string, content string) error {
+	return e.WriteBuffer(wz, file, strings.NewReader(content))
+}
+
+func (e *EPub) WriteBuffer(wz *zip.Writer, file string, content io.Reader) error {
 	m, err := wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),
@@ -106,7 +111,7 @@ func (e *EPub) WriteFile(wz *zip.Writer, file, content string) error {
 	if err != nil {
 		return err
 	}
-	_, err = m.Write([]byte(content))
+	_, err = io.Copy(m, content)
 	return err
 }
 
@@ -220,7 +225,7 @@ func (e *EPub) Write() error {
 	wz := zip.NewWriter(w)
 	defer wz.Close()
 	for _, content := range zipContent {
-		if err := e.WriteFile(wz, content[0], content[1]); err != nil {
+		if err := e.WriteString(wz, content[0], content[1]); err != nil {
 			return err
 		}
 	}
@@ -230,10 +235,10 @@ func (e *EPub) Write() error {
 	for img := range e.ProcessingImages() {
 		text := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
 		image := fmt.Sprintf("OEBPS/Images/%s.jpg", img.Title)
-		if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
+		if err := e.WriteString(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
 			return err
 		}
-		if err := e.WriteFile(wz, image, img.Data); err != nil {
+		if err := e.WriteBuffer(wz, image, img.Data); err != nil {
 			return err
 		}
 		bar.Add(1)
