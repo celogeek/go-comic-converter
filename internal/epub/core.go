@@ -43,6 +43,7 @@ type EPub struct {
 	ViewWidth  int
 	ViewHeight int
 	Quality    int
+	Crop       bool
 
 	Images          []*Images
 	FirstImageTitle string
@@ -89,6 +90,11 @@ func (e *EPub) SetSize(w, h int) *EPub {
 
 func (e *EPub) SetQuality(q int) *EPub {
 	e.Quality = q
+	return e
+}
+
+func (e *EPub) SetCrop(c bool) *EPub {
+	e.Crop = c
 	return e
 }
 
@@ -171,7 +177,7 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 			go func() {
 				defer wg.Done()
 				for task := range todo {
-					data, w, h := imageconverter.Convert(task.Path, true, e.ViewWidth, e.ViewHeight, e.Quality)
+					data, w, h := imageconverter.Convert(task.Path, e.Crop, e.ViewWidth, e.ViewHeight, e.Quality)
 					results <- &ImageDetails{task.Images, data, w, h}
 				}
 			}()

@@ -25,6 +25,7 @@ type Option struct {
 	Author  string
 	Title   string
 	Quality int
+	NoCrop  bool
 }
 
 func (o *Option) String() string {
@@ -43,6 +44,7 @@ func (o *Option) String() string {
 	Author : %s
 	Title  : %s
 	Quality: %d
+	Crop   : %v
 `,
 		o.Input,
 		o.Output,
@@ -53,6 +55,7 @@ func (o *Option) String() string {
 		o.Author,
 		o.Title,
 		o.Quality,
+		!o.NoCrop,
 	)
 }
 
@@ -69,6 +72,7 @@ func main() {
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image: Default 75")
+	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping: Default false")
 	flag.Parse()
 
 	if opt.Input == "" || opt.Output == "" {
@@ -92,6 +96,7 @@ func main() {
 	err := epub.NewEpub(opt.Output).
 		SetSize(profile.Width, profile.Height).
 		SetQuality(opt.Quality).
+		SetCrop(!opt.NoCrop).
 		SetTitle(opt.Title).
 		SetAuthor(opt.Author).
 		LoadDir(opt.Input).
