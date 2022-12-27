@@ -20,7 +20,7 @@ import (
 	imageconverter "go-comic-converter/internal/image-converter"
 )
 
-type Images struct {
+type Image struct {
 	Id     int
 	Data   []byte
 	Width  int
@@ -44,8 +44,15 @@ type EPub struct {
 	Error error
 
 	ImagesCount       int
-	ProcessingImages  func() chan *Images
+	ProcessingImages  func() chan *Image
 	TemplateProcessor *template.Template
+}
+
+type EpubPart struct {
+	Idx    int
+	Cover  *Image
+	Images []*Image
+	Suffix string
 }
 
 func NewEpub(path string) *EPub {
@@ -178,16 +185,16 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 
 	todo := make(chan *Todo)
 
-	e.ProcessingImages = func() chan *Images {
+	e.ProcessingImages = func() chan *Image {
 		wg := &sync.WaitGroup{}
-		results := make(chan *Images)
+		results := make(chan *Image)
 		for i := 0; i < runtime.NumCPU(); i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
 				for task := range todo {
 					data, w, h := imageconverter.Convert(task.Path, e.Crop, e.ViewWidth, e.ViewHeight, e.Quality)
-					results <- &Images{
+					results <- &Image{
 						task.Id,
 						data,
 						w,
@@ -214,17 +221,8 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 	return e
 }
 
-func (e *EPub) Write() error {
-	if e.Error != nil {
-		return e.Error
-	}
-
-	w, err := os.Create(e.Path)
-	if err != nil {
-		return err
-	}
-
-	images := make([]*Images, e.ImagesCount)
+func (e *EPub) GetParts() <-chan *EpubPart {
+	images := make([]*Image, e.ImagesCount)
 	totalSize := 0
 	bar := progressbar.Default(int64(e.ImagesCount), "Processing")
 	for img := range e.ProcessingImages() {
@@ -234,49 +232,107 @@ func (e *EPub) Write() error {
 	}
 	bar.Close()
 
-	cover := images[0]
-	images = images[1:]
+	epubPart := make(chan *EpubPart)
+	go func() {
+		defer close(epubPart)
+		cover := images[0]
+		images = images[1:]
+		fmt.Println("Limit: ", e.LimitMb, e.LimitMb == 0)
+		if e.LimitMb == 0 {
+			epubPart <- &EpubPart{
+				Idx:    1,
+				Cover:  cover,
+				Images: images,
+				Suffix: "",
+			}
+			return
+		}
 
-	fmt.Println(len(images))
-	fmt.Println("Total Size:", totalSize)
+		maxSize := e.LimitMb * 1024 * 1024
+		currentSize := 512*1024 + len(cover.Data)
+		currentImages := make([]*Image, 0)
+		part := 1
+
+		for _, img := range images {
+			if len(currentImages) > 0 && currentSize+len(img.Data) > maxSize {
+				epubPart <- &EpubPart{
+					Idx:    part,
+					Cover:  cover,
+					Images: currentImages,
+					Suffix: fmt.Sprintf(" PART_%03d", part),
+				}
+				part += 1
+				currentSize = 512*1024 + len(cover.Data)
+				currentImages = make([]*Image, 0)
+			}
+			currentSize += len(img.Data)
+			currentImages = append(currentImages, img)
+		}
+		if len(currentImages) > 0 {
+			epubPart <- &EpubPart{
+				Idx:    part,
+				Cover:  cover,
+				Images: currentImages,
+				Suffix: fmt.Sprintf(" PART_%03d", part),
+			}
+		}
+	}()
+
+	return epubPart
+}
+
+func (e *EPub) Write() error {
+	if e.Error != nil {
+		return e.Error
+	}
 
 	type ZipContent struct {
 		Name    string
 		Content any
 	}
 
-	zipContent := []ZipContent{
-		{"mimetype", TEMPLATE_MIME_TYPE},
-		{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
-		{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, map[string]any{"Info": e, "Images": images})},
-		{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": images})},
-		{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": images})},
-		{"OEBPS/Text/style.css", TEMPLATE_STYLE},
-		{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
-			"Id":     "cover",
-			"Width":  cover.Width,
-			"Height": cover.Height,
-		})},
-		{"OEBPS/Images/cover.jpg", cover.Data},
-	}
+	for part := range e.GetParts() {
+		fmt.Printf("Writing part %d...\n", part.Idx)
+		ext := filepath.Ext(e.Path)
+		path := fmt.Sprintf("%s%s%s", e.Path[0:len(e.Path)-len(ext)], part.Suffix, ext)
+		w, err := os.Create(path)
+		if err != nil {
+			return err
+		}
 
-	wz := zip.NewWriter(w)
-	defer wz.Close()
-	for _, content := range zipContent {
-		if err := e.WriteFile(wz, content.Name, content.Content); err != nil {
-			return err
+		zipContent := []ZipContent{
+			{"mimetype", TEMPLATE_MIME_TYPE},
+			{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
+			{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/Text/style.css", TEMPLATE_STYLE},
+			{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
+				"Id":     "cover",
+				"Width":  part.Cover.Width,
+				"Height": part.Cover.Height,
+			})},
+			{"OEBPS/Images/cover.jpg", part.Cover.Data},
 		}
-	}
 
-	for _, img := range images {
-		text := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
-		image := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
-		if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
-			return err
+		wz := zip.NewWriter(w)
+		for _, content := range zipContent {
+			if err := e.WriteFile(wz, content.Name, content.Content); err != nil {
+				return err
+			}
 		}
-		if err := e.WriteFile(wz, image, img.Data); err != nil {
-			return err
+
+		for _, img := range part.Images {
+			text := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
+			image := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
+			if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
+				return err
+			}
+			if err := e.WriteFile(wz, image, img.Data); err != nil {
+				return err
+			}
 		}
+		wz.Close()
 	}
 
 	return nil

@@ -80,7 +80,7 @@ func main() {
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image: Default 75")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping: Default false")
-	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit")
+	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit, Minimum 20")
 	flag.Parse()
 
 	if opt.Input == "" || opt.Output == "" {
@@ -95,6 +95,12 @@ func main() {
 		return
 	}
 
+	if opt.LimitMb > 0 && opt.LimitMb < 20 {
+		fmt.Println("LimitMb should be 0 or >= 20")
+		flag.Usage()
+		return
+	}
+
 	if opt.Title == "" {
 		opt.Title = filepath.Base(opt.Input)
 	}
@@ -105,6 +111,7 @@ func main() {
 		SetSize(profile.Width, profile.Height).
 		SetQuality(opt.Quality).
 		SetCrop(!opt.NoCrop).
+		SetLimitMb(opt.LimitMb).
 		SetTitle(opt.Title).
 		SetAuthor(opt.Author).
 		LoadDir(opt.Input).
