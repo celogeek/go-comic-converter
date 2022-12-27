@@ -2,13 +2,18 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
-<title>Part {{ .Part.Idx }}</title>
+<title>Part {{ .Part }}</title>
 <link href="style.css" type="text/css" rel="stylesheet"/>
 <meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
 </head>
 <body style="">
-<h1 style="text-align:center;top:50%;">
-Part {{ .Part.Idx }}
+<h1 style="text-align:center;top:0%;padding-top:50%;font-size:4em">
+    <p>
+    {{ .Info.Title }}
+    </p>
+    <p>
+    Part {{ .Part }} / {{ .Total }}
+    </p>
 </h1>
 </body>
 </html>

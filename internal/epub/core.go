@@ -49,10 +49,8 @@ type EPub struct {
 }
 
 type EpubPart struct {
-	Idx    int
 	Cover  *Image
 	Images []*Image
-	Suffix string
 }
 
 func NewEpub(path string) *EPub {
@@ -221,7 +219,7 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 	return e
 }
 
-func (e *EPub) GetParts() <-chan *EpubPart {
+func (e *EPub) GetParts() []*EpubPart {
 	images := make([]*Image, e.ImagesCount)
 	totalSize := 0
 	bar := progressbar.Default(int64(e.ImagesCount), "Processing")
@@ -232,51 +230,42 @@ func (e *EPub) GetParts() <-chan *EpubPart {
 	}
 	bar.Close()
 
-	epubPart := make(chan *EpubPart)
-	go func() {
-		defer close(epubPart)
-		cover := images[0]
-		images = images[1:]
-		fmt.Println("Limit: ", e.LimitMb, e.LimitMb == 0)
-		if e.LimitMb == 0 {
-			epubPart <- &EpubPart{
-				Idx:    1,
-				Cover:  cover,
-				Images: images,
-				Suffix: "",
-			}
-			return
-		}
+	epubPart := make([]*EpubPart, 0)
 
-		maxSize := e.LimitMb * 1024 * 1024
-		currentSize := 512*1024 + len(cover.Data)
-		currentImages := make([]*Image, 0)
-		part := 1
+	cover := images[0]
+	images = images[1:]
+	if e.LimitMb == 0 {
+		epubPart = append(epubPart, &EpubPart{
+			Cover:  cover,
+			Images: images,
+		})
+		return epubPart
+	}
 
-		for _, img := range images {
-			if len(currentImages) > 0 && currentSize+len(img.Data) > maxSize {
-				epubPart <- &EpubPart{
-					Idx:    part,
-					Cover:  cover,
-					Images: currentImages,
-					Suffix: fmt.Sprintf(" PART_%03d", part),
-				}
-				part += 1
-				currentSize = 512*1024 + len(cover.Data)
-				currentImages = make([]*Image, 0)
-			}
-			currentSize += len(img.Data)
-			currentImages = append(currentImages, img)
-		}
-		if len(currentImages) > 0 {
-			epubPart <- &EpubPart{
-				Idx:    part,
+	maxSize := e.LimitMb * 1024 * 1024
+	currentSize := 512*1024 + len(cover.Data)
+	currentImages := make([]*Image, 0)
+	part := 1
+
+	for _, img := range images {
+		if len(currentImages) > 0 && currentSize+len(img.Data) > maxSize {
+			epubPart = append(epubPart, &EpubPart{
 				Cover:  cover,
 				Images: currentImages,
-				Suffix: fmt.Sprintf(" PART_%03d", part),
-			}
+			})
+			part += 1
+			currentSize = 512*1024 + len(cover.Data)
+			currentImages = make([]*Image, 0)
 		}
-	}()
+		currentSize += len(img.Data)
+		currentImages = append(currentImages, img)
+	}
+	if len(currentImages) > 0 {
+		epubPart = append(epubPart, &EpubPart{
+			Cover:  cover,
+			Images: currentImages,
+		})
+	}
 
 	return epubPart
 }
@@ -291,10 +280,17 @@ func (e *EPub) Write() error {
 		Content any
 	}
 
-	for part := range e.GetParts() {
-		fmt.Printf("Writing part %d...\n", part.Idx)
+	epubParts := e.GetParts()
+	totalParts := len(epubParts)
+
+	for i, part := range epubParts {
+		fmt.Printf("Writing part %d...\n", i+1)
 		ext := filepath.Ext(e.Path)
-		path := fmt.Sprintf("%s%s%s", e.Path[0:len(e.Path)-len(ext)], part.Suffix, ext)
+		suffix := ""
+		if totalParts > 1 {
+			suffix = fmt.Sprintf(" PART_%02d", i+1)
+		}
+		path := fmt.Sprintf("%s%s%s", e.Path[0:len(e.Path)-len(ext)], suffix, ext)
 		w, err := os.Create(path)
 		if err != nil {
 			return err
@@ -307,7 +303,11 @@ func (e *EPub) Write() error {
 			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/Text/style.css", TEMPLATE_STYLE},
-			{"OEBPS/Text/part.xhtml", e.Render(TEMPLATE_PART, map[string]any{"Info": e, "Part": part})},
+			{"OEBPS/Text/part.xhtml", e.Render(TEMPLATE_PART, map[string]any{
+				"Info":  e,
+				"Part":  i + 1,
+				"Total": totalParts,
+			})},
 			{"OEBPS/Text/cover.xhtml", e.Render(TEMPLATE_TEXT, map[string]any{
 				"Id":     "cover",
 				"Width":  part.Cover.Width,
