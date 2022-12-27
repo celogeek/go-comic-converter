@@ -265,7 +265,7 @@ func (e *EPub) GetParts() []*EpubPart {
 	}
 
 	maxSize := e.LimitMb * 1024 * 1024
-	currentSize := 512*1024 + len(cover.Data)
+	currentSize := len(cover.Data)
 	currentImages := make([]*Image, 0)
 	part := 1
 
@@ -276,7 +276,7 @@ func (e *EPub) GetParts() []*EpubPart {
 				Images: currentImages,
 			})
 			part += 1
-			currentSize = 512*1024 + len(cover.Data)
+			currentSize = len(cover.Data)
 			currentImages = make([]*Image, 0)
 		}
 		currentSize += len(img.Data)
