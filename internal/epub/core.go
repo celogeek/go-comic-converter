@@ -47,22 +47,13 @@ type EPub struct {
 	FirstImageTitle string
 	Error           error
 
-	Processors       func()
-	ProcessorsCount  int
-	ProcessorsWG     *sync.WaitGroup
-	ProcessorsResult []chan *ImageDetails
+	ProcessingImages func() chan *ImageDetails
 }
 
 func NewEpub(path string) *EPub {
 	uid, err := uuid.NewV4()
 	if err != nil {
 		panic(err)
-	}
-
-	nbcpu := runtime.NumCPU()
-	results := make([]chan *ImageDetails, nbcpu)
-	for r := range results {
-		results[r] = make(chan *ImageDetails)
 	}
 
 	return &EPub{
@@ -76,10 +67,6 @@ func NewEpub(path string) *EPub {
 		ViewWidth:  0,
 		ViewHeight: 0,
 		Quality:    75,
-
-		ProcessorsCount:  nbcpu,
-		ProcessorsWG:     &sync.WaitGroup{},
-		ProcessorsResult: results,
 	}
 }
 
@@ -170,31 +157,30 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 		Path string
 	}
 
-	todo := make([]chan *Todo, e.ProcessorsCount)
-	for i := range todo {
-		todo[i] = make(chan *Todo)
-	}
+	todo := make(chan *Todo)
 
-	e.Processors = func() {
-		for i := 0; i < e.ProcessorsCount; i++ {
-			e.ProcessorsWG.Add(1)
-			go func(ticket int) {
-				defer e.ProcessorsWG.Done()
-				defer close(e.ProcessorsResult[ticket])
-				for task := range todo[ticket] {
+	e.ProcessingImages = func() chan *ImageDetails {
+		wg := &sync.WaitGroup{}
+		results := make(chan *ImageDetails)
+		for i := 0; i < runtime.NumCPU(); i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for task := range todo {
 					data, w, h := imageconverter.Convert(task.Path, true, e.ViewWidth, e.ViewHeight, e.Quality)
-					e.ProcessorsResult[ticket] <- &ImageDetails{task.Images, data, w, h}
+					results <- &ImageDetails{task.Images, data, w, h}
 				}
-			}(i % e.ProcessorsCount)
+			}()
 		}
 		go func() {
 			for i, path := range images {
-				todo[i%e.ProcessorsCount] <- &Todo{e.Images[i], path}
+				todo <- &Todo{e.Images[i], path}
 			}
-			for i := range todo {
-				close(todo[i])
-			}
+			close(todo)
+			wg.Wait()
+			close(results)
 		}()
+		return results
 	}
 
 	e.FirstImageTitle = e.Images[0].Title
@@ -228,21 +214,16 @@ func (e *EPub) Write() error {
 		}
 	}
 
-	e.Processors()
-	for i, img := range e.Images {
-		fmt.Printf("%03d/%03d\n", i+1, len(e.Images))
-
+	for img := range e.ProcessingImages() {
 		text := fmt.Sprintf("OEBPS/Text/%s.xhtml", img.Title)
 		image := fmt.Sprintf("OEBPS/Images/%s.jpg", img.Title)
-		details := <-e.ProcessorsResult[i%e.ProcessorsCount]
-		if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, details)); err != nil {
+		if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
 			return err
 		}
-		if err := e.WriteFile(wz, image, details.Data); err != nil {
+		if err := e.WriteFile(wz, image, img.Data); err != nil {
 			return err
 		}
 	}
-	e.ProcessorsWG.Wait()
 
 	return nil
 }
