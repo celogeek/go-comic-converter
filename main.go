@@ -65,7 +65,7 @@ func main() {
 	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: %s", strings.Join(availableProfiles, ", ")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
-	flag.IntVar(&opt.Quality, "quality", 75, "Quality of the image: Default 75")
+	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image: Default 75")
 	flag.Parse()
 
 	if opt.Input == "" || opt.Output == "" {
