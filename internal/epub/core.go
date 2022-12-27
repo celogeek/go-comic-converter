@@ -93,7 +93,10 @@ func (e *EPub) SetQuality(q int) *EPub {
 }
 
 func (e *EPub) WriteFile(wz *zip.Writer, file, content string) error {
-	m, err := wz.Create(file)
+	m, err := wz.CreateHeader(&zip.FileHeader{
+		Name:     file,
+		Modified: time.Now(),
+	})
 	if err != nil {
 		return err
 	}
