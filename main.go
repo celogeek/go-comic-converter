@@ -89,7 +89,7 @@ func main() {
 	err := epub.NewEpub(opt.Output).
 		SetSize(profile.Width, profile.Height).
 		SetQuality(opt.Quality).
-		SetTitle(opt.Input).
+		SetTitle(opt.Title).
 		SetAuthor(opt.Author).
 		LoadDir(opt.Input).
 		Write()
