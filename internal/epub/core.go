@@ -15,7 +15,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/schollz/progressbar/v3"
-	"github.com/yosssi/gohtml"
 
 	imageconverter "go-comic-converter/internal/image-converter"
 )
@@ -112,6 +111,28 @@ func (e *EPub) SetLimitMb(l int) *EPub {
 	return e
 }
 
+func (e *EPub) WriteMagic(wz *zip.Writer) error {
+	t := time.Now()
+	fh := &zip.FileHeader{
+		Name:               "mimetype",
+		Method:             zip.Store,
+		Modified:           t,
+		ModifiedTime:       uint16(t.Second()/2 + t.Minute()<<5 + t.Hour()<<11),
+		ModifiedDate:       uint16(t.Day() + int(t.Month())<<5 + (t.Year()-1980)<<9),
+		CompressedSize64:   20,
+		UncompressedSize64: 20,
+		CRC32:              0x2cab616f,
+	}
+	fh.SetMode(0600)
+	m, err := wz.CreateRaw(fh)
+
+	if err != nil {
+		return err
+	}
+	_, err = m.Write([]byte("application/epub+zip"))
+	return err
+}
+
 func (e *EPub) WriteFile(wz *zip.Writer, file string, data any) error {
 	var content []byte
 	switch b := data.(type) {
@@ -126,6 +147,7 @@ func (e *EPub) WriteFile(wz *zip.Writer, file string, data any) error {
 	m, err := wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),
+		Method:   zip.Deflate,
 	})
 	if err != nil {
 		return err
@@ -144,7 +166,7 @@ func (e *EPub) Render(templateString string, data any) string {
 		panic(err)
 	}
 
-	return gohtml.Format(result.String())
+	return result.String()
 }
 
 func (e *EPub) LoadDir(dirname string) *EPub {
@@ -283,8 +305,8 @@ func (e *EPub) Write() error {
 	epubParts := e.GetParts()
 	totalParts := len(epubParts)
 
+	bar := progressbar.Default(int64(totalParts), "Writing Part")
 	for i, part := range epubParts {
-		fmt.Printf("Writing part %d...\n", i+1)
 		ext := filepath.Ext(e.Path)
 		suffix := ""
 		if totalParts > 1 {
@@ -297,10 +319,9 @@ func (e *EPub) Write() error {
 		}
 
 		zipContent := []ZipContent{
-			{"mimetype", TEMPLATE_MIME_TYPE},
-			{"META-INF/container.xml", gohtml.Format(TEMPLATE_CONTAINER)},
+			{"META-INF/container.xml", TEMPLATE_CONTAINER},
 			{"OEBPS/content.opf", e.Render(TEMPLATE_CONTENT, map[string]any{"Info": e, "Images": part.Images})},
-			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/toc.ncx", e.Render(TEMPLATE_TOC, map[string]any{"Info": e, "Image": part.Images[0]})},
 			{"OEBPS/nav.xhtml", e.Render(TEMPLATE_NAV, map[string]any{"Info": e, "Image": part.Images[0]})},
 			{"OEBPS/Text/style.css", TEMPLATE_STYLE},
 			{"OEBPS/Text/part.xhtml", e.Render(TEMPLATE_PART, map[string]any{
@@ -312,6 +333,11 @@ func (e *EPub) Write() error {
 		}
 
 		wz := zip.NewWriter(w)
+		defer wz.Close()
+
+		if err = e.WriteMagic(wz); err != nil {
+			return err
+		}
 		for _, content := range zipContent {
 			if err := e.WriteFile(wz, content.Name, content.Content); err != nil {
 				return err
@@ -328,8 +354,9 @@ func (e *EPub) Write() error {
 				return err
 			}
 		}
-		wz.Close()
+		bar.Add(1)
 	}
+	bar.Close()
 
 	return nil
 }

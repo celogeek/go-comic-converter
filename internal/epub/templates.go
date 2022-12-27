@@ -2,9 +2,6 @@ package epub
 
 import _ "embed"
 
-//go:embed "templates/mimetype.tmpl"
-var TEMPLATE_MIME_TYPE string
-
 //go:embed "templates/container.xml.tmpl"
 var TEMPLATE_CONTAINER string
 
