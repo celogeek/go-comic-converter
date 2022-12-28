@@ -2,7 +2,10 @@ package epub
 
 import (
 	"archive/zip"
+	"bytes"
+	"compress/flate"
 	"fmt"
+	"hash/crc32"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -19,9 +22,14 @@ import (
 	imageconverter "go-comic-converter/internal/image-converter"
 )
 
+type ImageData struct {
+	Header *zip.FileHeader
+	Data   []byte
+}
+
 type Image struct {
 	Id     int
-	Data   []byte
+	Data   *ImageData
 	Width  int
 	Height int
 }
@@ -133,6 +141,15 @@ func (e *EPub) WriteMagic(wz *zip.Writer) error {
 	return err
 }
 
+func (e *EPub) WriteImage(wz *zip.Writer, image *Image) error {
+	m, err := wz.CreateRaw(image.Data.Header)
+	if err != nil {
+		return err
+	}
+	_, err = m.Write(image.Data.Data)
+	return err
+}
+
 func (e *EPub) WriteFile(wz *zip.Writer, file string, data any) error {
 	var content []byte
 	switch b := data.(type) {
@@ -213,10 +230,42 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 			go func() {
 				defer wg.Done()
 				for task := range todo {
-					data, w, h := imageconverter.Convert(task.Path, e.Crop, e.ViewWidth, e.ViewHeight, e.Quality)
+					data, w, h := imageconverter.Convert(
+						task.Path,
+						e.Crop,
+						e.ViewWidth,
+						e.ViewHeight,
+						e.Quality,
+					)
+					cdata := bytes.NewBuffer([]byte{})
+					wcdata, err := flate.NewWriter(cdata, flate.BestCompression)
+					if err != nil {
+						panic(err)
+					}
+					wcdata.Write(data)
+					wcdata.Close()
+					if err != nil {
+						panic(err)
+					}
+					t := time.Now()
+					name := fmt.Sprintf("OEBPS/Images/%d.jpg", task.Id)
+					if task.Id == 0 {
+						name = "OEBPS/Images/cover.jpg"
+					}
 					results <- &Image{
 						task.Id,
-						data,
+						&ImageData{
+							&zip.FileHeader{
+								Name:               name,
+								CompressedSize64:   uint64(cdata.Len()),
+								UncompressedSize64: uint64(len(data)),
+								CRC32:              crc32.Checksum(data, crc32.IEEETable),
+								Method:             zip.Deflate,
+								ModifiedTime:       uint16(t.Second()/2 + t.Minute()<<5 + t.Hour()<<11),
+								ModifiedDate:       uint16(t.Day() + int(t.Month())<<5 + (t.Year()-1980)<<9),
+							},
+							cdata.Bytes(),
+						},
 						w,
 						h,
 					}
@@ -243,11 +292,9 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 
 func (e *EPub) GetParts() []*EpubPart {
 	images := make([]*Image, e.ImagesCount)
-	totalSize := 0
 	bar := progressbar.Default(int64(e.ImagesCount), "Processing")
 	for img := range e.ProcessingImages() {
 		images[img.Id] = img
-		totalSize += len(img.Data)
 		bar.Add(1)
 	}
 	bar.Close()
@@ -264,22 +311,31 @@ func (e *EPub) GetParts() []*EpubPart {
 		return epubPart
 	}
 
-	maxSize := e.LimitMb * 1024 * 1024
-	currentSize := len(cover.Data)
+	maxSize := uint64(e.LimitMb * 1024 * 1024)
+
+	sizeImage := func(image *Image) uint64 {
+		// image + header + len Name + xhtml size
+		return image.Data.Header.CompressedSize64 + 30 + uint64(len(image.Data.Header.Name))
+	}
+	xhtmlSize := uint64(1024)
+	// descriptor files + image
+	baseSize := uint64(16*1024) + sizeImage(cover)
+
+	currentSize := baseSize
 	currentImages := make([]*Image, 0)
 	part := 1
 
 	for _, img := range images {
-		if len(currentImages) > 0 && currentSize+len(img.Data) > maxSize {
+		if len(currentImages) > 0 && currentSize+sizeImage(img)+xhtmlSize > maxSize {
 			epubPart = append(epubPart, &EpubPart{
 				Cover:  cover,
 				Images: currentImages,
 			})
 			part += 1
-			currentSize = len(cover.Data)
+			currentSize = baseSize
 			currentImages = make([]*Image, 0)
 		}
-		currentSize += len(img.Data)
+		currentSize += sizeImage(img) + xhtmlSize
 		currentImages = append(currentImages, img)
 	}
 	if len(currentImages) > 0 {
@@ -329,7 +385,6 @@ func (e *EPub) Write() error {
 				"Part":  i + 1,
 				"Total": totalParts,
 			})},
-			{"OEBPS/Images/cover.jpg", part.Cover.Data},
 		}
 
 		wz := zip.NewWriter(w)
@@ -343,14 +398,14 @@ func (e *EPub) Write() error {
 				return err
 			}
 		}
+		e.WriteImage(wz, part.Cover)
 
 		for _, img := range part.Images {
 			text := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
-			image := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
 			if err := e.WriteFile(wz, text, e.Render(TEMPLATE_TEXT, img)); err != nil {
 				return err
 			}
-			if err := e.WriteFile(wz, image, img.Data); err != nil {
+			if err := e.WriteImage(wz, img); err != nil {
 				return err
 			}
 		}
