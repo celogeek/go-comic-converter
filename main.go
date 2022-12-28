@@ -74,20 +74,25 @@ func main() {
 
 	opt := &Option{}
 	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert")
-	flag.StringVar(&opt.Output, "output", "", "Output of the epub")
+	flag.StringVar(&opt.Output, "output", "", "Output of the epub: (default [INPUT].epub)")
 	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: %s", strings.Join(availableProfiles, ", ")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
-	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image: Default 75")
-	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping: Default false")
-	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit, Minimum 20")
+	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
+	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
+	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.Parse()
 
-	if opt.Input == "" || opt.Output == "" {
+	if opt.Input == "" {
 		fmt.Println("Missing input or output!")
 		flag.Usage()
 		return
 	}
+
+	if opt.Output == "" {
+		opt.Output = fmt.Sprintf("%s.epub", filepath.Clean(opt.Input))
+	}
+
 	profile, profileMatch := Profiles[opt.Profile]
 	if !profileMatch {
 		fmt.Println("Profile doesn't exists!")
