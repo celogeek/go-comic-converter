@@ -1,8 +1,10 @@
 package epub
 
 import (
+	"archive/zip"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -122,6 +124,99 @@ func (e *EPub) Render(templateString string, data any) string {
 	return result.String()
 }
 
+func (e *EPub) Load(path string) *EPub {
+	fi, err := os.Stat(path)
+	if err != nil {
+		e.Error = err
+		return e
+	}
+
+	if fi.IsDir() {
+		return e.LoadDir(path)
+	}
+
+	switch ext := strings.ToLower(filepath.Ext(path)); ext {
+	case ".cbz":
+		e.LoadCBZ(path)
+	case ".cbr":
+		e.LoadCBR(path)
+	case ".pdf":
+		e.LoadPDF(path)
+	default:
+		e.Error = fmt.Errorf("unknown file format (%s): support .cbz, .cbr, .pdf", ext)
+	}
+	return e
+}
+
+func (e *EPub) LoadCBZ(path string) *EPub {
+	r, err := zip.OpenReader(path)
+	if err != nil {
+		e.Error = err
+	}
+
+	images := make([]*zip.File, 0)
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		if strings.ToLower(filepath.Ext(f.Name)) != ".jpg" {
+			continue
+		}
+		images = append(images, f)
+	}
+	if len(images) == 0 {
+		e.Error = fmt.Errorf("no images found")
+		r.Close()
+		return e
+	}
+	e.ImagesCount = len(images)
+
+	type Todo struct {
+		Id int
+		FZ *zip.File
+	}
+
+	todo := make(chan *Todo)
+
+	e.ProcessingImages = func() chan *Image {
+		defer r.Close()
+		wg := &sync.WaitGroup{}
+		results := make(chan *Image)
+		for i := 0; i < runtime.NumCPU(); i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for task := range todo {
+					fmt.Println(task.FZ.Name)
+					// TODO
+				}
+			}()
+		}
+		go func() {
+			for i, fz := range images {
+				todo <- &Todo{i, fz}
+			}
+			close(todo)
+			wg.Wait()
+			close(results)
+		}()
+
+		return results
+	}
+
+	return e
+}
+
+func (e *EPub) LoadCBR(path string) *EPub {
+	e.Error = fmt.Errorf("no implemented")
+	return e
+}
+
+func (e *EPub) LoadPDF(path string) *EPub {
+	e.Error = fmt.Errorf("no implemented")
+	return e
+}
+
 func (e *EPub) LoadDir(dirname string) *EPub {
 	images := make([]string, 0)
 	err := filepath.WalkDir(dirname, func(path string, d fs.DirEntry, err error) error {
@@ -188,11 +283,7 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 		}
 		go func() {
 			for i, path := range images {
-				if i == 0 {
-					todo <- &Todo{i, path}
-				} else {
-					todo <- &Todo{i, path}
-				}
+				todo <- &Todo{i, path}
 			}
 			close(todo)
 			wg.Wait()
@@ -214,7 +305,6 @@ func (e *EPub) GetParts() []*EpubPart {
 	bar.Close()
 
 	epubPart := make([]*EpubPart, 0)
-
 	cover := images[0]
 	images = images[1:]
 	if e.LimitMb == 0 {

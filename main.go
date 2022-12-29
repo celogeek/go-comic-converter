@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"go-comic-converter/internal/epub"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -86,24 +87,35 @@ func main() {
 	if opt.Input == "" {
 		fmt.Println("Missing input or output!")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
 	if opt.Output == "" {
-		opt.Output = fmt.Sprintf("%s.epub", filepath.Clean(opt.Input))
+		fi, err := os.Stat(opt.Input)
+		if err != nil {
+			fmt.Println(err)
+			flag.Usage()
+			os.Exit(1)
+		}
+		if fi.IsDir() {
+			opt.Output = fmt.Sprintf("%s.epub", filepath.Clean(opt.Input))
+		} else {
+			ext := filepath.Ext(opt.Input)
+			opt.Output = fmt.Sprintf("%s.epub", opt.Input[0:len(opt.Input)-len(ext)])
+		}
 	}
 
 	profile, profileMatch := Profiles[opt.Profile]
 	if !profileMatch {
 		fmt.Println("Profile doesn't exists!")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
 	if opt.LimitMb > 0 && opt.LimitMb < 20 {
 		fmt.Println("LimitMb should be 0 or >= 20")
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
 	if opt.Title == "" {
@@ -119,10 +131,13 @@ func main() {
 		SetLimitMb(opt.LimitMb).
 		SetTitle(opt.Title).
 		SetAuthor(opt.Author).
-		LoadDir(opt.Input).
+		Load(opt.Input).
 		Write()
 
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
 	}
+
+	os.Exit(0)
 }
