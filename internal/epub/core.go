@@ -169,6 +169,11 @@ func (e *EPub) LoadCBZ(path string) *EPub {
 		r.Close()
 		return e
 	}
+
+	sort.SliceStable(images, func(i, j int) bool {
+		return strings.Compare(images[i].Name, images[j].Name) < 0
+	})
+
 	e.ImagesCount = len(images)
 
 	type Todo struct {
@@ -179,7 +184,7 @@ func (e *EPub) LoadCBZ(path string) *EPub {
 	todo := make(chan *Todo)
 
 	e.ProcessingImages = func() chan *Image {
-		defer r.Close()
+		// defer r.Close()
 		wg := &sync.WaitGroup{}
 		results := make(chan *Image)
 		for i := 0; i < runtime.NumCPU(); i++ {
@@ -187,8 +192,27 @@ func (e *EPub) LoadCBZ(path string) *EPub {
 			go func() {
 				defer wg.Done()
 				for task := range todo {
-					fmt.Println(task.FZ.Name)
-					// TODO
+					reader, err := task.FZ.Open()
+					if err != nil {
+						panic(err)
+					}
+					data, w, h := imageconverter.Convert(
+						reader,
+						e.Crop,
+						e.ViewWidth,
+						e.ViewHeight,
+						e.Quality,
+					)
+					name := fmt.Sprintf("OEBPS/Images/%d.jpg", task.Id)
+					if task.Id == 0 {
+						name = "OEBPS/Images/cover.jpg"
+					}
+					results <- &Image{
+						task.Id,
+						NewImageData(name, data),
+						w,
+						h,
+					}
 				}
 			}()
 		}
@@ -198,6 +222,7 @@ func (e *EPub) LoadCBZ(path string) *EPub {
 			}
 			close(todo)
 			wg.Wait()
+			r.Close()
 			close(results)
 		}()
 
@@ -261,8 +286,12 @@ func (e *EPub) LoadDir(dirname string) *EPub {
 			go func() {
 				defer wg.Done()
 				for task := range todo {
+					reader, err := os.Open(task.Path)
+					if err != nil {
+						panic(err)
+					}
 					data, w, h := imageconverter.Convert(
-						task.Path,
+						reader,
 						e.Crop,
 						e.ViewWidth,
 						e.ViewHeight,

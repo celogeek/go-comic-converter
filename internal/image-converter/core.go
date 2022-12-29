@@ -5,19 +5,15 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"io"
 	"os"
 
 	"golang.org/x/image/draw"
 )
 
-func Load(file string) *image.Gray {
-	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
+func Load(reader io.ReadCloser) *image.Gray {
+	defer reader.Close()
+	img, _, err := image.Decode(reader)
 	if err != nil {
 		panic(err)
 	}
@@ -142,8 +138,8 @@ func Save(img *image.Gray, output string, quality int) {
 	}
 }
 
-func Convert(path string, crop bool, w, h int, quality int) ([]byte, int, int) {
-	img := Load(path)
+func Convert(reader io.ReadCloser, crop bool, w, h int, quality int) ([]byte, int, int) {
+	img := Load(reader)
 	if crop {
 		img = CropMarging(img)
 	}
