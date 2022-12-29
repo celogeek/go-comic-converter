@@ -43,7 +43,9 @@ func (o *Option) String() string {
 		limitmb = fmt.Sprintf("%d Mb", o.LimitMb)
 	}
 
-	return fmt.Sprintf(`Options:
+	return fmt.Sprintf(`Go Comic Converter
+
+Options:
     Input  : %s
     Output : %s
     Profile: %s - %s - %dx%d

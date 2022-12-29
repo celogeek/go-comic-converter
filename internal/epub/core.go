@@ -19,13 +19,6 @@ import (
 	imageconverter "go-comic-converter/internal/image-converter"
 )
 
-type image struct {
-	Id     int
-	Data   *imageData
-	Width  int
-	Height int
-}
-
 type EpubOptions struct {
 	Input      string
 	Output     string
@@ -47,6 +40,13 @@ type ePub struct {
 	imagesCount       int
 	processingImages  func() chan *image
 	templateProcessor *template.Template
+}
+
+type image struct {
+	Id     int
+	Data   *imageData
+	Width  int
+	Height int
 }
 
 type epubPart struct {
@@ -137,12 +137,12 @@ func (e *ePub) loadCBZ() error {
 
 	e.imagesCount = len(images)
 
-	type Todo struct {
+	type task struct {
 		Id int
 		FZ *zip.File
 	}
 
-	todo := make(chan *Todo)
+	tasks := make(chan *task)
 
 	e.processingImages = func() chan *image {
 		// defer r.Close()
@@ -152,8 +152,8 @@ func (e *ePub) loadCBZ() error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				for task := range todo {
-					reader, err := task.FZ.Open()
+				for imgTask := range tasks {
+					reader, err := imgTask.FZ.Open()
 					if err != nil {
 						panic(err)
 					}
@@ -164,12 +164,12 @@ func (e *ePub) loadCBZ() error {
 						e.ViewHeight,
 						e.Quality,
 					)
-					name := fmt.Sprintf("OEBPS/Images/%d.jpg", task.Id)
-					if task.Id == 0 {
+					name := fmt.Sprintf("OEBPS/Images/%d.jpg", imgTask.Id)
+					if imgTask.Id == 0 {
 						name = "OEBPS/Images/cover.jpg"
 					}
 					results <- &image{
-						task.Id,
+						imgTask.Id,
 						newImageData(name, data),
 						w,
 						h,
@@ -179,9 +179,9 @@ func (e *ePub) loadCBZ() error {
 		}
 		go func() {
 			for i, fz := range images {
-				todo <- &Todo{i, fz}
+				tasks <- &task{i, fz}
 			}
-			close(todo)
+			close(tasks)
 			wg.Wait()
 			r.Close()
 			close(results)
@@ -228,12 +228,12 @@ func (e *ePub) loadDir() error {
 
 	e.imagesCount = len(images)
 
-	type Todo struct {
+	type task struct {
 		Id   int
 		Path string
 	}
 
-	todo := make(chan *Todo)
+	tasks := make(chan *task)
 
 	e.processingImages = func() chan *image {
 		wg := &sync.WaitGroup{}
@@ -242,8 +242,8 @@ func (e *ePub) loadDir() error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				for task := range todo {
-					reader, err := os.Open(task.Path)
+				for imgTask := range tasks {
+					reader, err := os.Open(imgTask.Path)
 					if err != nil {
 						panic(err)
 					}
@@ -254,12 +254,12 @@ func (e *ePub) loadDir() error {
 						e.ViewHeight,
 						e.Quality,
 					)
-					name := fmt.Sprintf("OEBPS/Images/%d.jpg", task.Id)
-					if task.Id == 0 {
+					name := fmt.Sprintf("OEBPS/Images/%d.jpg", imgTask.Id)
+					if imgTask.Id == 0 {
 						name = "OEBPS/Images/cover.jpg"
 					}
 					results <- &image{
-						task.Id,
+						imgTask.Id,
 						newImageData(name, data),
 						w,
 						h,
@@ -269,9 +269,9 @@ func (e *ePub) loadDir() error {
 		}
 		go func() {
 			for i, path := range images {
-				todo <- &Todo{i, path}
+				tasks <- &task{i, path}
 			}
-			close(todo)
+			close(tasks)
 			wg.Wait()
 			close(results)
 		}()
@@ -340,7 +340,7 @@ func (e *ePub) Write() error {
 		return err
 	}
 
-	type ZipContent struct {
+	type zipContent struct {
 		Name    string
 		Content any
 	}
@@ -363,7 +363,7 @@ func (e *ePub) Write() error {
 		}
 		defer wz.Close()
 
-		zipContent := []ZipContent{
+		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
 			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{"Info": e, "Images": part.Images})},
 			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e, "Image": part.Images[0]})},
@@ -379,7 +379,7 @@ func (e *ePub) Write() error {
 		if err = wz.WriteMagic(); err != nil {
 			return err
 		}
-		for _, content := range zipContent {
+		for _, content := range content {
 			if err := wz.WriteFile(content.Name, content.Content); err != nil {
 				return err
 			}
