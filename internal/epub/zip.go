@@ -7,28 +7,28 @@ import (
 	"time"
 )
 
-type EpubZip struct {
+type epubZip struct {
 	w  *os.File
 	wz *zip.Writer
 }
 
-func NewEpubZip(path string) (*EpubZip, error) {
+func newEpubZip(path string) (*epubZip, error) {
 	w, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
 	wz := zip.NewWriter(w)
-	return &EpubZip{w, wz}, nil
+	return &epubZip{w, wz}, nil
 }
 
-func (e *EpubZip) Close() error {
+func (e *epubZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
 	}
 	return e.w.Close()
 }
 
-func (e *EpubZip) WriteMagic() error {
+func (e *epubZip) WriteMagic() error {
 	t := time.Now()
 	fh := &zip.FileHeader{
 		Name:               "mimetype",
@@ -50,7 +50,7 @@ func (e *EpubZip) WriteMagic() error {
 	return err
 }
 
-func (e *EpubZip) WriteImage(image *ImageData) error {
+func (e *epubZip) WriteImage(image *imageData) error {
 	m, err := e.wz.CreateRaw(image.Header)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (e *EpubZip) WriteImage(image *ImageData) error {
 	return err
 }
 
-func (e *EpubZip) WriteFile(file string, data any) error {
+func (e *epubZip) WriteFile(file string, data any) error {
 	var content []byte
 	switch b := data.(type) {
 	case string:

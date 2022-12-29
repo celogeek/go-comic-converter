@@ -3,22 +3,22 @@ package epub
 import _ "embed"
 
 //go:embed "templates/container.xml.tmpl"
-var TEMPLATE_CONTAINER string
+var containerTmpl string
 
 //go:embed "templates/content.opf.tmpl"
-var TEMPLATE_CONTENT string
+var contentTmpl string
 
 //go:embed "templates/toc.ncx.tmpl"
-var TEMPLATE_TOC string
+var tocTmpl string
 
 //go:embed "templates/nav.xhtml.tmpl"
-var TEMPLATE_NAV string
+var navTmpl string
 
 //go:embed "templates/style.css.tmpl"
-var TEMPLATE_STYLE string
+var styleTmpl string
 
 //go:embed "templates/part.xhtml.tmpl"
-var TEMPLATE_PART string
+var partTmpl string
 
 //go:embed "templates/text.xhtml.tmpl"
-var TEMPLATE_TEXT string
+var textTmpl string
