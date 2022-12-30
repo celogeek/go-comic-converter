@@ -49,9 +49,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 		imageCount, imageInput, err = loadDir(path)
 	} else {
 		switch ext := strings.ToLower(filepath.Ext(path)); ext {
-		case ".cbz", "zip":
+		case ".cbz", ".zip":
 			imageCount, imageInput, err = loadCbz(path)
-		case ".cbr", "rar":
+		case ".cbr", ".rar":
 			imageCount, imageInput, err = loadCbr(path)
 		case ".pdf":
 			imageCount, imageInput, err = loadPdf(path)
