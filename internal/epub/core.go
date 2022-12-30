@@ -34,8 +34,6 @@ type ePub struct {
 	Publisher string
 	UpdatedAt string
 
-	imagesCount       int
-	processingImages  func() chan *Image
 	templateProcessor *template.Template
 }
 
