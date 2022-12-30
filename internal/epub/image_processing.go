@@ -210,40 +210,22 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 }
 
 func loadCbr(input string) (int, chan *imageTask, error) {
-	rr, err := os.Open(input)
+	// listing and indexing
+	rl, err := rardecode.OpenReader(input, "")
 	if err != nil {
 		return 0, nil, err
 	}
-	defer rr.Close()
-	rs, err := rr.Stat()
-	if err != nil {
-		return 0, nil, err
-	}
-
-	bar := progressbar.DefaultBytes(rs.Size(), "Uncompressing rar")
-	defer bar.Close()
-
-	r, err := rardecode.NewReader(io.TeeReader(rr, bar), "")
-	if err != nil {
-		return 0, nil, err
-	}
-
-	type imageContent struct {
-		Name string
-		Data io.ReadCloser
-	}
-
-	images := make([]*imageContent, 0)
-
+	names := make([]string, 0)
 	for {
-		f, err := r.Next()
+		f, err := rl.Next()
+
+		if err != nil && err != io.EOF {
+			rl.Close()
+			return 0, nil, err
+		}
 
 		if f == nil {
 			break
-		}
-
-		if err != nil {
-			return 0, nil, err
 		}
 
 		if f.IsDir {
@@ -254,32 +236,50 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 			continue
 		}
 
-		b := bytes.NewBuffer([]byte{})
-		io.Copy(b, r)
-
-		images = append(images, &imageContent{
-			Name: f.Name,
-			Data: readFakeCloser{b},
-		})
+		names = append(names, f.Name)
 	}
+	rl.Close()
 
-	if len(images) == 0 {
+	if len(names) == 0 {
 		return 0, nil, fmt.Errorf("no images found")
 	}
 
-	sort.SliceStable(images, func(i, j int) bool {
-		return strings.Compare(images[i].Name, images[j].Name) < 0
-	})
+	sort.Strings(names)
 
+	indexedNames := make(map[string]int)
+	for i, name := range names {
+		indexedNames[name] = i
+	}
+
+	// send file to the queue
 	output := make(chan *imageTask)
 	go func() {
 		defer close(output)
-		for i, img := range images {
-			output <- &imageTask{
-				Id:     i,
-				Reader: img.Data,
+		r, err := rardecode.OpenReader(input, "")
+		if err != nil {
+			panic(err)
+		}
+		defer r.Close()
+
+		for {
+			f, err := r.Next()
+			if err != nil && err != io.EOF {
+				panic(err)
+			}
+			if f == nil {
+				break
+			}
+			if idx, ok := indexedNames[f.Name]; ok {
+				b := bytes.NewBuffer([]byte{})
+				io.Copy(b, r)
+
+				output <- &imageTask{
+					Id:     idx,
+					Reader: readFakeCloser{b},
+				}
 			}
 		}
 	}()
-	return len(images), output, nil
+
+	return len(names), output, nil
 }
