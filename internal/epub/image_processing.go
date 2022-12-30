@@ -15,7 +15,6 @@ import (
 	"sync"
 
 	"github.com/nwaples/rardecode"
-	"github.com/schollz/progressbar/v3"
 )
 
 type Image struct {
@@ -65,7 +64,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 	// processing
 	wg := &sync.WaitGroup{}
-	bar := progressbar.Default(int64(imageCount), "Processing")
+	bar := NewBar(imageCount, "Processing", 1, 2)
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
 		go func() {

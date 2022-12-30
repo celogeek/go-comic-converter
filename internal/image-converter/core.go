@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"image/jpeg"
 	"io"
-	"os"
 
 	"golang.org/x/image/draw"
 )
@@ -119,23 +118,6 @@ func Get(img *image.Gray, quality int) []byte {
 		panic(err)
 	}
 	return b.Bytes()
-}
-
-func Save(img *image.Gray, output string, quality int) {
-	o, err := os.Create(output)
-	if err != nil {
-		panic(err)
-	}
-	defer o.Close()
-
-	if quality == 0 {
-		quality = 75
-	}
-
-	err = jpeg.Encode(o, img, &jpeg.Options{Quality: quality})
-	if err != nil {
-		panic(err)
-	}
 }
 
 func Convert(reader io.ReadCloser, crop bool, w, h int, quality int) ([]byte, int, int) {

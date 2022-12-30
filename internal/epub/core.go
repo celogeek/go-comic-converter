@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/schollz/progressbar/v3"
 )
 
 type ImageOptions struct {
@@ -139,7 +138,7 @@ func (e *ePub) Write() error {
 	}
 	totalParts := len(epubParts)
 
-	bar := progressbar.Default(int64(totalParts), "Writing Part")
+	bar := NewBar(totalParts, "Writing Part", 2, 2)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
