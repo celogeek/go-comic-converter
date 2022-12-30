@@ -6,7 +6,6 @@ import (
 	"go-comic-converter/internal/epub"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -54,15 +53,14 @@ func init() {
 }
 
 type Option struct {
-	Input    string
-	Output   string
-	Profile  string
-	Author   string
-	Title    string
-	Quality  int
-	NoCrop   bool
-	LimitMb  int
-	PrintMem bool
+	Input   string
+	Output  string
+	Profile string
+	Author  string
+	Title   string
+	Quality int
+	NoCrop  bool
+	LimitMb int
 }
 
 func (o *Option) String() string {
@@ -90,7 +88,6 @@ Options:
     Quality : %d
     Crop    : %v
     LimitMb : %s
-    PrintMem: %v
 `,
 		o.Input,
 		o.Output,
@@ -103,27 +100,6 @@ Options:
 		o.Quality,
 		!o.NoCrop,
 		limitmb,
-		o.PrintMem,
-	)
-}
-
-func PrintMemUsage() {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	bToMb := func(b uint64) uint64 { return b / 1024 / 1024 }
-
-	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
-	fmt.Printf(`Memory Usage:
-	Alloc     : %v MiB
-	TotalAlloc: %v MiB
-	Sys       : %v MiB
-	NumGC     : %v
-`,
-		bToMb(m.Alloc),
-		bToMb(m.TotalAlloc),
-		bToMb(m.Sys),
-		m.NumGC,
 	)
 }
 
@@ -139,7 +115,7 @@ func main() {
 	}
 
 	opt := &Option{}
-	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert")
+	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
 	flag.StringVar(&opt.Output, "output", "", "Output of the epub: (default [INPUT].epub)")
 	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: \n%s", strings.Join(availableProfiles, "\n")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
@@ -147,7 +123,6 @@ func main() {
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
-	flag.BoolVar(&opt.PrintMem, "printmem", false, "Print memory usage")
 	flag.Parse()
 
 	if opt.Input == "" {
@@ -208,8 +183,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	if opt.PrintMem {
-		PrintMemUsage()
-	}
 	os.Exit(0)
 }
