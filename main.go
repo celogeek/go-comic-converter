@@ -124,10 +124,14 @@ func main() {
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	if opt.Input == "" {
-		fmt.Println("Missing input or output!")
+		fmt.Fprintln(os.Stderr, "Missing input or output!")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -135,7 +139,7 @@ func main() {
 	if opt.Output == "" {
 		fi, err := os.Stat(opt.Input)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			flag.Usage()
 			os.Exit(1)
 		}
@@ -149,14 +153,14 @@ func main() {
 
 	profileIdx, profileMatch := ProfilesIdx[opt.Profile]
 	if !profileMatch {
-		fmt.Println("Profile doesn't exists!")
+		fmt.Fprintln(os.Stderr, "Profile doesn't exists!")
 		flag.Usage()
 		os.Exit(1)
 	}
 	profile := Profiles[profileIdx]
 
 	if opt.LimitMb > 0 && opt.LimitMb < 20 {
-		fmt.Println("LimitMb should be 0 or >= 20")
+		fmt.Fprintln(os.Stderr, "LimitMb should be 0 or >= 20")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -165,7 +169,7 @@ func main() {
 		opt.Title = filepath.Base(opt.Input)
 	}
 
-	fmt.Println(opt)
+	fmt.Fprintln(os.Stderr, opt)
 
 	if err := epub.NewEpub(&epub.EpubOptions{
 		Input:   opt.Input,
@@ -180,7 +184,7 @@ func main() {
 			Crop:       !opt.NoCrop,
 		},
 	}).Write(); err != nil {
-		fmt.Printf("Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 

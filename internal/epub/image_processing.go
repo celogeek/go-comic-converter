@@ -136,7 +136,7 @@ func loadDir(input string) (int, chan *imageTask, error) {
 		return nil
 	})
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	if len(images) == 0 {
@@ -151,7 +151,7 @@ func loadDir(input string) (int, chan *imageTask, error) {
 		for i, img := range images {
 			f, err := os.Open(img)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
 			output <- &imageTask{
@@ -194,7 +194,7 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 		for i, img := range images {
 			f, err := img.Open()
 			if err != nil {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
 			output <- &imageTask{
