@@ -127,15 +127,17 @@ func main() {
 	fmt.Println(opt)
 
 	if err := epub.NewEpub(&epub.EpubOptions{
-		Input:      opt.Input,
-		Output:     opt.Output,
-		ViewWidth:  profile.Width,
-		ViewHeight: profile.Height,
-		Quality:    opt.Quality,
-		Crop:       !opt.NoCrop,
-		LimitMb:    opt.LimitMb,
-		Title:      opt.Title,
-		Author:     opt.Author,
+		Input:   opt.Input,
+		Output:  opt.Output,
+		LimitMb: opt.LimitMb,
+		Title:   opt.Title,
+		Author:  opt.Author,
+		ImageOptions: &epub.ImageOptions{
+			ViewWidth:  profile.Width,
+			ViewHeight: profile.Height,
+			Quality:    opt.Quality,
+			Crop:       !opt.NoCrop,
+		},
 	}).Write(); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)

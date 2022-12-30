@@ -1,34 +1,31 @@
 package epub
 
 import (
-	"archive/zip"
 	"fmt"
-	"io/fs"
-	"os"
 	"path/filepath"
-	"runtime"
-	"sort"
 	"strings"
-	"sync"
 	"text/template"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/schollz/progressbar/v3"
-
-	imageconverter "go-comic-converter/internal/image-converter"
 )
 
-type EpubOptions struct {
-	Input      string
-	Output     string
-	Title      string
-	Author     string
+type ImageOptions struct {
+	Crop       bool
 	ViewWidth  int
 	ViewHeight int
 	Quality    int
-	Crop       bool
-	LimitMb    int
+}
+
+type EpubOptions struct {
+	Input   string
+	Output  string
+	Title   string
+	Author  string
+	LimitMb int
+
+	*ImageOptions
 }
 
 type ePub struct {
@@ -38,20 +35,13 @@ type ePub struct {
 	UpdatedAt string
 
 	imagesCount       int
-	processingImages  func() chan *image
+	processingImages  func() chan *Image
 	templateProcessor *template.Template
 }
 
-type image struct {
-	Id     int
-	Data   *imageData
-	Width  int
-	Height int
-}
-
 type epubPart struct {
-	Cover  *image
-	Images []*image
+	Cover  *Image
+	Images []*Image
 }
 
 func NewEpub(options *EpubOptions) *ePub {
@@ -88,207 +78,11 @@ func (e *ePub) render(templateString string, data any) string {
 	return result.String()
 }
 
-func (e *ePub) load() error {
-	fi, err := os.Stat(e.Input)
+func (e *ePub) getParts() ([]*epubPart, error) {
+	images, err := LoadImages(e.Input, e.ImageOptions)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	if fi.IsDir() {
-		return e.loadDir()
-	}
-
-	switch ext := strings.ToLower(filepath.Ext(e.Input)); ext {
-	case ".cbz":
-		return e.loadCBZ()
-	case ".cbr":
-		return e.loadCBR()
-	case ".pdf":
-		return e.loadPDF()
-	default:
-		return fmt.Errorf("unknown file format (%s): support .cbz, .cbr, .pdf", ext)
-	}
-}
-
-func (e *ePub) loadCBZ() error {
-	r, err := zip.OpenReader(e.Input)
-	if err != nil {
-		return err
-	}
-
-	images := make([]*zip.File, 0)
-	for _, f := range r.File {
-		if f.FileInfo().IsDir() {
-			continue
-		}
-		if strings.ToLower(filepath.Ext(f.Name)) != ".jpg" {
-			continue
-		}
-		images = append(images, f)
-	}
-	if len(images) == 0 {
-		r.Close()
-		return fmt.Errorf("no images found")
-	}
-
-	sort.SliceStable(images, func(i, j int) bool {
-		return strings.Compare(images[i].Name, images[j].Name) < 0
-	})
-
-	e.imagesCount = len(images)
-
-	type task struct {
-		Id int
-		FZ *zip.File
-	}
-
-	tasks := make(chan *task)
-
-	e.processingImages = func() chan *image {
-		// defer r.Close()
-		wg := &sync.WaitGroup{}
-		results := make(chan *image)
-		for i := 0; i < runtime.NumCPU(); i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for imgTask := range tasks {
-					reader, err := imgTask.FZ.Open()
-					if err != nil {
-						panic(err)
-					}
-					data, w, h := imageconverter.Convert(
-						reader,
-						e.Crop,
-						e.ViewWidth,
-						e.ViewHeight,
-						e.Quality,
-					)
-					name := fmt.Sprintf("OEBPS/Images/%d.jpg", imgTask.Id)
-					if imgTask.Id == 0 {
-						name = "OEBPS/Images/cover.jpg"
-					}
-					results <- &image{
-						imgTask.Id,
-						newImageData(name, data),
-						w,
-						h,
-					}
-				}
-			}()
-		}
-		go func() {
-			for i, fz := range images {
-				tasks <- &task{i, fz}
-			}
-			close(tasks)
-			wg.Wait()
-			r.Close()
-			close(results)
-		}()
-
-		return results
-	}
-
-	return nil
-}
-
-func (e *ePub) loadCBR() error {
-	return fmt.Errorf("no implemented")
-}
-
-func (e *ePub) loadPDF() error {
-	return fmt.Errorf("no implemented")
-}
-
-func (e *ePub) loadDir() error {
-	images := make([]string, 0)
-	err := filepath.WalkDir(e.Input, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		ext := filepath.Ext(path)
-		if strings.ToLower(ext) != ".jpg" {
-			return nil
-		}
-
-		images = append(images, path)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	if len(images) == 0 {
-		return fmt.Errorf("no images found")
-	}
-	sort.Strings(images)
-
-	e.imagesCount = len(images)
-
-	type task struct {
-		Id   int
-		Path string
-	}
-
-	tasks := make(chan *task)
-
-	e.processingImages = func() chan *image {
-		wg := &sync.WaitGroup{}
-		results := make(chan *image)
-		for i := 0; i < runtime.NumCPU(); i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for imgTask := range tasks {
-					reader, err := os.Open(imgTask.Path)
-					if err != nil {
-						panic(err)
-					}
-					data, w, h := imageconverter.Convert(
-						reader,
-						e.Crop,
-						e.ViewWidth,
-						e.ViewHeight,
-						e.Quality,
-					)
-					name := fmt.Sprintf("OEBPS/Images/%d.jpg", imgTask.Id)
-					if imgTask.Id == 0 {
-						name = "OEBPS/Images/cover.jpg"
-					}
-					results <- &image{
-						imgTask.Id,
-						newImageData(name, data),
-						w,
-						h,
-					}
-				}
-			}()
-		}
-		go func() {
-			for i, path := range images {
-				tasks <- &task{i, path}
-			}
-			close(tasks)
-			wg.Wait()
-			close(results)
-		}()
-		return results
-	}
-
-	return nil
-}
-
-func (e *ePub) getParts() []*epubPart {
-	images := make([]*image, e.imagesCount)
-	bar := progressbar.Default(int64(e.imagesCount), "Processing")
-	for img := range e.processingImages() {
-		images[img.Id] = img
-		bar.Add(1)
-	}
-	bar.Close()
 
 	parts := make([]*epubPart, 0)
 	cover := images[0]
@@ -298,7 +92,7 @@ func (e *ePub) getParts() []*epubPart {
 			Cover:  cover,
 			Images: images,
 		})
-		return parts
+		return parts, nil
 	}
 
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
@@ -308,7 +102,7 @@ func (e *ePub) getParts() []*epubPart {
 	baseSize := uint64(16*1024) + cover.Data.CompressedSize()
 
 	currentSize := baseSize
-	currentImages := make([]*image, 0)
+	currentImages := make([]*Image, 0)
 	part := 1
 
 	for _, img := range images {
@@ -320,7 +114,7 @@ func (e *ePub) getParts() []*epubPart {
 			})
 			part += 1
 			currentSize = baseSize
-			currentImages = make([]*image, 0)
+			currentImages = make([]*Image, 0)
 		}
 		currentSize += imgSize
 		currentImages = append(currentImages, img)
@@ -332,20 +126,19 @@ func (e *ePub) getParts() []*epubPart {
 		})
 	}
 
-	return parts
+	return parts, nil
 }
 
 func (e *ePub) Write() error {
-	if err := e.load(); err != nil {
-		return err
-	}
-
 	type zipContent struct {
 		Name    string
 		Content any
 	}
 
-	epubParts := e.getParts()
+	epubParts, err := e.getParts()
+	if err != nil {
+		return err
+	}
 	totalParts := len(epubParts)
 
 	bar := progressbar.Default(int64(totalParts), "Writing Part")

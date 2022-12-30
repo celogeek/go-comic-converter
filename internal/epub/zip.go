@@ -50,7 +50,7 @@ func (e *epubZip) WriteMagic() error {
 	return err
 }
 
-func (e *epubZip) WriteImage(image *imageData) error {
+func (e *epubZip) WriteImage(image *ImageData) error {
 	m, err := e.wz.CreateRaw(image.Header)
 	if err != nil {
 		return err

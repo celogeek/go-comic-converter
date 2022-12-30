@@ -8,16 +8,16 @@ import (
 	"time"
 )
 
-type imageData struct {
+type ImageData struct {
 	Header *zip.FileHeader
 	Data   []byte
 }
 
-func (img *imageData) CompressedSize() uint64 {
+func (img *ImageData) CompressedSize() uint64 {
 	return img.Header.CompressedSize64 + 30 + uint64(len(img.Header.Name))
 }
 
-func newImageData(name string, data []byte) *imageData {
+func newImageData(name string, data []byte) *ImageData {
 	cdata := bytes.NewBuffer([]byte{})
 	wcdata, err := flate.NewWriter(cdata, flate.BestCompression)
 	if err != nil {
@@ -29,7 +29,7 @@ func newImageData(name string, data []byte) *imageData {
 		panic(err)
 	}
 	t := time.Now()
-	return &imageData{
+	return &ImageData{
 		&zip.FileHeader{
 			Name:               name,
 			CompressedSize64:   uint64(cdata.Len()),
