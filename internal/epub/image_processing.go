@@ -56,7 +56,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 		case ".pdf":
 			imageCount, imageInput, err = loadPdf(path)
 		default:
-			err = fmt.Errorf("unknown file format (%s): support .cbz, .cbr, .pdf", ext)
+			err = fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar, .pdf", ext)
 		}
 	}
 	if err != nil {
