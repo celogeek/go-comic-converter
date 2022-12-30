@@ -11,21 +11,21 @@ import (
 	"golang.org/x/image/draw"
 )
 
-var AlgoGray = map[string]func(color.Color) color.Color{
-	"default": func(c color.Color) color.Color {
-		return color.GrayModel.Convert(c)
+var AlgoGray = map[string]func(color.Color) color.Gray{
+	"default": func(c color.Color) color.Gray {
+		return color.GrayModel.Convert(c).(color.Gray)
 	},
-	"mean": func(c color.Color) color.Color {
+	"mean": func(c color.Color) color.Gray {
 		r, g, b, _ := c.RGBA()
 		y := float64(r+g+b) / 3 * (255.0 / 65535)
 		return color.Gray{uint8(y)}
 	},
-	"luma": func(c color.Color) color.Color {
+	"luma": func(c color.Color) color.Gray {
 		r, g, b, _ := c.RGBA()
 		y := (0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)) * (255.0 / 65535)
 		return color.Gray{uint8(y)}
 	},
-	"luster": func(c color.Color) color.Color {
+	"luster": func(c color.Color) color.Gray {
 		r, g, b, _ := c.RGBA()
 		arr := []float64{float64(r), float64(g), float64(b)}
 		sort.Float64s(arr)
@@ -43,7 +43,7 @@ func toGray(img image.Image, algo string) *image.Gray {
 
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-			grayImg.Set(x, y, algoConv(img.At(x, y)))
+			grayImg.SetGray(x, y, algoConv(img.At(x, y)))
 		}
 	}
 	return grayImg
