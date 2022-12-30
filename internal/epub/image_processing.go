@@ -30,12 +30,6 @@ type imageTask struct {
 	Reader io.ReadCloser
 }
 
-type readFakeCloser struct {
-	io.Reader
-}
-
-func (rfc readFakeCloser) Close() error { return nil }
-
 func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	images := make([]*Image, 0)
 
@@ -275,7 +269,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 
 				output <- &imageTask{
 					Id:     idx,
-					Reader: readFakeCloser{b},
+					Reader: io.NopCloser(b),
 				}
 			}
 		}
