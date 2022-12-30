@@ -188,7 +188,8 @@ func main() {
 	}
 
 	if opt.Title == "" {
-		opt.Title = filepath.Base(opt.Input)
+		ext := filepath.Ext(defaultOutput)
+		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
 	}
 
 	fmt.Fprintln(os.Stderr, opt)
