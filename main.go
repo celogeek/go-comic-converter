@@ -71,12 +71,13 @@ type Option struct {
 
 func (o *Option) String() string {
 	var desc string
-	var width, height int
+	var width, height, level int
 	if i, ok := ProfilesIdx[o.Profile]; ok {
 		profile := Profiles[i]
 		desc = profile.Description
 		width = profile.Width
 		height = profile.Height
+		level = len(profile.Palette)
 	}
 	limitmb := "nolimit"
 	if o.LimitMb > 0 {
@@ -88,7 +89,7 @@ func (o *Option) String() string {
 Options:
     Input   : %s
     Output  : %s
-    Profile : %s - %s - %dx%d
+    Profile : %s - %s - %dx%d - %d levels of gray
     Author  : %s
     Title   : %s
     Quality : %d
@@ -98,10 +99,7 @@ Options:
 `,
 		o.Input,
 		o.Output,
-		o.Profile,
-		desc,
-		width,
-		height,
+		o.Profile, desc, width, height, level,
 		o.Author,
 		o.Title,
 		o.Quality,
@@ -115,9 +113,10 @@ func main() {
 	availableProfiles := make([]string, 0)
 	for _, p := range Profiles {
 		availableProfiles = append(availableProfiles, fmt.Sprintf(
-			"    - %-7s ( %9s ) - %s",
+			"    - %-7s ( %9s ) - %2d levels of gray - %s",
 			p.Code,
 			fmt.Sprintf("%dx%d", p.Width, p.Height),
+			len(p.Palette),
 			p.Description,
 		))
 	}
