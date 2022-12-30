@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
 	"io"
 	"io/fs"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
 
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
