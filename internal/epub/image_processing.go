@@ -15,6 +15,9 @@ import (
 	"sync"
 
 	"github.com/nwaples/rardecode"
+	pdfimage "github.com/raff/pdfreader/image"
+	"github.com/raff/pdfreader/pdfread"
+	"golang.org/x/image/tiff"
 )
 
 type Image struct {
@@ -51,7 +54,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 		case ".cbr", "rar":
 			imageCount, imageInput, err = loadCbr(path)
 		case ".pdf":
-			err = fmt.Errorf("not implemented")
+			imageCount, imageInput, err = loadPdf(path)
 		default:
 			err = fmt.Errorf("unknown file format (%s): support .cbz, .cbr, .pdf", ext)
 		}
@@ -275,4 +278,37 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 	}()
 
 	return len(names), output, nil
+}
+
+func loadPdf(input string) (int, chan *imageTask, error) {
+	pdf := pdfread.Load(input)
+	if pdf == nil {
+		return 0, nil, fmt.Errorf("can't read pdf")
+	}
+
+	nbPages := len(pdf.Pages())
+	output := make(chan *imageTask)
+	go func() {
+		defer close(output)
+		defer pdf.Close()
+		for i := 0; i < nbPages; i++ {
+			img, err := pdfimage.Extract(pdf, i+1)
+			if err != nil {
+				panic(err)
+			}
+
+			b := bytes.NewBuffer([]byte{})
+			err = tiff.Encode(b, img, nil)
+			if err != nil {
+				panic(err)
+			}
+
+			output <- &imageTask{
+				Id:     i,
+				Reader: io.NopCloser(b),
+			}
+		}
+	}()
+
+	return nbPages, output, nil
 }

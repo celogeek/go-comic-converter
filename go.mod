@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/gofrs/uuid v3.1.0+incompatible
 	github.com/nwaples/rardecode v1.1.3
+	github.com/raff/pdfreader v0.0.0-20220308062436-033e8ac577f0
 	github.com/schollz/progressbar/v3 v3.12.2
 	golang.org/x/image v0.2.0
 )
