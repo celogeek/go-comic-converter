@@ -2,6 +2,10 @@
 
 Convert CBZ/CBR/Dir into Epub for e-reader devices (Kindle Devices, ...)
 
+My goal is to make a simple, crossplatform, and fast tool to convert comics into epub.
+
+Epub is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
+
 # Installation
 
 First ensure to have a working version of GO: [Installation](https://go.dev/doc/install)
@@ -113,3 +117,10 @@ Usage of go-comic-converter:
   -title string
     	Title of the epub
 ```
+
+# Credit
+
+This project is largely inspired from KCC (Kindle Comic Converter). Thanks:
+ - [ciromattia](https://github.com/ciromattia/kcc)
+ - [darodi fork](https://github.com/darodi/kcc)
+
