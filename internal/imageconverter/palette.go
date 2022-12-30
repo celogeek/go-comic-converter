@@ -17,6 +17,7 @@ var PALETTE_16 = color.Palette{
 	color.Gray{0xbb},
 	color.Gray{0xcc},
 	color.Gray{0xdd},
+	color.Gray{0xee},
 	color.Gray{0xff},
 }
 
@@ -34,6 +35,7 @@ var PALETTE_15 = color.Palette{
 	color.Gray{0xaa},
 	color.Gray{0xbb},
 	color.Gray{0xcc},
+	color.Gray{0xdd},
 	color.Gray{0xff},
 }
 
