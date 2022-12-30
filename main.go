@@ -10,13 +10,46 @@ import (
 )
 
 type Profile struct {
+	Code        string
 	Description string
 	Width       int
 	Height      int
 }
 
-var Profiles = map[string]Profile{
-	"KS": {"Kindle Scribe", 1860, 2480},
+var Profiles = []Profile{
+	// Kindle
+	{"K1", "Kindle 1", 600, 670},
+	{"K11", "Kindle 11", 1072, 1448},
+	{"K2", "Kindle 2", 600, 670},
+	{"K34", "Kindle Keyboard/Touch", 600, 800},
+	{"K578", "Kindle", 600, 800},
+	{"KDX", "Kindle DX/DXG", 824, 1000},
+	{"KPW", "Kindle Paperwhite 1/2", 758, 1024},
+	{"KV", "Kindle Paperwhite 3/4/Voyage/Oasis", 1072, 1448},
+	{"KPW5", "Kindle Paperwhite 5/Signature Edition", 1236, 1648},
+	{"KO", "Kindle Oasis 2/3", 1264, 1680},
+	{"KS", "Kindle Scribe", 1860, 2480},
+	// Kobo
+	{"KoMT", "Kobo Mini/Touch", 600, 800},
+	{"KoG", "Kobo Glo", 768, 1024},
+	{"KoGHD", "Kobo Glo HD", 1072, 1448},
+	{"KoA", "Kobo Aura", 758, 1024},
+	{"KoAHD", "Kobo Aura HD", 1080, 1440},
+	{"KoAH2O", "Kobo Aura H2O", 1080, 1430},
+	{"KoAO", "Kobo Aura ONE", 1404, 1872},
+	{"KoN", "Kobo Nia", 758, 1024},
+	{"KoC", "Kobo Clara HD/Kobo Clara 2E", 1072, 1448},
+	{"KoL", "Kobo Libra H2O/Kobo Libra 2", 1264, 1680},
+	{"KoF", "Kobo Forma", 1440, 1920},
+	{"KoS", "Kobo Sage", 1440, 1920},
+	{"KoE", "Kobo Elipsa", 1404, 1872},
+}
+var ProfilesIdx = map[string]int{}
+
+func init() {
+	for i, p := range Profiles {
+		ProfilesIdx[p.Code] = i
+	}
 }
 
 type Option struct {
@@ -33,7 +66,8 @@ type Option struct {
 func (o *Option) String() string {
 	var desc string
 	var width, height int
-	if profile, ok := Profiles[o.Profile]; ok {
+	if i, ok := ProfilesIdx[o.Profile]; ok {
+		profile := Profiles[i]
 		desc = profile.Description
 		width = profile.Width
 		height = profile.Height
@@ -71,14 +105,19 @@ Options:
 
 func main() {
 	availableProfiles := make([]string, 0)
-	for k := range Profiles {
-		availableProfiles = append(availableProfiles, k)
+	for _, p := range Profiles {
+		availableProfiles = append(availableProfiles, fmt.Sprintf(
+			"    - %-7s ( %9s ) - %s",
+			p.Code,
+			fmt.Sprintf("%dx%d", p.Width, p.Height),
+			p.Description,
+		))
 	}
 
 	opt := &Option{}
 	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert")
 	flag.StringVar(&opt.Output, "output", "", "Output of the epub: (default [INPUT].epub)")
-	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: %s", strings.Join(availableProfiles, ", ")))
+	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: \n%s", strings.Join(availableProfiles, "\n")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
@@ -107,12 +146,13 @@ func main() {
 		}
 	}
 
-	profile, profileMatch := Profiles[opt.Profile]
+	profileIdx, profileMatch := ProfilesIdx[opt.Profile]
 	if !profileMatch {
 		fmt.Println("Profile doesn't exists!")
 		flag.Usage()
 		os.Exit(1)
 	}
+	profile := Profiles[profileIdx]
 
 	if opt.LimitMb > 0 && opt.LimitMb < 20 {
 		fmt.Println("LimitMb should be 0 or >= 20")
