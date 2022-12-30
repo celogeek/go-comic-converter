@@ -75,7 +75,7 @@ Usage of go-comic-converter:
   -nocrop
     	Disable cropping
   -output string
-    	Output of the epub: (default [INPUT].epub)
+    	Output of the epub (directory or epub): (default [INPUT].epub)
   -profile string
     	Profile to use:
     	    - K1      (   600x670 ) - Kindle 1
