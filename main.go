@@ -136,19 +136,41 @@ func main() {
 		os.Exit(1)
 	}
 
+	var defaultOutput string
+	fi, err := os.Stat(opt.Input)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		flag.Usage()
+		os.Exit(1)
+	}
+	inputBase := filepath.Clean(opt.Input)
+	if fi.IsDir() {
+		defaultOutput = fmt.Sprintf("%s.epub", inputBase)
+	} else {
+		ext := filepath.Ext(inputBase)
+		defaultOutput = fmt.Sprintf("%s.epub", inputBase[0:len(inputBase)-len(ext)])
+	}
+
 	if opt.Output == "" {
-		fi, err := os.Stat(opt.Input)
+		opt.Output = defaultOutput
+	}
+
+	if filepath.Ext(opt.Output) != ".epub" {
+		fo, err := os.Stat(opt.Output)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			flag.Usage()
 			os.Exit(1)
 		}
-		if fi.IsDir() {
-			opt.Output = fmt.Sprintf("%s.epub", filepath.Clean(opt.Input))
-		} else {
-			ext := filepath.Ext(opt.Input)
-			opt.Output = fmt.Sprintf("%s.epub", opt.Input[0:len(opt.Input)-len(ext)])
+		if !fo.IsDir() {
+			fmt.Fprintln(os.Stderr, "output must be an existing dir or end with .epub")
+			flag.Usage()
+			os.Exit(1)
 		}
+		opt.Output = filepath.Join(
+			opt.Output,
+			filepath.Base(defaultOutput),
+		)
 	}
 
 	profileIdx, profileMatch := ProfilesIdx[opt.Profile]
