@@ -4,8 +4,16 @@ Convert CBZ/CBR/Dir into Epub for e-reader devices (Kindle Devices, ...)
 
 # Installation
 
+First ensure to have a working version of GO: [Installation](https://go.dev/doc/install)
+
+Then install the last version of the tool:
 ```
-go get -u github.com/celogeek/go-comic-converter
+go install github.com/celogeek/go-comic-converter@latest
+```
+
+Add GOPATH to your PATH
+```
+export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
 # Usage
