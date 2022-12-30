@@ -156,8 +156,8 @@ func (e *ePub) Write() error {
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
 			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{"Info": e, "Images": part.Images})},
-			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e, "Image": part.Images[0]})},
-			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e, "Image": part.Images[0]})},
+			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e})},
+			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e})},
 			{"OEBPS/Text/style.css", styleTmpl},
 			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
 				"Info":  e,
