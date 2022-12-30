@@ -117,7 +117,7 @@ func main() {
 
 	opt := &Option{}
 	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
-	flag.StringVar(&opt.Output, "output", "", "Output of the epub: (default [INPUT].epub)")
+	flag.StringVar(&opt.Output, "output", "", "Output of the epub (directory or epub): (default [INPUT].epub)")
 	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: \n%s", strings.Join(availableProfiles, "\n")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
