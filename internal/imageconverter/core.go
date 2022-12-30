@@ -1,4 +1,4 @@
-package comicconverter
+package imageconverter
 
 import (
 	"bytes"
@@ -6,62 +6,29 @@ import (
 	"image/color"
 	"image/jpeg"
 	"io"
-	"sort"
 
 	"golang.org/x/image/draw"
 )
 
-var AlgoGray = map[string]func(color.Color) color.Gray{
-	"default": func(c color.Color) color.Gray {
-		return color.GrayModel.Convert(c).(color.Gray)
-	},
-	"mean": func(c color.Color) color.Gray {
-		r, g, b, _ := c.RGBA()
-		y := float64(r+g+b) / 3 * (255.0 / 65535)
-		return color.Gray{uint8(y)}
-	},
-	"luma": func(c color.Color) color.Gray {
-		r, g, b, _ := c.RGBA()
-		y := (0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)) * (255.0 / 65535)
-		return color.Gray{uint8(y)}
-	},
-	"luster": func(c color.Color) color.Gray {
-		r, g, b, _ := c.RGBA()
-		arr := []float64{float64(r), float64(g), float64(b)}
-		sort.Float64s(arr)
-		y := (arr[0] + arr[2]) / 2 * (255.0 / 65535)
-		return color.Gray{uint8(y)}
-	},
-}
-
-func toGray(img image.Image, algo string) *image.Gray {
-	grayImg := image.NewGray(img.Bounds())
-	algoConv, ok := AlgoGray[algo]
-	if !ok {
-		panic("wrong gray algo")
-	}
-
-	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
-		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-			grayImg.SetGray(x, y, algoConv(img.At(x, y)))
-		}
-	}
-	return grayImg
-}
-
-func Load(reader io.ReadCloser, algo string) *image.Gray {
+func Load(reader io.ReadCloser, algo string, palette color.Palette) *image.Gray {
 	defer reader.Close()
 	img, _, err := image.Decode(reader)
 	if err != nil {
 		panic(err)
 	}
-
-	switch imgt := img.(type) {
-	case *image.Gray:
-		return imgt
-	default:
-		return toGray(img, algo)
+	algoFunc, ok := ALGO_GRAY[algo]
+	if !ok {
+		panic("unknown algo")
 	}
+
+	grayImg := image.NewGray(img.Bounds())
+	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+			grayImg.SetGray(x, y, algoFunc(img.At(x, y), palette))
+		}
+	}
+
+	return grayImg
 }
 
 func isBlank(c color.Color) bool {
@@ -157,8 +124,8 @@ func Get(img *image.Gray, quality int) []byte {
 	return b.Bytes()
 }
 
-func Convert(reader io.ReadCloser, crop bool, w, h int, quality int, algo string) ([]byte, int, int) {
-	img := Load(reader, algo)
+func Convert(reader io.ReadCloser, crop bool, w, h int, quality int, algo string, palette color.Palette) ([]byte, int, int) {
+	img := Load(reader, algo, palette)
 	if crop {
 		img = CropMarging(img)
 	}

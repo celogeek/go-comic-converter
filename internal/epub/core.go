@@ -2,6 +2,7 @@ package epub
 
 import (
 	"fmt"
+	"image/color"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -16,6 +17,7 @@ type ImageOptions struct {
 	ViewHeight int
 	Quality    int
 	Algo       string
+	Palette    color.Palette
 }
 
 type EpubOptions struct {

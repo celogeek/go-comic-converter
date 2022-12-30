@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
+	"github.com/celogeek/go-comic-converter/internal/imageconverter"
 
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
@@ -81,6 +81,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					options.ViewHeight,
 					options.Quality,
 					options.Algo,
+					options.Palette,
 				)
 				name := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
 				if img.Id == 0 {

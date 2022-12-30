@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image/color"
 	"os"
 	"path/filepath"
 	"strings"
 
-	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
+	"github.com/celogeek/go-comic-converter/internal/imageconverter"
 
 	"github.com/celogeek/go-comic-converter/internal/epub"
 )
@@ -17,35 +18,36 @@ type Profile struct {
 	Description string
 	Width       int
 	Height      int
+	Palette     color.Palette
 }
 
 var Profiles = []Profile{
 	// Kindle
-	{"K1", "Kindle 1", 600, 670},
-	{"K11", "Kindle 11", 1072, 1448},
-	{"K2", "Kindle 2", 600, 670},
-	{"K34", "Kindle Keyboard/Touch", 600, 800},
-	{"K578", "Kindle", 600, 800},
-	{"KDX", "Kindle DX/DXG", 824, 1000},
-	{"KPW", "Kindle Paperwhite 1/2", 758, 1024},
-	{"KV", "Kindle Paperwhite 3/4/Voyage/Oasis", 1072, 1448},
-	{"KPW5", "Kindle Paperwhite 5/Signature Edition", 1236, 1648},
-	{"KO", "Kindle Oasis 2/3", 1264, 1680},
-	{"KS", "Kindle Scribe", 1860, 2480},
+	{"K1", "Kindle 1", 600, 670, imageconverter.PALETTE_4},
+	{"K11", "Kindle 11", 1072, 1448, imageconverter.PALETTE_16},
+	{"K2", "Kindle 2", 600, 670, imageconverter.PALETTE_15},
+	{"K34", "Kindle Keyboard/Touch", 600, 800, imageconverter.PALETTE_16},
+	{"K578", "Kindle", 600, 800, imageconverter.PALETTE_16},
+	{"KDX", "Kindle DX/DXG", 824, 1000, imageconverter.PALETTE_16},
+	{"KPW", "Kindle Paperwhite 1/2", 758, 1024, imageconverter.PALETTE_16},
+	{"KV", "Kindle Paperwhite 3/4/Voyage/Oasis", 1072, 1448, imageconverter.PALETTE_16},
+	{"KPW5", "Kindle Paperwhite 5/Signature Edition", 1236, 1648, imageconverter.PALETTE_16},
+	{"KO", "Kindle Oasis 2/3", 1264, 1680, imageconverter.PALETTE_16},
+	{"KS", "Kindle Scribe", 1860, 2480, imageconverter.PALETTE_16},
 	// Kobo
-	{"KoMT", "Kobo Mini/Touch", 600, 800},
-	{"KoG", "Kobo Glo", 768, 1024},
-	{"KoGHD", "Kobo Glo HD", 1072, 1448},
-	{"KoA", "Kobo Aura", 758, 1024},
-	{"KoAHD", "Kobo Aura HD", 1080, 1440},
-	{"KoAH2O", "Kobo Aura H2O", 1080, 1430},
-	{"KoAO", "Kobo Aura ONE", 1404, 1872},
-	{"KoN", "Kobo Nia", 758, 1024},
-	{"KoC", "Kobo Clara HD/Kobo Clara 2E", 1072, 1448},
-	{"KoL", "Kobo Libra H2O/Kobo Libra 2", 1264, 1680},
-	{"KoF", "Kobo Forma", 1440, 1920},
-	{"KoS", "Kobo Sage", 1440, 1920},
-	{"KoE", "Kobo Elipsa", 1404, 1872},
+	{"KoMT", "Kobo Mini/Touch", 600, 800, imageconverter.PALETTE_16},
+	{"KoG", "Kobo Glo", 768, 1024, imageconverter.PALETTE_16},
+	{"KoGHD", "Kobo Glo HD", 1072, 1448, imageconverter.PALETTE_16},
+	{"KoA", "Kobo Aura", 758, 1024, imageconverter.PALETTE_16},
+	{"KoAHD", "Kobo Aura HD", 1080, 1440, imageconverter.PALETTE_16},
+	{"KoAH2O", "Kobo Aura H2O", 1080, 1430, imageconverter.PALETTE_16},
+	{"KoAO", "Kobo Aura ONE", 1404, 1872, imageconverter.PALETTE_16},
+	{"KoN", "Kobo Nia", 758, 1024, imageconverter.PALETTE_16},
+	{"KoC", "Kobo Clara HD/Kobo Clara 2E", 1072, 1448, imageconverter.PALETTE_16},
+	{"KoL", "Kobo Libra H2O/Kobo Libra 2", 1264, 1680, imageconverter.PALETTE_16},
+	{"KoF", "Kobo Forma", 1440, 1920, imageconverter.PALETTE_16},
+	{"KoS", "Kobo Sage", 1440, 1920, imageconverter.PALETTE_16},
+	{"KoE", "Kobo Elipsa", 1404, 1872, imageconverter.PALETTE_16},
 }
 var ProfilesIdx = map[string]int{}
 
@@ -120,7 +122,7 @@ func main() {
 		))
 	}
 	availableAlgo := make([]string, 0)
-	for a := range imageconverter.AlgoGray {
+	for a := range imageconverter.ALGO_GRAY {
 		availableAlgo = append(availableAlgo, a)
 	}
 
@@ -202,7 +204,7 @@ func main() {
 		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
 	}
 
-	if _, ok := imageconverter.AlgoGray[opt.Algo]; !ok {
+	if _, ok := imageconverter.ALGO_GRAY[opt.Algo]; !ok {
 		fmt.Fprintln(os.Stderr, "algo doesn't exists")
 		flag.Usage()
 		os.Exit(1)
@@ -222,6 +224,7 @@ func main() {
 			Quality:    opt.Quality,
 			Crop:       !opt.NoCrop,
 			Algo:       opt.Algo,
+			Palette:    profile.Palette,
 		},
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
