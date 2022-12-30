@@ -91,7 +91,7 @@ Options:
     Title   : %s
     Quality : %d
     Crop    : %v
-	AlgoGray: %s
+    Algo    : %s
     LimitMb : %s
 `,
 		o.Input,
