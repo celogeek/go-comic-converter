@@ -80,6 +80,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					options.ViewWidth,
 					options.ViewHeight,
 					options.Quality,
+					options.Algo,
 				)
 				name := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
 				if img.Id == 0 {

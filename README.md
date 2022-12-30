@@ -76,6 +76,8 @@ The ePub include as a first page:
 # go-comic-converter -h
 
 Usage of go-comic-converter:
+  -algo string
+    	Algo for RGB to Grayscale: luster, default, mean, luma (default "default")
   -author string
     	Author of the epub (default "GO Comic Converter")
   -input string

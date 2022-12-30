@@ -15,6 +15,7 @@ type ImageOptions struct {
 	ViewWidth  int
 	ViewHeight int
 	Quality    int
+	Algo       string
 }
 
 type EpubOptions struct {

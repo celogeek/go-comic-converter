@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
+
 	"github.com/celogeek/go-comic-converter/internal/epub"
 )
 
@@ -61,6 +63,7 @@ type Option struct {
 	Title   string
 	Quality int
 	NoCrop  bool
+	Algo    string
 	LimitMb int
 }
 
@@ -88,6 +91,7 @@ Options:
     Title   : %s
     Quality : %d
     Crop    : %v
+	AlgoGray: %s
     LimitMb : %s
 `,
 		o.Input,
@@ -100,6 +104,7 @@ Options:
 		o.Title,
 		o.Quality,
 		!o.NoCrop,
+		o.Algo,
 		limitmb,
 	)
 }
@@ -114,6 +119,10 @@ func main() {
 			p.Description,
 		))
 	}
+	availableAlgo := make([]string, 0)
+	for a := range imageconverter.AlgoGray {
+		availableAlgo = append(availableAlgo, a)
+	}
 
 	opt := &Option{}
 	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
@@ -123,6 +132,7 @@ func main() {
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
+	flag.StringVar(&opt.Algo, "algo", "default", fmt.Sprintf("Algo for RGB to Grayscale: %s", strings.Join(availableAlgo, ", ")))
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
@@ -192,6 +202,12 @@ func main() {
 		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
 	}
 
+	if _, ok := imageconverter.AlgoGray[opt.Algo]; !ok {
+		fmt.Fprintln(os.Stderr, "algo doesn't exists")
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	fmt.Fprintln(os.Stderr, opt)
 
 	if err := epub.NewEpub(&epub.EpubOptions{
@@ -205,6 +221,7 @@ func main() {
 			ViewHeight: profile.Height,
 			Quality:    opt.Quality,
 			Crop:       !opt.NoCrop,
+			Algo:       opt.Algo,
 		},
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
