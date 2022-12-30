@@ -53,9 +53,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 		imageCount, imageInput, err = loadDir(path)
 	} else {
 		switch ext := strings.ToLower(filepath.Ext(path)); ext {
-		case ".cbz":
+		case ".cbz", "zip":
 			imageCount, imageInput, err = loadCbz(path)
-		case ".cbr":
+		case ".cbr", "rar":
 			imageCount, imageInput, err = loadCbr(path)
 		case ".pdf":
 			err = fmt.Errorf("not implemented")
@@ -220,7 +220,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 		return 0, nil, err
 	}
 
-	bar := progressbar.DefaultBytes(rs.Size(), "Uncompressing")
+	bar := progressbar.DefaultBytes(rs.Size(), "Uncompressing rar")
 	defer bar.Close()
 
 	r, err := rardecode.NewReader(io.TeeReader(rr, bar), "")
