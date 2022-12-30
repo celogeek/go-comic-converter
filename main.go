@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go-comic-converter/internal/epub"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/celogeek/go-comic-converter/internal/epub"
 )
 
 type Profile struct {

@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	imageconverter "go-comic-converter/internal/image-converter"
+	imageconverter "github.com/celogeek/go-comic-converter/internal/image-converter"
 	"io"
 	"io/fs"
 	"os"
