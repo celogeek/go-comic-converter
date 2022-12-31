@@ -4,6 +4,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"image"
+	"image/color"
+	"image/jpeg"
 	"io"
 	"io/fs"
 	"os"
@@ -13,7 +16,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/celogeek/go-comic-converter/internal/imageconverter"
+	"github.com/disintegration/gift"
 
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
@@ -31,6 +34,57 @@ type Image struct {
 type imageTask struct {
 	Id     int
 	Reader io.ReadCloser
+}
+
+func colorIsBlank(c color.Color) bool {
+	g := color.GrayModel.Convert(c).(color.Gray)
+	return g.Y >= 0xf0
+}
+
+func findMarging(img image.Image) image.Rectangle {
+	imgArea := img.Bounds()
+
+LEFT:
+	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
+		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
+			if !colorIsBlank(img.At(x, y)) {
+				break LEFT
+			}
+		}
+		imgArea.Min.X++
+	}
+
+UP:
+	for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
+		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
+			if !colorIsBlank(img.At(x, y)) {
+				break UP
+			}
+		}
+		imgArea.Min.Y++
+	}
+
+RIGHT:
+	for x := imgArea.Max.X - 1; x >= imgArea.Min.X; x-- {
+		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
+			if !colorIsBlank(img.At(x, y)) {
+				break RIGHT
+			}
+		}
+		imgArea.Max.X--
+	}
+
+BOTTOM:
+	for y := imgArea.Max.Y - 1; y >= imgArea.Min.Y; y-- {
+		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
+			if !colorIsBlank(img.At(x, y)) {
+				break BOTTOM
+			}
+		}
+		imgArea.Max.Y--
+	}
+
+	return imgArea
 }
 
 func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
@@ -69,29 +123,48 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	// processing
 	wg := &sync.WaitGroup{}
 	bar := NewBar(imageCount, "Processing", 1, 2)
+
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+
 			for img := range imageInput {
-				data, w, h := imageconverter.Convert(
-					img.Reader,
-					options.Crop,
-					options.ViewWidth,
-					options.ViewHeight,
-					options.Quality,
-					options.Algo,
-					options.Palette,
+				// Decode image
+				src, _, err := image.Decode(img.Reader)
+				if err != nil {
+					panic(err)
+				}
+
+				// prepare filter
+				g := gift.New(
+					gift.Crop(findMarging(src)),
+					gift.ResizeToFit(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
+					// gift.Gamma(1.8),
+					// gift.Sigmoid(0.5, 5),
 				)
+				g.SetParallelization(false)
+
+				// Convert image
+				dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)
+				g.Draw(dst, src)
+
+				// Encode image
+				b := bytes.NewBuffer([]byte{})
+				err = jpeg.Encode(b, dst, &jpeg.Options{Quality: options.Quality})
+				if err != nil {
+					panic(err)
+				}
+
 				name := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
 				if img.Id == 0 {
 					name = "OEBPS/Images/cover.jpg"
 				}
 				imageOutput <- &Image{
 					img.Id,
-					newImageData(name, data),
-					w,
-					h,
+					newImageData(name, b.Bytes()),
+					dst.Bounds().Dx(),
+					dst.Bounds().Dy(),
 				}
 			}
 		}()

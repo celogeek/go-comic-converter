@@ -1,4 +1,4 @@
-package imageconverter
+package epub
 
 import "image/color"
 

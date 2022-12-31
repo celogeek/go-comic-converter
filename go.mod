@@ -3,6 +3,7 @@ module github.com/celogeek/go-comic-converter
 go 1.19
 
 require (
+	github.com/disintegration/gift v1.2.1
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/nwaples/rardecode v1.1.3
 	github.com/raff/pdfreader v0.0.0-20220308062436-033e8ac577f0
