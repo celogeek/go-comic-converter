@@ -76,10 +76,12 @@ The ePub include as a first page:
 # go-comic-converter -h
 
 Usage of go-comic-converter:
-  -algo string
-    	Algo for RGB to Grayscale: default, mean, luma, luster (default "default")
   -author string
     	Author of the epub (default "GO Comic Converter")
+  -brightness int
+    	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
+  -contrast int
+    	Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast
   -input string
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
   -limitmb int

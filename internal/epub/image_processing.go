@@ -139,9 +139,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 				// prepare filter
 				g := gift.New(
 					gift.Crop(findMarging(src)),
+					gift.Contrast(float32(options.Contrast)),
+					gift.Brightness(float32(options.Brightness)),
 					gift.ResizeToFit(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-					// gift.Gamma(1.8),
-					// gift.Sigmoid(0.5, 5),
 				)
 				g.SetParallelization(false)
 

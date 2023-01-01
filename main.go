@@ -56,14 +56,16 @@ func init() {
 }
 
 type Option struct {
-	Input   string
-	Output  string
-	Profile string
-	Author  string
-	Title   string
-	Quality int
-	NoCrop  bool
-	LimitMb int
+	Input      string
+	Output     string
+	Profile    string
+	Author     string
+	Title      string
+	Quality    int
+	NoCrop     bool
+	Brightness int
+	Contrast   int
+	LimitMb    int
 }
 
 func (o *Option) String() string {
@@ -84,14 +86,16 @@ func (o *Option) String() string {
 	return fmt.Sprintf(`Go Comic Converter
 
 Options:
-    Input   : %s
-    Output  : %s
-    Profile : %s - %s - %dx%d - %d levels of gray
-    Author  : %s
-    Title   : %s
-    Quality : %d
-    Crop    : %v
-    LimitMb : %s
+    Input     : %s
+    Output    : %s
+    Profile   : %s - %s - %dx%d - %d levels of gray
+    Author    : %s
+    Title     : %s
+    Quality   : %d
+    Crop      : %v
+    Brightness: %d
+    Contrast  : %d
+    LimitMb   : %s
 `,
 		o.Input,
 		o.Output,
@@ -100,6 +104,8 @@ Options:
 		o.Title,
 		o.Quality,
 		!o.NoCrop,
+		o.Brightness,
+		o.Contrast,
 		limitmb,
 	)
 }
@@ -124,6 +130,8 @@ func main() {
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
 	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
+	flag.IntVar(&opt.Brightness, "brightness", 0, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
+	flag.IntVar(&opt.Contrast, "contrast", 0, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
@@ -188,6 +196,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	if opt.Brightness < -100 || opt.Brightness > 100 {
+		fmt.Fprintln(os.Stderr, "Brightness should be between -100 and 100")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if opt.Contrast < -100 || opt.Contrast > 100 {
+		fmt.Fprintln(os.Stderr, "Contrast should be between -100 and 100")
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	if opt.Title == "" {
 		ext := filepath.Ext(defaultOutput)
 		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
@@ -207,6 +227,8 @@ func main() {
 			Quality:    opt.Quality,
 			Crop:       !opt.NoCrop,
 			Palette:    profile.Palette,
+			Brightness: opt.Brightness,
+			Contrast:   opt.Contrast,
 		},
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

@@ -18,6 +18,8 @@ type ImageOptions struct {
 	Quality    int
 	Algo       string
 	Palette    color.Palette
+	Brightness int
+	Contrast   int
 }
 
 type EpubOptions struct {
