@@ -11,13 +11,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
 
 	"github.com/disintegration/gift"
-
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
@@ -122,9 +120,8 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 	// processing
 	wg := &sync.WaitGroup{}
-	bar := NewBar(imageCount, "Processing", 1, 2)
 
-	for i := 0; i < runtime.NumCPU(); i++ {
+	for i := 0; i < options.Workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -136,14 +133,14 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					panic(err)
 				}
 
-				// prepare filter
-				g := gift.New(
-					gift.Crop(findMarging(src)),
-					gift.Contrast(float32(options.Contrast)),
-					gift.Brightness(float32(options.Brightness)),
-					gift.ResizeToFit(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-				)
-				g.SetParallelization(false)
+				if options.AutoRotate {
+					g := gift.New(gift.Crop(findMarging(src)))
+					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
+					g.Draw(newSrc, src)
+					src = newSrc
+				}
+
+				g := NewGift(options)
 
 				// Convert image
 				dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)

@@ -20,6 +20,8 @@ type ImageOptions struct {
 	Palette    color.Palette
 	Brightness int
 	Contrast   int
+	AutoRotate bool
+	Workers    int
 }
 
 type EpubOptions struct {
