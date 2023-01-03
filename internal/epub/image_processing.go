@@ -169,14 +169,15 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 	go func() {
 		wg.Wait()
-		bar.Close()
 		close(imageOutput)
 	}()
 
+	bar := NewBar(imageCount, "Processing", 1, 2)
 	for image := range imageOutput {
 		images = append(images, image)
 		bar.Add(1)
 	}
+	bar.Close()
 
 	if len(images) == 0 {
 		return nil, fmt.Errorf("image not found")
