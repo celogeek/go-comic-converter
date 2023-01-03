@@ -78,6 +78,8 @@ The ePub include as a first page:
 Usage of go-comic-converter:
   -author string
     	Author of the epub (default "GO Comic Converter")
+  -autorotate
+    	Auto Rotate page when width > height
   -brightness int
     	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
   -contrast int
@@ -120,6 +122,8 @@ Usage of go-comic-converter:
     	Quality of the image (default 85)
   -title string
     	Title of the epub
+  -workers int
+    	Number of workers (default number of CPUs)
 ```
 
 # Credit
