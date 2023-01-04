@@ -144,7 +144,15 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 				// Convert image
 				dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)
-				g.Draw(dst, src)
+				if dst.Bounds().Dx() == 0 || dst.Bounds().Dy() == 0 {
+					dst = image.NewPaletted(image.Rectangle{
+						Min: image.Point{0, 0},
+						Max: image.Point{1, 1},
+					}, dst.Palette)
+					dst.Set(0, 0, color.White)
+				} else {
+					g.Draw(dst, src)
+				}
 
 				// Encode image
 				b := bytes.NewBuffer([]byte{})
