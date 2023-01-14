@@ -2,13 +2,13 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
-<title>Page {{ .Id }}</title>
+<title>Page {{ .Id }}_p{{ .Part}}</title>
 <link href="style.css" type="text/css" rel="stylesheet"/>
 <meta name="viewport" content="width={{ .Width }}, height={{ .Height }}"/>
 </head>
 <body style="">
 <div style="text-align:center;top:0.0%;">
-<img width="{{ .Width }}" height="{{ .Height }}" src="../Images/{{ .Id }}.jpg"/>
+<img width="{{ .Width }}" height="{{ .Height }}" src="../Images/{{ .Id }}_p{{ .Part}}.jpg"/>
 </div>
 <div id="PV">
 <div id="PV-TL">
@@ -25,16 +25,16 @@
 </div>
 </div>
 <div class="PV-P" id="PV-TL-P" style="">
-<img style="position:absolute;left:0;top:0;" src="../Images/{{ .Id }}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;left:0;top:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-TR-P" style="">
-<img style="position:absolute;right:0;top:0;" src="../Images/{{ .Id }}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;right:0;top:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-BL-P" style="">
-<img style="position:absolute;left:0;bottom:0;" src="../Images/{{ .Id }}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;left:0;bottom:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-BR-P" style="">
-<img style="position:absolute;right:0;bottom:0;" src="../Images/{{ .Id }}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;right:0;bottom:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
 </div>
 </body>
 </html>

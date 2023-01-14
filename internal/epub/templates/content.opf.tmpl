@@ -26,18 +26,14 @@
 <item id="css" href="Text/style.css" media-type="text/css"/>
 <item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
 {{ range .Images }}
-<item id="page_{{ .Id }}" href="Text/{{ .Id }}.xhtml" media-type="application/xhtml+xml"/>
-<item id="img_{{ .Id }}" href="Images/{{ .Id }}.jpg" media-type="image/jpeg"/>
+<item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
+<item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
 {{ end }}
 </manifest>
 <spine page-progression-direction="ltr" toc="ncx">
 <itemref idref="page_part" linear="yes" properties="page-spread-right"/>
 {{ range $idx, $ := .Images }}
-{{ if mod $idx 2 }}
-<itemref idref="page_{{ $.Id }}" linear="yes" properties="page-spread-left"/>
-{{ else }}
-<itemref idref="page_{{ $.Id }}" linear="yes" properties="page-spread-right"/>
-{{ end }}
+<itemref idref="page_{{ $.Id }}_p{{ $.Part }}" linear="yes" properties="page-spread-{{ if mod $idx 2 }}left{{ else }}right{{ end }}"/>
 {{ end }}
 </spine>
 </package>

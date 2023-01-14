@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
 	"io"
 	"io/fs"
 	"os"
@@ -24,6 +23,7 @@ import (
 
 type Image struct {
 	Id     int
+	Part   int
 	Data   *ImageData
 	Width  int
 	Height int
@@ -154,22 +154,28 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					g.Draw(dst, src)
 				}
 
-				// Encode image
-				b := bytes.NewBuffer([]byte{})
-				err = jpeg.Encode(b, dst, &jpeg.Options{Quality: options.Quality})
-				if err != nil {
-					panic(err)
-				}
-
-				name := fmt.Sprintf("OEBPS/Images/%d.jpg", img.Id)
-				if img.Id == 0 {
-					name = "OEBPS/Images/cover.jpg"
-				}
 				imageOutput <- &Image{
 					img.Id,
-					newImageData(name, b.Bytes()),
+					0,
+					newImageData(img.Id, 0, dst, options.Quality),
 					dst.Bounds().Dx(),
 					dst.Bounds().Dy(),
+				}
+
+				if options.AutoSplitDoublePage && src.Bounds().Dx() > src.Bounds().Dy() {
+					gifts := NewGiftSplitDoublePage(options)
+					for i, g := range gifts {
+						part := i + 1
+						dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)
+						g.Draw(dst, src)
+						imageOutput <- &Image{
+							img.Id,
+							part,
+							newImageData(img.Id, part, dst, options.Quality),
+							dst.Bounds().Dx(),
+							dst.Bounds().Dy(),
+						}
+					}
 				}
 			}
 		}()
@@ -183,7 +189,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	bar := NewBar(imageCount, "Processing", 1, 2)
 	for image := range imageOutput {
 		images = append(images, image)
-		bar.Add(1)
+		if image.Part == 0 {
+			bar.Add(1)
+		}
 	}
 	bar.Close()
 
@@ -192,7 +200,12 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	}
 
 	sort.Slice(images, func(i, j int) bool {
-		return images[i].Id < images[j].Id
+		if images[i].Id < images[j].Id {
+			return true
+		} else if images[i].Id == images[j].Id && images[i].Part < images[j].Part {
+			return true
+		}
+		return false
 	})
 
 	return images, nil

@@ -57,18 +57,19 @@ func init() {
 }
 
 type Option struct {
-	Input      string
-	Output     string
-	Profile    string
-	Author     string
-	Title      string
-	Quality    int
-	NoCrop     bool
-	Brightness int
-	Contrast   int
-	AutoRotate bool
-	Workers    int
-	LimitMb    int
+	Input               string
+	Output              string
+	Profile             string
+	Author              string
+	Title               string
+	Quality             int
+	NoCrop              bool
+	Brightness          int
+	Contrast            int
+	AutoRotate          bool
+	AutoSplitDoublePage bool
+	Workers             int
+	LimitMb             int
 }
 
 func (o *Option) String() string {
@@ -89,18 +90,19 @@ func (o *Option) String() string {
 	return fmt.Sprintf(`Go Comic Converter
 
 Options:
-    Input     : %s
-    Output    : %s
-    Profile   : %s - %s - %dx%d - %d levels of gray
-    Author    : %s
-    Title     : %s
-    Quality   : %d
-    Crop      : %v
-    Brightness: %d
-    Contrast  : %d
-    AutoRotate: %v
-    LimitMb   : %s
-    Workers   : %d
+    Input              : %s
+    Output             : %s
+    Profile            : %s - %s - %dx%d - %d levels of gray
+    Author             : %s
+    Title              : %s
+    Quality            : %d
+    Crop               : %v
+    Brightness         : %d
+    Contrast           : %d
+    AutoRotate         : %v
+    AutoSplitDoublePage: %v
+    LimitMb            : %s
+    Workers            : %d
 `,
 		o.Input,
 		o.Output,
@@ -112,6 +114,7 @@ Options:
 		o.Brightness,
 		o.Contrast,
 		o.AutoRotate,
+		o.AutoSplitDoublePage,
 		limitmb,
 		o.Workers,
 	)
@@ -140,6 +143,7 @@ func main() {
 	flag.IntVar(&opt.Brightness, "brightness", 0, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
 	flag.IntVar(&opt.Contrast, "contrast", 0, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	flag.BoolVar(&opt.AutoRotate, "autorotate", false, "Auto Rotate page when width > height")
+	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", false, "Auto Split double page when width > height")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.IntVar(&opt.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	flag.Usage = func() {
@@ -231,15 +235,16 @@ func main() {
 		Title:   opt.Title,
 		Author:  opt.Author,
 		ImageOptions: &epub.ImageOptions{
-			ViewWidth:  profile.Width,
-			ViewHeight: profile.Height,
-			Quality:    opt.Quality,
-			Crop:       !opt.NoCrop,
-			Palette:    profile.Palette,
-			Brightness: opt.Brightness,
-			Contrast:   opt.Contrast,
-			AutoRotate: opt.AutoRotate,
-			Workers:    opt.Workers,
+			ViewWidth:           profile.Width,
+			ViewHeight:          profile.Height,
+			Quality:             opt.Quality,
+			Crop:                !opt.NoCrop,
+			Palette:             profile.Palette,
+			Brightness:          opt.Brightness,
+			Contrast:            opt.Contrast,
+			AutoRotate:          opt.AutoRotate,
+			AutoSplitDoublePage: opt.AutoSplitDoublePage,
+			Workers:             opt.Workers,
 		},
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

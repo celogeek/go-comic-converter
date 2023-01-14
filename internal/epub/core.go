@@ -12,16 +12,17 @@ import (
 )
 
 type ImageOptions struct {
-	Crop       bool
-	ViewWidth  int
-	ViewHeight int
-	Quality    int
-	Algo       string
-	Palette    color.Palette
-	Brightness int
-	Contrast   int
-	AutoRotate bool
-	Workers    int
+	Crop                bool
+	ViewWidth           int
+	ViewHeight          int
+	Quality             int
+	Algo                string
+	Palette             color.Palette
+	Brightness          int
+	Contrast            int
+	AutoRotate          bool
+	AutoSplitDoublePage bool
+	Workers             int
 }
 
 type EpubOptions struct {
@@ -184,7 +185,7 @@ func (e *ePub) Write() error {
 		wz.WriteImage(part.Cover.Data)
 
 		for _, img := range part.Images {
-			text := fmt.Sprintf("OEBPS/Text/%d.xhtml", img.Id)
+			text := fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part)
 			if err := wz.WriteFile(text, e.render(textTmpl, img)); err != nil {
 				return err
 			}
