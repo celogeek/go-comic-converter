@@ -133,7 +133,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					panic(err)
 				}
 
-				if options.AutoRotate {
+				if options.Crop {
 					g := gift.New(gift.Crop(findMarging(src)))
 					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
 					g.Draw(newSrc, src)
