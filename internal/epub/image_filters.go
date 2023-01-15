@@ -28,12 +28,14 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 func NewGiftSplitDoublePage(options *ImageOptions) []*gift.GIFT {
 	gifts := make([]*gift.GIFT, 2)
 
+	rightFirst := options.Manga
+
 	gifts[0] = gift.New(
-		filters.CropSplitDoublePage(false),
+		filters.CropSplitDoublePage(rightFirst),
 	)
 
 	gifts[1] = gift.New(
-		filters.CropSplitDoublePage(true),
+		filters.CropSplitDoublePage(!rightFirst),
 	)
 
 	for _, g := range gifts {

@@ -92,6 +92,8 @@ Usage of go-comic-converter:
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
   -limitmb int
     	Limit size of the ePub: Default nolimit (0), Minimum 20
+  -manga
+    	Manga mode (right to left)
   -nocrop
     	Disable cropping
   -output string

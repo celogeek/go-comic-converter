@@ -30,10 +30,19 @@
 <item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
 {{ end }}
 </manifest>
-<spine page-progression-direction="ltr" toc="ncx">
+{{ if .Info.Manga }}
+<spine page-progression-direction="rtl" toc="ncx">
 <itemref idref="page_part" linear="yes" properties="page-spread-right"/>
 {{ range $idx, $ := .Images }}
 <itemref idref="page_{{ $.Id }}_p{{ $.Part }}" linear="yes" properties="page-spread-{{ if mod $idx 2 }}left{{ else }}right{{ end }}"/>
 {{ end }}
 </spine>
+{{ else }}
+<spine page-progression-direction="ltr" toc="ncx">
+<itemref idref="page_part" linear="yes" properties="page-spread-left"/>
+{{ range $idx, $ := .Images }}
+<itemref idref="page_{{ $.Id }}_p{{ $.Part }}" linear="yes" properties="page-spread-{{ if mod $idx 2 }}right{{ else }}end{{ end }}"/>
+{{ end }}
+</spine>
+{{ end }}
 </package>

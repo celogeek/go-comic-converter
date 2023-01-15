@@ -22,6 +22,7 @@ type ImageOptions struct {
 	Contrast            int
 	AutoRotate          bool
 	AutoSplitDoublePage bool
+	Manga               bool
 	Workers             int
 }
 
@@ -186,7 +187,10 @@ func (e *ePub) Write() error {
 
 		for _, img := range part.Images {
 			text := fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part)
-			if err := wz.WriteFile(text, e.render(textTmpl, img)); err != nil {
+			if err := wz.WriteFile(text, e.render(textTmpl, map[string]any{
+				"Image": img,
+				"Manga": e.Manga,
+			})); err != nil {
 				return err
 			}
 			if err := wz.WriteImage(img.Data); err != nil {

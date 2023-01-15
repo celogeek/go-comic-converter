@@ -2,39 +2,39 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
-<title>Page {{ .Id }}_p{{ .Part}}</title>
+<title>Page {{ .Image.Id }}_p{{ .Image.Part}}</title>
 <link href="style.css" type="text/css" rel="stylesheet"/>
-<meta name="viewport" content="width={{ .Width }}, height={{ .Height }}"/>
+<meta name="viewport" content="width={{ .Image.Width }}, height={{ .Image.Height }}"/>
 </head>
 <body style="">
 <div style="text-align:center;top:0.0%;">
-<img width="{{ .Width }}" height="{{ .Height }}" src="../Images/{{ .Id }}_p{{ .Part}}.jpg"/>
+<img width="{{ .Image.Width }}" height="{{ .Image.Height }}" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg"/>
 </div>
 <div id="PV">
 <div id="PV-TL">
-<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TL-P", "ordinal":1}'></a>
+<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TL-P", "ordinal":{{ if .Manga }}2{{ else }}1{{ end }}}'></a>
 </div>
 <div id="PV-TR">
-<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TR-P", "ordinal":2}'></a>
+<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TR-P", "ordinal":{{ if .Manga }}1{{ else }}2{{ end }}}'></a>
 </div>
 <div id="PV-BL">
-<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BL-P", "ordinal":3}'></a>
+<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BL-P", "ordinal":{{ if .Manga }}4{{ else }}3{{ end }}}'></a>
 </div>
 <div id="PV-BR">
-<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BR-P", "ordinal":4}'></a>
+<a style="display:inline-block;width:100%;height:100%;" class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BR-P", "ordinal":{{ if .Manga }}3{{ else }}4{{ end }}}'></a>
 </div>
 </div>
 <div class="PV-P" id="PV-TL-P" style="">
-<img style="position:absolute;left:0;top:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;left:0;top:0;" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-TR-P" style="">
-<img style="position:absolute;right:0;top:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;right:0;top:0;" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-BL-P" style="">
-<img style="position:absolute;left:0;bottom:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;left:0;bottom:0;" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
 </div>
 <div class="PV-P" id="PV-BR-P" style="">
-<img style="position:absolute;right:0;bottom:0;" src="../Images/{{ .Id }}_p{{ .Part}}.jpg" width="{{ zoom .Width 1.5 }}" height="{{ zoom .Height 1.5 }}"/>
+<img style="position:absolute;right:0;bottom:0;" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
 </div>
 </body>
 </html>
