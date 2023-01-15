@@ -22,3 +22,6 @@ var partTmpl string
 
 //go:embed "templates/text.xhtml.tmpl"
 var textTmpl string
+
+//go:embed "templates/blank.xhtml.tmpl"
+var blankTmpl string

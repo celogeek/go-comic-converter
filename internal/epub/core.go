@@ -56,10 +56,27 @@ func NewEpub(options *EpubOptions) *ePub {
 		panic(err)
 	}
 
+	var spreadRight = options.Manga
+
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
 		"mod":  func(i, j int) bool { return i%j == 0 },
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
+		"spread": func() (spread string) {
+			if spreadRight {
+				spread = "right"
+			} else {
+				spread = "left"
+			}
+			spreadRight = !spreadRight
+			return
+		},
+		"spread_blank": func(part int) bool {
+			if part == 1 && spreadRight == options.Manga {
+				return true
+			}
+			return false
+		},
 	})
 
 	return &ePub{
@@ -186,13 +203,28 @@ func (e *ePub) Write() error {
 		wz.WriteImage(part.Cover.Data)
 
 		for _, img := range part.Images {
-			text := fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part)
-			if err := wz.WriteFile(text, e.render(textTmpl, map[string]any{
-				"Image": img,
-				"Manga": e.Manga,
-			})); err != nil {
+			if err := wz.WriteFile(
+				fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part),
+				e.render(textTmpl, map[string]any{
+					"Image": img,
+					"Manga": e.Manga,
+				}),
+			); err != nil {
 				return err
 			}
+
+			if img.Part == 1 {
+				if err := wz.WriteFile(
+					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
+					e.render(blankTmpl, map[string]any{
+						"Info":  e,
+						"Image": img,
+					}),
+				); err != nil {
+					return err
+				}
+			}
+
 			if err := wz.WriteImage(img.Data); err != nil {
 				return err
 			}

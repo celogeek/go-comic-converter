@@ -28,21 +28,18 @@
 {{ range .Images }}
 <item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
 <item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
+{{ if eq .Part 1 }}
+<item id="page_{{ .Id }}_sp" href="Text/{{ .Id }}_sp.xhtml" media-type="application/xhtml+xml"/>
+{{ end }}
 {{ end }}
 </manifest>
-{{ if .Info.Manga }}
-<spine page-progression-direction="rtl" toc="ncx">
-<itemref idref="page_part" linear="yes" properties="page-spread-right"/>
-{{ range $idx, $ := .Images }}
-<itemref idref="page_{{ $.Id }}_p{{ $.Part }}" linear="yes" properties="page-spread-{{ if mod $idx 2 }}left{{ else }}right{{ end }}"/>
+<spine page-progression-direction="{{ if .Info.Manga }}rtl{{ else }}ltr{{ end }}" toc="ncx">
+<itemref idref="page_part" linear="yes" properties="page-spread-{{ spread }}"/>
+{{ range .Images }}
+{{ if spread_blank .Part }}
+<itemref idref="page_{{ .Id }}_sp" linear="yes" properties="page-spread-{{ spread }}"/>
+{{ end }}
+<itemref idref="page_{{ .Id }}_p{{ .Part }}" linear="yes" properties="page-spread-{{ spread }}"/>
 {{ end }}
 </spine>
-{{ else }}
-<spine page-progression-direction="ltr" toc="ncx">
-<itemref idref="page_part" linear="yes" properties="page-spread-left"/>
-{{ range $idx, $ := .Images }}
-<itemref idref="page_{{ $.Id }}_p{{ $.Part }}" linear="yes" properties="page-spread-{{ if mod $idx 2 }}right{{ else }}end{{ end }}"/>
-{{ end }}
-</spine>
-{{ end }}
 </package>
