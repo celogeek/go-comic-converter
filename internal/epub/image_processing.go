@@ -154,7 +154,14 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					dst.Bounds().Dy(),
 				}
 
-				if options.AutoSplitDoublePage && src.Bounds().Dx() > src.Bounds().Dy() {
+				// Auto split double page
+				// Except for cover
+				// Only if the src image have width > height and is bigger than the view
+				if img.Id > 0 &&
+					options.AutoSplitDoublePage &&
+					src.Bounds().Dx() > src.Bounds().Dy() &&
+					src.Bounds().Dx() > options.ViewHeight &&
+					src.Bounds().Dy() > options.ViewWidth {
 					gifts := NewGiftSplitDoublePage(options)
 					for i, g := range gifts {
 						part := i + 1
