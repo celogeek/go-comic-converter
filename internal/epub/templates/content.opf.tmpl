@@ -11,7 +11,7 @@
 <meta name="fixed-layout" content="true"/>
 <meta name="original-resolution" content="{{ .Info.ViewWidth }}x{{ .Info.ViewHeight }}"/>
 <meta name="book-type" content="comic"/>
-<meta name="primary-writing-mode" content="horizontal-lr"/>
+<meta name="primary-writing-mode" content="horizontal-{{ if .Info.Manga }}rl{{ else }}lr{{ end }}"/>
 <meta name="zero-gutter" content="true"/>
 <meta name="zero-margin" content="true"/>
 <meta name="ke-border-color" content="#FFFFFF"/>
