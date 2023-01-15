@@ -10,7 +10,7 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 	g.SetParallelization(false)
 
 	if options.AutoRotate {
-		g.Add(filters.AutoRotate())
+		g.Add(filters.AutoRotate(options.ViewWidth, options.ViewHeight))
 	}
 	if options.Contrast != 0 {
 		g.Add(gift.Contrast(float32(options.Contrast)))
