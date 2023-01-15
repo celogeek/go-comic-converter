@@ -17,15 +17,15 @@ type cropSplitDoublePage struct {
 
 func (p *cropSplitDoublePage) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	if p.right {
-		dstBounds = image.Rectangle{
-			Min: image.Point{srcBounds.Max.X / 2, srcBounds.Min.Y},
-			Max: srcBounds.Max,
-		}
+		dstBounds = image.Rect(
+			srcBounds.Max.X/2, srcBounds.Min.Y,
+			srcBounds.Max.X, srcBounds.Max.Y,
+		)
 	} else {
-		dstBounds = image.Rectangle{
-			Min: srcBounds.Min,
-			Max: image.Point{srcBounds.Max.X / 2, srcBounds.Max.Y},
-		}
+		dstBounds = image.Rect(
+			srcBounds.Min.X, srcBounds.Min.Y,
+			srcBounds.Max.X/2, srcBounds.Max.Y,
+		)
 	}
 	return
 }
