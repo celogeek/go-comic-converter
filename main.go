@@ -66,6 +66,7 @@ type Option struct {
 	NoCrop              bool
 	Brightness          int
 	Contrast            int
+	Auto                bool
 	AutoRotate          bool
 	AutoSplitDoublePage bool
 	Workers             int
@@ -142,6 +143,7 @@ func main() {
 	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
 	flag.IntVar(&opt.Brightness, "brightness", 0, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
 	flag.IntVar(&opt.Contrast, "contrast", 0, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	flag.BoolVar(&opt.Auto, "auto", false, "Activate all automatic options")
 	flag.BoolVar(&opt.AutoRotate, "autorotate", false, "Auto Rotate page when width > height")
 	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", false, "Auto Split double page when width > height")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
@@ -224,6 +226,11 @@ func main() {
 	if opt.Title == "" {
 		ext := filepath.Ext(defaultOutput)
 		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
+	}
+
+	if opt.Auto {
+		opt.AutoRotate = true
+		opt.AutoSplitDoublePage = true
 	}
 
 	fmt.Fprintln(os.Stderr, opt)

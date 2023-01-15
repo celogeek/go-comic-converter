@@ -78,6 +78,8 @@ The ePub include as a first page:
 Usage of go-comic-converter:
   -author string
     	Author of the epub (default "GO Comic Converter")
+  -auto
+    	Activate all automatic options
   -autorotate
     	Auto Rotate page when width > height
   -autosplitdoublepage
