@@ -20,6 +20,7 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 	}
 	g.Add(
 		gift.ResizeToFit(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
+		filters.Pixel(),
 	)
 	return g
 }
