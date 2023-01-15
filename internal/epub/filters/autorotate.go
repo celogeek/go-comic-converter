@@ -7,7 +7,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
-func AutoRotate() *autoRotateFilter {
+func AutoRotate() gift.Filter {
 	return &autoRotateFilter{}
 }
 

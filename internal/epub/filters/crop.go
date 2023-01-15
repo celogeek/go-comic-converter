@@ -7,7 +7,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
-func CropSplitDoublePage(right bool) *cropSplitDoublePage {
+func CropSplitDoublePage(right bool) gift.Filter {
 	return &cropSplitDoublePage{right}
 }
 
