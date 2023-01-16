@@ -212,22 +212,25 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	return images, nil
 }
 
-func loadDir(input string) (int, chan *imageTask, error) {
+func isJpeg(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".jpg", ".jpeg":
+		{
+			return true
+		}
+	}
+	return false
+}
 
+func loadDir(input string) (int, chan *imageTask, error) {
 	images := make([]string, 0)
 	err := filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
-			return nil
+		if !d.IsDir() && isJpeg(path) {
+			images = append(images, path)
 		}
-		ext := filepath.Ext(path)
-		if strings.ToLower(ext) != ".jpg" {
-			return nil
-		}
-
-		images = append(images, path)
 		return nil
 	})
 	if err != nil {
@@ -266,13 +269,9 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 
 	images := make([]*zip.File, 0)
 	for _, f := range r.File {
-		if f.FileInfo().IsDir() {
-			continue
+		if !f.FileInfo().IsDir() && isJpeg(f.Name) {
+			images = append(images, f)
 		}
-		if strings.ToLower(filepath.Ext(f.Name)) != ".jpg" {
-			continue
-		}
-		images = append(images, f)
 	}
 	if len(images) == 0 {
 		r.Close()
@@ -320,15 +319,9 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 			break
 		}
 
-		if f.IsDir {
-			continue
+		if !f.IsDir && isJpeg(f.Name) {
+			names = append(names, f.Name)
 		}
-
-		if strings.ToLower(filepath.Ext(f.Name)) != ".jpg" {
-			continue
-		}
-
-		names = append(names, f.Name)
 	}
 	rl.Close()
 
