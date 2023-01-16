@@ -94,6 +94,8 @@ Usage of go-comic-converter:
     	Limit size of the ePub: Default nolimit (0), Minimum 20
   -manga
     	Manga mode (right to left)
+  -noblankpage
+    	Remove blank pages
   -nocrop
     	Disable cropping
   -output string

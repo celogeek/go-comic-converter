@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="3.0" unique-identifier="BookID" xmlns="http://www.idpf.org/2007/opf">
+{{ $info := .Info }}
 <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:title>{{ .Info.Title }}</dc:title>
+<dc:title>{{ $info.Title }}</dc:title>
 <dc:language>en-US</dc:language>
-<dc:identifier id="BookID">urn:uuid:{{ .Info.UID }}</dc:identifier>
+<dc:identifier id="BookID">urn:uuid:{{ $info.UID }}</dc:identifier>
 <dc:contributor id="contributor">GO Comic Converter</dc:contributor>
 <dc:creator>GO Comic Converter</dc:creator>
-<meta property="dcterms:modified">{{ .Info.UpdatedAt }}</meta>
+<meta property="dcterms:modified">{{ $info.UpdatedAt }}</meta>
 <meta name="cover" content="cover"/>
 <meta name="fixed-layout" content="true"/>
-<meta name="original-resolution" content="{{ .Info.ViewWidth }}x{{ .Info.ViewHeight }}"/>
+<meta name="original-resolution" content="{{ $info.ViewWidth }}x{{ $info.ViewHeight }}"/>
 <meta name="book-type" content="comic"/>
-<meta name="primary-writing-mode" content="horizontal-{{ if .Info.Manga }}rl{{ else }}lr{{ end }}"/>
+<meta name="primary-writing-mode" content="horizontal-{{ if $info.Manga }}rl{{ else }}lr{{ end }}"/>
 <meta name="zero-gutter" content="true"/>
 <meta name="zero-margin" content="true"/>
 <meta name="ke-border-color" content="#FFFFFF"/>
@@ -28,12 +29,14 @@
 {{ range .Images }}
 <item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
 <item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
+{{ if eq $info.NoBlankPage false }}
 {{ if eq .Part 1 }}
 <item id="page_{{ .Id }}_sp" href="Text/{{ .Id }}_sp.xhtml" media-type="application/xhtml+xml"/>
 {{ end }}
 {{ end }}
+{{ end }}
 </manifest>
-<spine page-progression-direction="{{ if .Info.Manga }}rtl{{ else }}ltr{{ end }}" toc="ncx">
+<spine page-progression-direction="{{ if $info.Manga }}rtl{{ else }}ltr{{ end }}" toc="ncx">
 <itemref idref="page_part" linear="yes" properties="page-spread-{{ spread }}"/>
 {{ range .Images }}
 {{ if spread_blank .Part }}

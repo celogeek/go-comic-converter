@@ -23,6 +23,7 @@ type ImageOptions struct {
 	Contrast            int
 	AutoRotate          bool
 	AutoSplitDoublePage bool
+	NoBlankPage         bool
 	Manga               bool
 	Workers             int
 }
@@ -73,7 +74,7 @@ func NewEpub(options *EpubOptions) *ePub {
 			return
 		},
 		"spread_blank": func(part int) bool {
-			if part == 1 && spreadRight == options.Manga {
+			if !options.NoBlankPage && part == 1 && spreadRight == options.Manga {
 				return true
 			}
 			return false
@@ -216,7 +217,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 
-			if img.Part == 1 {
+			if !e.NoBlankPage && img.Part == 1 {
 				if err := wz.WriteFile(
 					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 					e.render(blankTmpl, map[string]any{
