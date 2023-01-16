@@ -69,6 +69,7 @@ type Option struct {
 	Auto                bool
 	AutoRotate          bool
 	AutoSplitDoublePage bool
+	NoBlankPage         bool
 	Manga               bool
 	Workers             int
 	LimitMb             int
@@ -103,6 +104,7 @@ Options:
     Contrast           : %d
     AutoRotate         : %v
     AutoSplitDoublePage: %v
+    NoBlankPage        : %v
     Manga              : %v
     LimitMb            : %s
     Workers            : %d
@@ -118,6 +120,7 @@ Options:
 		o.Contrast,
 		o.AutoRotate,
 		o.AutoSplitDoublePage,
+		o.NoBlankPage,
 		o.Manga,
 		limitmb,
 		o.Workers,
@@ -149,6 +152,7 @@ func main() {
 	flag.BoolVar(&opt.Auto, "auto", false, "Activate all automatic options")
 	flag.BoolVar(&opt.AutoRotate, "autorotate", false, "Auto Rotate page when width > height")
 	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", false, "Auto Split double page when width > height")
+	flag.BoolVar(&opt.NoBlankPage, "noblankpage", false, "Remove blank pages")
 	flag.BoolVar(&opt.Manga, "manga", false, "Manga mode (right to left)")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.IntVar(&opt.Workers, "workers", runtime.NumCPU(), "Number of workers")
@@ -255,6 +259,7 @@ func main() {
 			Contrast:            opt.Contrast,
 			AutoRotate:          opt.AutoRotate,
 			AutoSplitDoublePage: opt.AutoSplitDoublePage,
+			NoBlankPage:         opt.NoBlankPage,
 			Manga:               opt.Manga,
 			Workers:             opt.Workers,
 		},

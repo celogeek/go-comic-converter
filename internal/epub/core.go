@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -98,7 +99,9 @@ func (e *ePub) render(templateString string, data any) string {
 		panic(err)
 	}
 
-	return result.String()
+	stripBlank := regexp.MustCompile("\n+")
+
+	return stripBlank.ReplaceAllString(result.String(), "\n")
 }
 
 func (e *ePub) getParts() ([]*epubPart, error) {
