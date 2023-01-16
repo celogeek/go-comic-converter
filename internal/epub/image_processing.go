@@ -187,7 +187,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 	bar := NewBar(imageCount, "Processing", 1, 2)
 	for image := range imageOutput {
-		images = append(images, image)
+		if !(options.NoBlankPage && image.Width == 1 && image.Height == 1) {
+			images = append(images, image)
+		}
 		if image.Part == 0 {
 			bar.Add(1)
 		}
