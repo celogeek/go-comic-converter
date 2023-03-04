@@ -19,7 +19,7 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 		g.Add(gift.Brightness(float32(options.Brightness)))
 	}
 	g.Add(
-		gift.ResizeToFit(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
+		filters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
 		filters.Pixel(),
 	)
 	return g
