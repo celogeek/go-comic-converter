@@ -76,6 +76,8 @@ The ePub include as a first page:
 # go-comic-converter -h
 
 Usage of go-comic-converter:
+  -addpanelview
+    	Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.
   -author string
     	Author of the epub (default "GO Comic Converter")
   -auto

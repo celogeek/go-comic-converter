@@ -24,7 +24,10 @@
 <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
 <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
 <item id="cover" href="Images/{{ .Cover.Id }}_p{{ .Cover.Part }}.jpg" media-type="image/jpeg" properties="cover-image"/>
-<item id="css" href="Text/style.css" media-type="text/css"/>
+<item id="style_css" href="Text/style.css" media-type="text/css"/>
+{{ if eq $info.AddPanelView true }}
+<item id="panelview_css" href="Text/panelview.css" media-type="text/css"/>
+{{ end }}
 <item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
 {{ range .Images }}
 <item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>

@@ -72,6 +72,7 @@ type Option struct {
 	NoBlankPage         bool
 	Manga               bool
 	NoCover             bool
+	AddPanelView        bool
 	Workers             int
 	LimitMb             int
 }
@@ -108,6 +109,7 @@ Options:
     NoBlankPage        : %v
     Manga              : %v
     HasCover           : %v
+    AddPanelView       : %v
     LimitMb            : %s
     Workers            : %d
 `,
@@ -125,6 +127,7 @@ Options:
 		o.NoBlankPage,
 		o.Manga,
 		!o.NoCover,
+		o.AddPanelView,
 		limitmb,
 		o.Workers,
 	)
@@ -158,6 +161,7 @@ func main() {
 	flag.BoolVar(&opt.NoBlankPage, "noblankpage", false, "Remove blank pages")
 	flag.BoolVar(&opt.Manga, "manga", false, "Manga mode (right to left)")
 	flag.BoolVar(&opt.NoCover, "nocover", false, "Indicate if your comic doesn't have a cover. The first page will be used as a cover and include after the title.")
+	flag.BoolVar(&opt.AddPanelView, "addpanelview", false, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.IntVar(&opt.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	flag.Usage = func() {
@@ -266,6 +270,7 @@ func main() {
 			NoBlankPage:         opt.NoBlankPage,
 			Manga:               opt.Manga,
 			HasCover:            !opt.NoCover,
+			AddPanelView:        opt.AddPanelView,
 			Workers:             opt.Workers,
 		},
 	}).Write(); err != nil {

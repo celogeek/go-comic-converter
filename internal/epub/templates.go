@@ -17,11 +17,17 @@ var navTmpl string
 //go:embed "templates/style.css.tmpl"
 var styleTmpl string
 
+//go:embed "templates/panelview.css.tmpl"
+var panelViewTmpl string
+
 //go:embed "templates/part.xhtml.tmpl"
 var partTmpl string
 
 //go:embed "templates/text.xhtml.tmpl"
 var textTmpl string
+
+//go:embed "templates/textnopanel.xhtml.tmpl"
+var textNoPanelTmpl string
 
 //go:embed "templates/blank.xhtml.tmpl"
 var blankTmpl string

@@ -26,6 +26,7 @@ type ImageOptions struct {
 	NoBlankPage         bool
 	Manga               bool
 	HasCover            bool
+	AddPanelView        bool
 	Workers             int
 }
 
@@ -198,6 +199,9 @@ func (e *ePub) Write() error {
 				"Total": totalParts,
 			})},
 		}
+		if e.AddPanelView {
+			content = append(content, zipContent{"OEBPS/Text/panelview.css", panelViewTmpl})
+		}
 
 		if err = wz.WriteMagic(); err != nil {
 			return err
@@ -215,13 +219,19 @@ func (e *ePub) Write() error {
 		}
 
 		for _, img := range part.Images {
-			if err := wz.WriteFile(
-				fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part),
-				e.render(textTmpl, map[string]any{
+			var content string
+			if e.AddPanelView {
+				content = e.render(textTmpl, map[string]any{
 					"Image": img,
 					"Manga": e.Manga,
-				}),
-			); err != nil {
+				})
+			} else {
+				content = e.render(textNoPanelTmpl, map[string]any{
+					"Image": img,
+				})
+			}
+
+			if err := wz.WriteFile(fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part), content); err != nil {
 				return err
 			}
 
