@@ -96,6 +96,8 @@ Usage of go-comic-converter:
     	Manga mode (right to left)
   -noblankpage
     	Remove blank pages
+  -nocover
+    	Indicate if your comic doesn't have a cover. The first page will be used as a cover and include after the title.
   -nocrop
     	Disable cropping
   -output string

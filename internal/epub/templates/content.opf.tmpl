@@ -23,12 +23,14 @@
 <manifest>
 <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
 <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
-<item id="cover" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>
+<item id="cover" href="Images/{{ .Cover.Id }}_p{{ .Cover.Part }}.jpg" media-type="image/jpeg" properties="cover-image"/>
 <item id="css" href="Text/style.css" media-type="text/css"/>
 <item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
 {{ range .Images }}
 <item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
+{{ if eq .IsCover false }}
 <item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
+{{ end }}
 {{ if eq $info.NoBlankPage false }}
 {{ if eq .Part 1 }}
 <item id="page_{{ .Id }}_sp" href="Text/{{ .Id }}_sp.xhtml" media-type="application/xhtml+xml"/>

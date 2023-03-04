@@ -22,11 +22,12 @@ import (
 )
 
 type Image struct {
-	Id     int
-	Part   int
-	Data   *ImageData
-	Width  int
-	Height int
+	Id      int
+	Part    int
+	Data    *ImageData
+	Width   int
+	Height  int
+	IsCover bool
 }
 
 type imageTask struct {
@@ -152,12 +153,13 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					newImageData(img.Id, 0, dst, options.Quality),
 					dst.Bounds().Dx(),
 					dst.Bounds().Dy(),
+					img.Id == 0,
 				}
 
 				// Auto split double page
 				// Except for cover
 				// Only if the src image have width > height and is bigger than the view
-				if img.Id > 0 &&
+				if (!options.HasCover || img.Id > 0) &&
 					options.AutoSplitDoublePage &&
 					src.Bounds().Dx() > src.Bounds().Dy() &&
 					src.Bounds().Dx() > options.ViewHeight &&
@@ -173,6 +175,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 							newImageData(img.Id, part, dst, options.Quality),
 							dst.Bounds().Dx(),
 							dst.Bounds().Dy(),
+							false,
 						}
 					}
 				}

@@ -71,6 +71,7 @@ type Option struct {
 	AutoSplitDoublePage bool
 	NoBlankPage         bool
 	Manga               bool
+	NoCover             bool
 	Workers             int
 	LimitMb             int
 }
@@ -106,6 +107,7 @@ Options:
     AutoSplitDoublePage: %v
     NoBlankPage        : %v
     Manga              : %v
+    HasCover           : %v
     LimitMb            : %s
     Workers            : %d
 `,
@@ -122,6 +124,7 @@ Options:
 		o.AutoSplitDoublePage,
 		o.NoBlankPage,
 		o.Manga,
+		!o.NoCover,
 		limitmb,
 		o.Workers,
 	)
@@ -154,6 +157,7 @@ func main() {
 	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", false, "Auto Split double page when width > height")
 	flag.BoolVar(&opt.NoBlankPage, "noblankpage", false, "Remove blank pages")
 	flag.BoolVar(&opt.Manga, "manga", false, "Manga mode (right to left)")
+	flag.BoolVar(&opt.NoCover, "nocover", false, "Indicate if your comic doesn't have a cover. The first page will be used as a cover and include after the title.")
 	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.IntVar(&opt.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	flag.Usage = func() {
@@ -261,6 +265,7 @@ func main() {
 			AutoSplitDoublePage: opt.AutoSplitDoublePage,
 			NoBlankPage:         opt.NoBlankPage,
 			Manga:               opt.Manga,
+			HasCover:            !opt.NoCover,
 			Workers:             opt.Workers,
 		},
 	}).Write(); err != nil {

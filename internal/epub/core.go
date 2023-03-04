@@ -25,6 +25,7 @@ type ImageOptions struct {
 	AutoSplitDoublePage bool
 	NoBlankPage         bool
 	Manga               bool
+	HasCover            bool
 	Workers             int
 }
 
@@ -113,7 +114,9 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 
 	parts := make([]*epubPart, 0)
 	cover := images[0]
-	images = images[1:]
+	if e.HasCover {
+		images = images[1:]
+	}
 	if e.LimitMb == 0 {
 		parts = append(parts, &epubPart{
 			Cover:  cover,
@@ -185,7 +188,7 @@ func (e *ePub) Write() error {
 
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
-			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{"Info": e, "Images": part.Images})},
+			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{"Info": e, "Cover": part.Cover, "Images": part.Images})},
 			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e})},
 			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e})},
 			{"OEBPS/Text/style.css", styleTmpl},
@@ -204,7 +207,12 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		wz.WriteImage(part.Cover.Data)
+
+		// Cover exist or part > 1
+		// If no cover, part 2 and more will include the image as a cover
+		if e.HasCover || i > 0 {
+			wz.WriteImage(part.Cover.Data)
+		}
 
 		for _, img := range part.Images {
 			if err := wz.WriteFile(
