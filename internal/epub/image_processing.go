@@ -22,12 +22,13 @@ import (
 )
 
 type Image struct {
-	Id      int
-	Part    int
-	Data    *ImageData
-	Width   int
-	Height  int
-	IsCover bool
+	Id        int
+	Part      int
+	Data      *ImageData
+	Width     int
+	Height    int
+	IsCover   bool
+	NeedSpace bool
 }
 
 type imageTask struct {
@@ -154,6 +155,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					dst.Bounds().Dx(),
 					dst.Bounds().Dy(),
 					img.Id == 0,
+					false,
 				}
 
 				// Auto split double page
@@ -176,6 +178,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 							dst.Bounds().Dx(),
 							dst.Bounds().Dy(),
 							false,
+							false, // NeedSpace reajust during parts computation
 						}
 					}
 				}

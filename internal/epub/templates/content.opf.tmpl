@@ -1,53 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="3.0" unique-identifier="BookID" xmlns="http://www.idpf.org/2007/opf">
 {{ $info := .Info }}
-<metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-<dc:title>{{ $info.Title }}</dc:title>
-<dc:language>en-US</dc:language>
-<dc:identifier id="BookID">urn:uuid:{{ $info.UID }}</dc:identifier>
-<dc:contributor id="contributor">GO Comic Converter</dc:contributor>
-<dc:creator>GO Comic Converter</dc:creator>
-<meta property="dcterms:modified">{{ $info.UpdatedAt }}</meta>
-<meta name="cover" content="cover"/>
-<meta name="fixed-layout" content="true"/>
-<meta name="original-resolution" content="{{ $info.ViewWidth }}x{{ $info.ViewHeight }}"/>
-<meta name="book-type" content="comic"/>
-<meta name="primary-writing-mode" content="horizontal-{{ if $info.Manga }}rl{{ else }}lr{{ end }}"/>
-<meta name="zero-gutter" content="true"/>
-<meta name="zero-margin" content="true"/>
-<meta name="ke-border-color" content="#FFFFFF"/>
-<meta name="ke-border-width" content="0"/>
-<meta name="orientation-lock" content="portrait"/>
-<meta name="region-mag" content="true"/>
-</metadata>
-<manifest>
-<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
-<item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
-<item id="cover" href="Images/{{ .Cover.Id }}_p{{ .Cover.Part }}.jpg" media-type="image/jpeg" properties="cover-image"/>
-<item id="style_css" href="Text/style.css" media-type="text/css"/>
+  <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>{{ $info.Title }}</dc:title>
+    <dc:language>en-US</dc:language>
+    <dc:identifier id="BookID">urn:uuid:{{ $info.UID }}</dc:identifier>
+    <dc:contributor id="contributor">GO Comic Converter</dc:contributor>
+    <dc:creator>GO Comic Converter</dc:creator>
+    <meta property="dcterms:modified">{{ $info.UpdatedAt }}</meta>
+    <meta name="fixed-layout" content="true"/>
+    <meta name="original-resolution" content="{{ $info.ViewWidth }}x{{ $info.ViewHeight }}"/>
+    <meta name="book-type" content="comic"/>
+    <meta name="primary-writing-mode" content="horizontal-{{ if $info.Manga }}rl{{ else }}lr{{ end }}"/>
+    <meta property="rendition:orientation">portrait</meta>
+    <meta name="orientation-lock" content="portrait"/>
 {{ if eq $info.AddPanelView true }}
-<item id="panelview_css" href="Text/panelview.css" media-type="text/css"/>
+    <meta name="region-mag" content="true"/>
 {{ end }}
-<item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="nav" href="nav.xhtml" properties="nav" media-type="application/xhtml+xml"/>
+    <item id="style_css" href="Text/style.css" media-type="text/css"/>
+{{ if eq $info.AddPanelView true }}
+    <item id="panelview_css" href="Text/panelview.css" media-type="text/css"/>
+{{ end }}
+    <item id="cover" href="Images/{{ .Cover.Id }}_p{{ .Cover.Part }}.jpg" media-type="image/jpeg" properties="cover-image"/>
 {{ range .Images }}
-<item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
 {{ if eq .IsCover false }}
-<item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
-{{ end }}
-{{ if eq $info.NoBlankPage false }}
-{{ if eq .Part 1 }}
-<item id="page_{{ .Id }}_sp" href="Text/{{ .Id }}_sp.xhtml" media-type="application/xhtml+xml"/>
+    <item id="img_{{ .Id }}_p{{ .Part}}" href="Images/{{ .Id }}_p{{ .Part}}.jpg" media-type="image/jpeg"/>
 {{ end }}
 {{ end }}
-{{ end }}
-</manifest>
-<spine page-progression-direction="{{ if $info.Manga }}rtl{{ else }}ltr{{ end }}" toc="ncx">
-<itemref idref="page_part" linear="yes" properties="page-spread-{{ spread }}"/>
+    <item id="page_part" href="Text/part.xhtml" media-type="application/xhtml+xml"/>
 {{ range .Images }}
-{{ if spread_blank .Part }}
-<itemref idref="page_{{ .Id }}_sp" linear="yes" properties="page-spread-{{ spread }}"/>
+    <item id="page_{{ .Id }}_p{{ .Part}}" href="Text/{{ .Id }}_p{{ .Part}}.xhtml" media-type="application/xhtml+xml"/>
+{{ if eq .NeedSpace true }}
+    <item id="page_{{ .Id }}_sp" href="Text/{{ .Id }}_sp.xhtml" media-type="application/xhtml+xml"/>
 {{ end }}
-<itemref idref="page_{{ .Id }}_p{{ .Part }}" linear="yes" properties="page-spread-{{ spread }}"/>
 {{ end }}
-</spine>
+  </manifest>
+  <spine toc="ncx" page-progression-direction="{{ if $info.Manga }}rtl{{ else }}ltr{{ end }}">
+    <itemref idref="page_part" linear="yes"/>
+{{ range .Images }}
+{{ if eq .NeedSpace true }}
+    <itemref idref="page_{{ .Id }}_sp" linear="yes"/>
+{{ end }}
+    <itemref idref="page_{{ .Id }}_p{{ .Part }}" linear="yes"/>
+{{ end }}
+  </spine>
 </package>

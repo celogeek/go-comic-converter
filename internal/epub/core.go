@@ -60,27 +60,10 @@ func NewEpub(options *EpubOptions) *ePub {
 		panic(err)
 	}
 
-	var spreadRight = options.Manga
-
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
 		"mod":  func(i, j int) bool { return i%j == 0 },
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
-		"spread": func() (spread string) {
-			if spreadRight {
-				spread = "right"
-			} else {
-				spread = "left"
-			}
-			spreadRight = !spreadRight
-			return
-		},
-		"spread_blank": func(part int) bool {
-			if !options.NoBlankPage && part == 1 && spreadRight == options.Manga {
-				return true
-			}
-			return false
-		},
 	})
 
 	return &ePub{
@@ -118,14 +101,6 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	if e.HasCover {
 		images = images[1:]
 	}
-	if e.LimitMb == 0 {
-		parts = append(parts, &epubPart{
-			Cover:  cover,
-			Images: images,
-		})
-		return parts, nil
-	}
-
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 
 	xhtmlSize := uint64(1024)
@@ -135,20 +110,24 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	currentSize := baseSize
 	currentImages := make([]*Image, 0)
 	part := 1
+	imgIsOnRightSide := false
 
 	for _, img := range images {
 		imgSize := img.Data.CompressedSize() + xhtmlSize
-		if len(currentImages) > 0 && currentSize+imgSize > maxSize {
+		if maxSize > 0 && len(currentImages) > 0 && currentSize+imgSize > maxSize {
 			parts = append(parts, &epubPart{
 				Cover:  cover,
 				Images: currentImages,
 			})
 			part += 1
+			imgIsOnRightSide = false
 			currentSize = baseSize
 			currentImages = make([]*Image, 0)
 		}
 		currentSize += imgSize
+		img.NeedSpace = img.Part == 1 && imgIsOnRightSide
 		currentImages = append(currentImages, img)
+		imgIsOnRightSide = !imgIsOnRightSide
 	}
 	if len(currentImages) > 0 {
 		parts = append(parts, &epubPart{
@@ -235,7 +214,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 
-			if !e.NoBlankPage && img.Part == 1 {
+			if img.NeedSpace {
 				if err := wz.WriteFile(
 					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 					e.render(blankTmpl, map[string]any{
