@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
-<head>
-<title>Page {{ .Image.Id }} Space</title>
-<link href="style.css" type="text/css" rel="stylesheet"/>
-<meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
-</head>
-<body style="">
-<div style="text-align:center;top:0.0%;">
-<h1>{{ if .Info.Manga }}&#8592;{{ else }}&#8594;{{ end }}</h1>
-</div>
-</body>
+  <head>
+    <title>Page {{ .Image.Id }} Space</title>
+    <link href="style.css" type="text/css" rel="stylesheet"/>
+    <meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
+  </head>
+  <body>
+    <h1>{{ if .Info.Manga }}&#8592;{{ else }}&#8594;{{ end }}</h1>
+  </body>
 </html>
