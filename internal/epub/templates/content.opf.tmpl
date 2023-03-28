@@ -5,8 +5,10 @@
     <dc:title>{{ $info.Title }}</dc:title>
     <dc:language>en-US</dc:language>
     <dc:identifier id="BookID">urn:uuid:{{ $info.UID }}</dc:identifier>
-    <dc:contributor id="contributor">GO Comic Converter</dc:contributor>
-    <dc:creator>GO Comic Converter</dc:creator>
+    <dc:contributor id="contributor">{{ $info.Publisher }}</dc:contributor>
+    <dc:publisher>{{ $info.Publisher }}</dc:contributor>
+    <dc:date>{{ $info.UpdatedAt }}</dc:contributor>
+    <dc:creator>{{ $info.Author }}</dc:creator>
     <meta property="dcterms:modified">{{ $info.UpdatedAt }}</meta>
     <meta name="fixed-layout" content="true"/>
     <meta name="original-resolution" content="{{ $info.ViewWidth }}x{{ $info.ViewHeight }}"/>
