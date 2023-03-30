@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"io/fs"
 	"os"
@@ -218,9 +220,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	return images, nil
 }
 
-func isJpeg(path string) bool {
+func isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg":
+	case ".jpg", ".jpeg", ".png":
 		{
 			return true
 		}
@@ -234,7 +236,7 @@ func loadDir(input string) (int, chan *imageTask, error) {
 		if err != nil {
 			return err
 		}
-		if !d.IsDir() && isJpeg(path) {
+		if !d.IsDir() && isSupportedImage(path) {
 			images = append(images, path)
 		}
 		return nil
@@ -275,7 +277,7 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 
 	images := make([]*zip.File, 0)
 	for _, f := range r.File {
-		if !f.FileInfo().IsDir() && isJpeg(f.Name) {
+		if !f.FileInfo().IsDir() && isSupportedImage(f.Name) {
 			images = append(images, f)
 		}
 	}
@@ -325,7 +327,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 			break
 		}
 
-		if !f.IsDir && isJpeg(f.Name) {
+		if !f.IsDir && isSupportedImage(f.Name) {
 			names = append(names, f.Name)
 		}
 	}
