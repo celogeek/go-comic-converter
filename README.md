@@ -26,9 +26,9 @@ Add GOPATH to your PATH
 export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
-# Supported images
+# Supported image files
 
-The supported images are jpeg and png from the sources.
+The supported image files are jpeg and png from the sources.
 
 The extensions can be: jpg, jpeg, png.
 
@@ -38,7 +38,7 @@ The case for extensions doesn't matter.
 
 ## Convert directory
 
-Convert every supported images file found in the input directory:
+Convert every supported image files found in the input directory:
 
 ```
 go-comic-converter --profile KS --input ~/Download/MyComic
@@ -48,7 +48,7 @@ By default it will output: ~/Download/MyComic.epub
 
 ## Convert CBZ, ZIP, CBR, RAR, PDF
 
-Convert every supported images file found in the input directory:
+Convert every supported image files found in the input directory:
 
 ```
 go-comic-converter --profile KS --input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
