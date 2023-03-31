@@ -166,9 +166,20 @@ func (e *ePub) Write() error {
 		}
 		defer wz.Close()
 
+		title := e.Title
+		if totalParts > 1 {
+			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
+		}
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
-			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{"Info": e, "Cover": part.Cover, "Images": part.Images})},
+			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{
+				"Info":   e,
+				"Cover":  part.Cover,
+				"Images": part.Images,
+				"Title":  title,
+				"Part":   i + 1,
+				"Total":  totalParts,
+			})},
 			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e})},
 			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e})},
 			{"OEBPS/Text/style.css", styleTmpl},

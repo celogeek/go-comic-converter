@@ -2,7 +2,7 @@
 <package version="3.0" unique-identifier="BookID" xmlns="http://www.idpf.org/2007/opf">
 {{ $info := .Info }}
   <metadata xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <dc:title>{{ $info.Title }}</dc:title>
+    <dc:title>{{ .Title }}</dc:title>
     <dc:language>en-US</dc:language>
     <dc:identifier id="BookID">urn:uuid:{{ $info.UID }}</dc:identifier>
     <dc:contributor id="contributor">{{ $info.Publisher }}</dc:contributor>
@@ -18,6 +18,10 @@
     <meta name="orientation-lock" content="portrait"/>
 {{ if eq $info.AddPanelView true }}
     <meta name="region-mag" content="true"/>
+{{ end }}
+{{ if gt .Total 1 }}
+    <meta name="calibre:series" content="{{ $info.Title }}"/>
+    <meta name="calibre:series_index" content="{{ .Part }}"/>
 {{ end }}
   </metadata>
   <manifest>
