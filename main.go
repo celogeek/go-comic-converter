@@ -216,6 +216,11 @@ func main() {
 	}
 	flag.Parse()
 
+	if opt.Auto {
+		opt.AutoRotate = true
+		opt.AutoSplitDoublePage = true
+	}
+
 	if opt.Save {
 		f, err := os.Create(ConfigFile)
 		if err != nil {
@@ -313,11 +318,6 @@ func main() {
 	if opt.Title == "" {
 		ext := filepath.Ext(defaultOutput)
 		opt.Title = filepath.Base(defaultOutput[0 : len(defaultOutput)-len(ext)])
-	}
-
-	if opt.Auto {
-		opt.AutoRotate = true
-		opt.AutoSplitDoublePage = true
 	}
 
 	fmt.Fprintln(os.Stderr, opt)
