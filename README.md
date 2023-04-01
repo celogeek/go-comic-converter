@@ -98,6 +98,10 @@ Usage of go-comic-converter:
     	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
   -contrast int
     	Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast
+  -crop
+    	Crop images (default true)
+  -hascover
+    	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title. (default true)
   -input string
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
   -limitmb int
@@ -106,10 +110,6 @@ Usage of go-comic-converter:
     	Manga mode (right to left)
   -noblankpage
     	Remove blank pages
-  -nocover
-    	Indicate if your comic doesn't have a cover. The first page will be used as a cover and include after the title.
-  -nocrop
-    	Disable cropping
   -output string
     	Output of the epub (directory or epub): (default [INPUT].epub)
   -profile string
@@ -138,8 +138,11 @@ Usage of go-comic-converter:
     	    - KoF     ( 1440x1920 ) - 16 levels of gray - Kobo Forma
     	    - KoS     ( 1440x1920 ) - 16 levels of gray - Kobo Sage
     	    - KoE     ( 1404x1872 ) - 16 levels of gray - Kobo Elipsa
+
   -quality int
     	Quality of the image (default 85)
+  -save
+    	Save your parameters as default.
   -title string
     	Title of the epub
   -workers int

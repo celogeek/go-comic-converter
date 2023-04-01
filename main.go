@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/celogeek/go-comic-converter/internal/epub"
+	"gopkg.in/yaml.v3"
 )
 
 type Profile struct {
@@ -56,6 +57,24 @@ func init() {
 	}
 }
 
+var Home, _ = os.UserHomeDir()
+var ConfigFile = filepath.Join(Home, ".go-comic-converter.yaml")
+
+type Config struct {
+	Profile             string `yaml:"profile"`
+	Quality             int    `yaml:"quality"`
+	Crop                bool   `yaml:"crop"`
+	Brightness          int    `yaml:"brightness"`
+	Contrast            int    `yaml:"contrast"`
+	AutoRotate          bool   `yaml:"auto_rotate"`
+	AutoSplitDoublePage bool   `yaml:"auto_split_double_page"`
+	NoBlankPage         bool   `yaml:"no_blank_page"`
+	Manga               bool   `yaml:"manga"`
+	HasCover            bool   `yaml:"has_cover"`
+	AddPanelView        bool   `yaml:"add_panel_view"`
+	LimitMb             int    `yaml:"limit_mb"`
+}
+
 type Option struct {
 	Input               string
 	Output              string
@@ -63,7 +82,7 @@ type Option struct {
 	Author              string
 	Title               string
 	Quality             int
-	NoCrop              bool
+	Crop                bool
 	Brightness          int
 	Contrast            int
 	Auto                bool
@@ -71,10 +90,11 @@ type Option struct {
 	AutoSplitDoublePage bool
 	NoBlankPage         bool
 	Manga               bool
-	NoCover             bool
+	HasCover            bool
 	AddPanelView        bool
 	Workers             int
 	LimitMb             int
+	Save                bool
 }
 
 func (o *Option) String() string {
@@ -119,14 +139,14 @@ Options:
 		o.Author,
 		o.Title,
 		o.Quality,
-		!o.NoCrop,
+		o.Crop,
 		o.Brightness,
 		o.Contrast,
 		o.AutoRotate,
 		o.AutoSplitDoublePage,
 		o.NoBlankPage,
 		o.Manga,
-		!o.NoCover,
+		o.HasCover,
 		o.AddPanelView,
 		limitmb,
 		o.Workers,
@@ -145,30 +165,81 @@ func main() {
 		))
 	}
 
+	defaultOpt := &Config{
+		Profile:             "",
+		Quality:             85,
+		Crop:                true,
+		Brightness:          0,
+		Contrast:            0,
+		AutoRotate:          false,
+		AutoSplitDoublePage: false,
+		NoBlankPage:         false,
+		Manga:               false,
+		HasCover:            true,
+		AddPanelView:        false,
+		LimitMb:             0,
+	}
+	configHandler, err := os.Open(ConfigFile)
+	if err == nil {
+		defer configHandler.Close()
+		err = yaml.NewDecoder(configHandler).Decode(defaultOpt)
+		if err != nil && err.Error() != "EOF" {
+			fmt.Fprintf(os.Stderr, "Error detected in your config %q\n", ConfigFile)
+			fmt.Fprint(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+
 	opt := &Option{}
 	flag.StringVar(&opt.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
 	flag.StringVar(&opt.Output, "output", "", "Output of the epub (directory or epub): (default [INPUT].epub)")
-	flag.StringVar(&opt.Profile, "profile", "", fmt.Sprintf("Profile to use: \n%s", strings.Join(availableProfiles, "\n")))
+	flag.StringVar(&opt.Profile, "profile", defaultOpt.Profile, fmt.Sprintf("Profile to use: \n%s\n", strings.Join(availableProfiles, "\n")))
 	flag.StringVar(&opt.Author, "author", "GO Comic Converter", "Author of the epub")
 	flag.StringVar(&opt.Title, "title", "", "Title of the epub")
-	flag.IntVar(&opt.Quality, "quality", 85, "Quality of the image")
-	flag.BoolVar(&opt.NoCrop, "nocrop", false, "Disable cropping")
-	flag.IntVar(&opt.Brightness, "brightness", 0, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
-	flag.IntVar(&opt.Contrast, "contrast", 0, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	flag.IntVar(&opt.Quality, "quality", defaultOpt.Quality, "Quality of the image")
+	flag.BoolVar(&opt.Crop, "crop", defaultOpt.Crop, "Crop images")
+	flag.IntVar(&opt.Brightness, "brightness", defaultOpt.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
+	flag.IntVar(&opt.Contrast, "contrast", defaultOpt.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	flag.BoolVar(&opt.Auto, "auto", false, "Activate all automatic options")
-	flag.BoolVar(&opt.AutoRotate, "autorotate", false, "Auto Rotate page when width > height")
-	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", false, "Auto Split double page when width > height")
-	flag.BoolVar(&opt.NoBlankPage, "noblankpage", false, "Remove blank pages")
-	flag.BoolVar(&opt.Manga, "manga", false, "Manga mode (right to left)")
-	flag.BoolVar(&opt.NoCover, "nocover", false, "Indicate if your comic doesn't have a cover. The first page will be used as a cover and include after the title.")
-	flag.BoolVar(&opt.AddPanelView, "addpanelview", false, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
-	flag.IntVar(&opt.LimitMb, "limitmb", 0, "Limit size of the ePub: Default nolimit (0), Minimum 20")
+	flag.BoolVar(&opt.AutoRotate, "autorotate", defaultOpt.AutoRotate, "Auto Rotate page when width > height")
+	flag.BoolVar(&opt.AutoSplitDoublePage, "autosplitdoublepage", defaultOpt.AutoSplitDoublePage, "Auto Split double page when width > height")
+	flag.BoolVar(&opt.NoBlankPage, "noblankpage", defaultOpt.NoBlankPage, "Remove blank pages")
+	flag.BoolVar(&opt.Manga, "manga", defaultOpt.Manga, "Manga mode (right to left)")
+	flag.BoolVar(&opt.HasCover, "hascover", defaultOpt.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
+	flag.BoolVar(&opt.AddPanelView, "addpanelview", defaultOpt.AddPanelView, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
+	flag.IntVar(&opt.LimitMb, "limitmb", defaultOpt.LimitMb, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	flag.IntVar(&opt.Workers, "workers", runtime.NumCPU(), "Number of workers")
+	flag.BoolVar(&opt.Save, "save", false, "Save your parameters as default.")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if opt.Save {
+		f, err := os.Create(ConfigFile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		defer f.Close()
+		yaml.NewEncoder(f).Encode(&Config{
+			Profile:             opt.Profile,
+			Quality:             opt.Quality,
+			Crop:                opt.Crop,
+			Brightness:          opt.Brightness,
+			Contrast:            opt.Contrast,
+			AutoRotate:          opt.AutoRotate,
+			AutoSplitDoublePage: opt.AutoSplitDoublePage,
+			NoBlankPage:         opt.NoBlankPage,
+			Manga:               opt.Manga,
+			HasCover:            opt.HasCover,
+			AddPanelView:        opt.AddPanelView,
+			LimitMb:             opt.LimitMb,
+		})
+		fmt.Fprintf(os.Stderr, "Default settings saved in %q\n", ConfigFile)
+		os.Exit(0)
+	}
 
 	if opt.Input == "" {
 		fmt.Fprintln(os.Stderr, "Missing input or output!")
@@ -215,7 +286,7 @@ func main() {
 
 	profileIdx, profileMatch := ProfilesIdx[opt.Profile]
 	if !profileMatch {
-		fmt.Fprintln(os.Stderr, "Profile doesn't exists!")
+		fmt.Fprintf(os.Stderr, "Profile %q doesn't exists!\n", opt.Profile)
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -261,7 +332,7 @@ func main() {
 			ViewWidth:           profile.Width,
 			ViewHeight:          profile.Height,
 			Quality:             opt.Quality,
-			Crop:                !opt.NoCrop,
+			Crop:                opt.Crop,
 			Palette:             profile.Palette,
 			Brightness:          opt.Brightness,
 			Contrast:            opt.Contrast,
@@ -269,7 +340,7 @@ func main() {
 			AutoSplitDoublePage: opt.AutoSplitDoublePage,
 			NoBlankPage:         opt.NoBlankPage,
 			Manga:               opt.Manga,
-			HasCover:            !opt.NoCover,
+			HasCover:            opt.HasCover,
 			AddPanelView:        opt.AddPanelView,
 			Workers:             opt.Workers,
 		},
