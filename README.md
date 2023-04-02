@@ -12,25 +12,29 @@ First ensure to have a working version of GO: [Installation](https://go.dev/doc/
 
 Then install the last version of the tool:
 ```
-go install github.com/celogeek/go-comic-converter@latest
+$ go install github.com/celogeek/go-comic-converter@latest
 ```
 
 To force install a specific version:
 ```
-go install github.com/celogeek/go-comic-converter@TAG
-# Ex: go install github.com/celogeek/go-comic-converter@v1.0.0
+$ go install github.com/celogeek/go-comic-converter@TAG
+```
+
+Example:
+```
+$ go install github.com/celogeek/go-comic-converter@v1.0.0
 ```
 
 Add GOPATH to your PATH
 ```
-export PATH=$(go env GOPATH)/bin:$PATH
+$ export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
 # Supported image files
 
 The supported image files are jpeg and png from the sources.
 
-The extensions can be: jpg, jpeg, png.
+The extensions can be: `jpg`, `jpeg`, `png`.
 
 The case for extensions doesn't matter.
 
@@ -41,7 +45,7 @@ The case for extensions doesn't matter.
 Convert every supported image files found in the input directory:
 
 ```
-go-comic-converter --profile KS --input ~/Download/MyComic
+$ go-comic-converter -profile KS -input ~/Download/MyComic
 ```
 
 By default it will output: ~/Download/MyComic.epub
@@ -51,7 +55,7 @@ By default it will output: ~/Download/MyComic.epub
 Convert every supported image files found in the input directory:
 
 ```
-go-comic-converter --profile KS --input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
+$ go-comic-converter -profile KS -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
 ```
 
 By default it will output: ~/Download/MyComic.epub
@@ -63,10 +67,10 @@ If you send your ePub through Amazon service, you have some size limitation:
   - App    : 50Mb
   - Website: 200Mb
 
-You can split your file using the "--limitmb MB" option:
+You can split your file using the "-limitmb MB" option:
 
 ```
-go-comic-converter --profile KS --input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] --limitmb 200
+go-comic-converter -profile KS -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -limitmb 200
 ```
 
 If you have more than 1 file the output will be:
@@ -78,40 +82,178 @@ The ePub include as a first page:
   - Title
   - Part NUM / TOTAL
 
+If the total is above 1, then the title of the epub include:
+  - Title [part/total]
+
+## Dry run
+
+If you want to preview what will be set during the convertion without running the conversion, then you can use the `-dry` option.
+
+```
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile KS -auto -manga -limitmb 200 -dry
+Go Comic Converter
+
+Options:
+    Input              : ~/Downloads/mymanga.cbr
+    Output             : ~/Downloads/mymanga.epub
+    Author             : GO Comic Converter
+    Title              : mymanga
+    Workers            : 8
+    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : true
+    AutoSplitDoublePage: true
+    NoBlankPage        : false
+    Manga              : true
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : 200 Mb
+```
+
+## Change default settings
+
+### Show current default option
+```
+$ go-comic-converter -show
+
+Go Comic Converter
+
+Options:
+    Profile            :
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : false
+    AutoSplitDoublePage: false
+    NoBlankPage        : false
+    Manga              : false
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : nolimit
+```
+
+### Change default settings
+```
+$ go-comic-converter -manga -auto -profile KS -limitmb 200 -save
+
+Go Comic Converter
+
+Options:
+    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : true
+    AutoSplitDoublePage: true
+    NoBlankPage        : false
+    Manga              : true
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : 200 Mb
+
+Saving to ~/.go-comic-converter.yaml
+```
+
+If you want to change a setting, you can change only one of them
+```
+$ go-comic-converter -manga=0 -save
+
+Go Comic Converter
+
+Options:
+    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : true
+    AutoSplitDoublePage: true
+    NoBlankPage        : false
+    Manga              : false
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : 200 Mb
+
+Saving to ~/.go-comic-converter.yaml
+```
+
+### Check
+You can test the command dry above like
+```
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -dry
+Go Comic Converter
+
+Options:
+    Input              : ~/Downloads/mymanga.cbr
+    Output             : ~/Downloads/mymanga.epub
+    Author             : GO Comic Converter
+    Title              : mymanga
+    Workers            : 8
+    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : true
+    AutoSplitDoublePage: true
+    NoBlankPage        : false
+    Manga              : true
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : 200 Mb
+```
+
+### Reset default
+To reset all value to default:
+
+```
+$ go-comic-converter -reset
+Go Comic Converter
+
+Options:
+    Profile            :
+    Quality            : 85
+    Crop               : true
+    Brightness         : 0
+    Contrast           : 0
+    AutoRotate         : false
+    AutoSplitDoublePage: false
+    NoBlankPage        : false
+    Manga              : false
+    HasCover           : true
+    AddPanelView       : false
+    LimitMb            : nolimit
+
+Reset default to ~/.go-comic-converter.yaml
+```
+
 # Help
 
 ```
-# go-comic-converter -h
+$ go-comic-converter -h
 
 Usage of go-comic-converter:
-  -addpanelview
-    	Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.
-  -author string
-    	Author of the epub (default "GO Comic Converter")
-  -auto
-    	Activate all automatic options
-  -autorotate
-    	Auto Rotate page when width > height
-  -autosplitdoublepage
-    	Auto Split double page when width > height
-  -brightness int
-    	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
-  -contrast int
-    	Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast
-  -crop
-    	Crop images (default true)
-  -hascover
-    	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title. (default true)
+
+Output:
   -input string
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
-  -limitmb int
-    	Limit size of the ePub: Default nolimit (0), Minimum 20
-  -manga
-    	Manga mode (right to left)
-  -noblankpage
-    	Remove blank pages
   -output string
     	Output of the epub (directory or epub): (default [INPUT].epub)
+  -author string (default "GO Comic Converter")
+    	Author of the epub
+  -title string
+    	Title of the epub
+  -workers int (default CPU)
+    	Number of workers
+  -dry
+    	Dry run to show all options
+
+Config:
   -profile string
     	Profile to use:
     	    - K1      (   600x670 ) -  4 levels of gray - Kindle 1
@@ -138,15 +280,42 @@ Usage of go-comic-converter:
     	    - KoF     ( 1440x1920 ) - 16 levels of gray - Kobo Forma
     	    - KoS     ( 1440x1920 ) - 16 levels of gray - Kobo Sage
     	    - KoE     ( 1404x1872 ) - 16 levels of gray - Kobo Elipsa
+  -quality int (default 85)
+    	Quality of the image
+  -crop (default true)
+    	Crop images
+  -brightness int
+    	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
+  -contrast int
+    	Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast
+  -autorotate
+    	Auto Rotate page when width > height
+  -auto
+    	Activate all automatic options
+  -autosplitdoublepage
+    	Auto Split double page when width > height
+  -noblankpage
+    	Remove blank pages
+  -manga
+    	Manga mode (right to left)
+  -hascover (default true)
+    	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.
+  -addpanelview
+    	Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.
+  -limitmb int
+    	Limit size of the ePub: Default nolimit (0), Minimum 20
 
-  -quality int
-    	Quality of the image (default 85)
+Default config:
+  -show
+    	Show your default parameters
   -save
-    	Save your parameters as default.
-  -title string
-    	Title of the epub
-  -workers int
-    	Number of workers (default number of CPUs)
+    	Save your parameters as default
+  -reset
+    	Reset your parameters to default
+
+Other:
+  -help
+    	Show this help message
 ```
 
 # Credit
