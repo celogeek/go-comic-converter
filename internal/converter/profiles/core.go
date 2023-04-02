@@ -20,7 +20,7 @@ type Profiles []Profile
 
 func New() Profiles {
 	return []Profile{
-		{"KS", "Kindle 1", 600, 670, epub.PALETTE_4},
+		{"K1", "Kindle 1", 600, 670, epub.PALETTE_4},
 		{"K11", "Kindle 11", 1072, 1448, epub.PALETTE_16},
 		{"K2", "Kindle 2", 600, 670, epub.PALETTE_15},
 		{"K34", "Kindle Keyboard/Touch", 600, 800, epub.PALETTE_16},
