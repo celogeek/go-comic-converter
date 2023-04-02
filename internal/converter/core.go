@@ -13,19 +13,11 @@ import (
 	"github.com/celogeek/go-comic-converter/internal/converter/options"
 )
 
-type converterOrder struct {
-	name      string
-	is_string bool
-
-	section    string
-	is_section bool
-}
-
 type Converter struct {
 	Options *options.Options
 	Cmd     *flag.FlagSet
 
-	order           []converterOrder
+	order           []Order
 	isZeroValueErrs []error
 }
 
@@ -35,7 +27,7 @@ func New() *Converter {
 	conv := &Converter{
 		Options: options,
 		Cmd:     cmd,
-		order:   make([]converterOrder, 0),
+		order:   make([]Order, 0),
 	}
 
 	cmdOutput := &strings.Builder{}
@@ -43,10 +35,11 @@ func New() *Converter {
 	cmd.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
 		for _, o := range conv.order {
-			if o.is_section {
-				fmt.Fprintf(os.Stderr, "\n%s:\n", o.section)
-			} else {
-				fmt.Fprintln(os.Stderr, conv.Usage(o.is_string, cmd.Lookup(o.name)))
+			switch v := o.(type) {
+			case OrderSection:
+				fmt.Fprintf(os.Stderr, "\n%s:\n", o.Value())
+			case OrderName:
+				fmt.Fprintln(os.Stderr, conv.Usage(v.isString, cmd.Lookup(v.Value())))
 			}
 		}
 		if cmdOutput.Len() > 0 {
@@ -62,22 +55,22 @@ func (c *Converter) LoadConfig() error {
 }
 
 func (c *Converter) AddSection(section string) {
-	c.order = append(c.order, converterOrder{section: section, is_section: true})
+	c.order = append(c.order, OrderSection{value: section})
 }
 
 func (c *Converter) AddStringParam(p *string, name string, value string, usage string) {
 	c.Cmd.StringVar(p, name, value, usage)
-	c.order = append(c.order, converterOrder{name: name, is_string: true})
+	c.order = append(c.order, OrderName{value: name, isString: true})
 }
 
 func (c *Converter) AddIntParam(p *int, name string, value int, usage string) {
 	c.Cmd.IntVar(p, name, value, usage)
-	c.order = append(c.order, converterOrder{name: name})
+	c.order = append(c.order, OrderName{value: name})
 }
 
 func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string) {
 	c.Cmd.BoolVar(p, name, value, usage)
-	c.order = append(c.order, converterOrder{name: name})
+	c.order = append(c.order, OrderName{value: name})
 }
 
 func (c *Converter) InitParse() {
