@@ -20,7 +20,7 @@ func main() {
 		cmd.Options.SaveDefault()
 		fmt.Fprintf(
 			os.Stderr,
-			"%s%s\n\nSaving to %s.\n",
+			"%s%s\n\nSaving to %s\n",
 			cmd.Options.Header(),
 			cmd.Options.ShowDefault(),
 			cmd.Options.FileName(),
