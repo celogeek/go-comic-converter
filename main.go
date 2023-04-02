@@ -33,6 +33,18 @@ func main() {
 		return
 	}
 
+	if cmd.Options.Reset {
+		cmd.Options.ResetDefault()
+		fmt.Fprintf(
+			os.Stderr,
+			"%s%s\n\nReset default to %s\n",
+			cmd.Options.Header(),
+			cmd.Options.ShowDefault(),
+			cmd.Options.FileName(),
+		)
+		return
+	}
+
 	if err := cmd.Validate(); err != nil {
 		cmd.Fatal(err)
 	}

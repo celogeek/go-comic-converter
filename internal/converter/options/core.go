@@ -34,8 +34,9 @@ type Options struct {
 	LimitMb             int    `yaml:"limit_mb"`
 
 	// Default Config
-	Show bool `yaml:"-"`
-	Save bool `yaml:"-"`
+	Show  bool `yaml:"-"`
+	Save  bool `yaml:"-"`
+	Reset bool `yaml:"-"`
 
 	// Other
 	Help bool `yaml:"-"`
@@ -149,6 +150,11 @@ func (o *Options) ShowDefault() string {
 		o.AddPanelView,
 		limitmb,
 	)
+}
+
+func (o *Options) ResetDefault() error {
+	New().SaveDefault()
+	return o.LoadDefault()
 }
 
 func (o *Options) SaveDefault() error {

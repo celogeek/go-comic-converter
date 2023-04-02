@@ -100,6 +100,7 @@ func (c *Converter) InitParse() {
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
 	c.AddBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
+	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
 	c.AddSection("Other")
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
