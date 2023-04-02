@@ -38,6 +38,8 @@ func New() *Converter {
 		order:   make([]converterOrder, 0),
 	}
 
+	cmdOutput := &strings.Builder{}
+	cmd.SetOutput(cmdOutput)
 	cmd.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
 		for _, o := range conv.order {
@@ -46,6 +48,9 @@ func New() *Converter {
 			} else {
 				fmt.Fprintln(os.Stderr, conv.Usage(o.is_string, cmd.Lookup(o.name)))
 			}
+		}
+		if cmdOutput.Len() > 0 {
+			fmt.Fprintf(os.Stderr, "\nError: %s", cmdOutput.String())
 		}
 	}
 
