@@ -1,10 +1,11 @@
-package converter
+package options
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/celogeek/go-comic-converter/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,10 +33,10 @@ type Options struct {
 	AddPanelView        bool   `yaml:"add_panel_view"`
 	LimitMb             int    `yaml:"limit_mb"`
 
-	profiles Profiles
+	profiles profiles.Profiles
 }
 
-func NewOptions() *Options {
+func New() *Options {
 	return &Options{
 		Profile:             "",
 		Quality:             85,
@@ -49,8 +50,7 @@ func NewOptions() *Options {
 		HasCover:            true,
 		AddPanelView:        false,
 		LimitMb:             0,
-
-		profiles: NewProfile(),
+		profiles:            profiles.New(),
 	}
 }
 
@@ -94,14 +94,6 @@ func (o *Options) LoadDefault() error {
 		return err
 	}
 	return nil
-}
-
-func (o *Options) GetProfile() *Profile {
-	if profile, ok := o.profiles[o.Profile]; ok {
-		return &profile
-	} else {
-		return nil
-	}
 }
 
 func (o *Options) ShowDefault() string {
@@ -157,4 +149,12 @@ func (o *Options) SaveDefault() error {
 	}
 	defer f.Close()
 	return yaml.NewEncoder(f).Encode(o)
+}
+
+func (o *Options) GetProfile() *profiles.Profile {
+	return o.profiles.Get(o.Profile)
+}
+
+func (o *Options) AvailableProfiles() string {
+	return o.profiles.String()
 }

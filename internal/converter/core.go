@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/celogeek/go-comic-converter/internal/converter/options"
 )
 
 type converterOrder struct {
@@ -20,7 +22,7 @@ type converterOrder struct {
 }
 
 type Converter struct {
-	Options *Options
+	Options *options.Options
 	Cmd     *flag.FlagSet
 
 	order           []converterOrder
@@ -28,7 +30,7 @@ type Converter struct {
 }
 
 func New() *Converter {
-	options := NewOptions()
+	options := options.New()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
 	conv := &Converter{
 		Options: options,
@@ -83,7 +85,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
 
 	c.AddSection("Config")
-	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.profiles))
+	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
 	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
 	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
@@ -238,7 +240,7 @@ func (c *Converter) Validate() error {
 		return errors.New("profile missing")
 	}
 
-	if _, ok := c.Options.profiles[c.Options.Profile]; !ok {
+	if p := c.Options.GetProfile(); p == nil {
 		return fmt.Errorf("profile %q doesn't exists", c.Options.Profile)
 	}
 
