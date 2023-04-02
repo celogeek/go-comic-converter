@@ -10,16 +10,16 @@ import (
 )
 
 type Options struct {
-	Input               string `yaml:"-"`
-	Output              string `yaml:"-"`
-	Author              string `yaml:"-"`
-	Title               string `yaml:"-"`
-	Auto                bool   `yaml:"-"`
-	Workers             int    `yaml:"-"`
-	Dry                 bool   `yaml:"-"`
-	Show                bool   `yaml:"-"`
-	Save                bool   `yaml:"-"`
-	Help                bool   `yaml:"-"`
+	// Output
+	Input   string `yaml:"-"`
+	Output  string `yaml:"-"`
+	Author  string `yaml:"-"`
+	Title   string `yaml:"-"`
+	Auto    bool   `yaml:"-"`
+	Workers int    `yaml:"-"`
+	Dry     bool   `yaml:"-"`
+
+	// Config
 	Profile             string `yaml:"profile"`
 	Quality             int    `yaml:"quality"`
 	Crop                bool   `yaml:"crop"`
@@ -33,6 +33,14 @@ type Options struct {
 	AddPanelView        bool   `yaml:"add_panel_view"`
 	LimitMb             int    `yaml:"limit_mb"`
 
+	// Default Config
+	Show bool `yaml:"-"`
+	Save bool `yaml:"-"`
+
+	// Other
+	Help bool `yaml:"-"`
+
+	// Internal
 	profiles profiles.Profiles
 }
 
@@ -93,6 +101,7 @@ func (o *Options) LoadDefault() error {
 	if err != nil && err.Error() != "EOF" {
 		return err
 	}
+
 	return nil
 }
 
