@@ -12,17 +12,17 @@ First ensure to have a working version of GO: [Installation](https://go.dev/doc/
 
 Then install the last version of the tool:
 ```
-$ go install github.com/celogeek/go-comic-converter@latest
+$ go install github.com/celogeek/go-comic-converter/v2
 ```
 
 To force install a specific version:
 ```
-$ go install github.com/celogeek/go-comic-converter@TAG
+$ go install github.com/celogeek/go-comic-converter/v2@V2TAG
 ```
 
 Example:
 ```
-$ go install github.com/celogeek/go-comic-converter@v1.0.0
+$ go install github.com/celogeek/go-comic-converter/v2@v2.0.1
 ```
 
 Add GOPATH to your PATH
