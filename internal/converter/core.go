@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/internal/converter/options"
+	"github.com/celogeek/go-comic-converter/v2/internal/converter/options"
 )
 
 type Converter struct {

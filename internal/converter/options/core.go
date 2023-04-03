@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/celogeek/go-comic-converter/internal/converter/profiles"
+	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
 )
 

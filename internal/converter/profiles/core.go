@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/internal/epub"
+	"github.com/celogeek/go-comic-converter/v2/internal/epub"
 )
 
 type Profile struct {

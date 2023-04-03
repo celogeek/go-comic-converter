@@ -1,4 +1,4 @@
-module github.com/celogeek/go-comic-converter
+module github.com/celogeek/go-comic-converter/v2
 
 go 1.19
 

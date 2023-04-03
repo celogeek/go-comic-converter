@@ -1,7 +1,7 @@
 package epub
 
 import (
-	"github.com/celogeek/go-comic-converter/internal/epub/filters"
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/filters"
 	"github.com/disintegration/gift"
 )
 

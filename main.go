@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/celogeek/go-comic-converter/internal/converter"
-	"github.com/celogeek/go-comic-converter/internal/epub"
+	"github.com/celogeek/go-comic-converter/v2/internal/converter"
+	"github.com/celogeek/go-comic-converter/v2/internal/epub"
 )
 
 func main() {
