@@ -30,6 +30,21 @@ Add GOPATH to your PATH
 $ export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
+# Check last version
+
+You can check if a new version is available with:
+```
+$ go-comic-converter -version
+go-comic-converter
+  Path             : github.com/celogeek/go-comic-converter/v2
+  Sum              : ...
+  Version          : v2.0.2
+  Available Version: v2.0.2
+
+To install the latest version:
+$ go install github.com/celogeek/go-comic-converter/v2@v2.0.2
+```
+
 # Supported image files
 
 The supported image files are jpeg and png from the sources.
@@ -314,6 +329,8 @@ Default config:
     	Reset your parameters to default
 
 Other:
+  -version
+    	Show current and available version
   -help
     	Show this help message
 ```

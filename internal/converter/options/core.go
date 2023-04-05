@@ -39,7 +39,8 @@ type Options struct {
 	Reset bool `yaml:"-"`
 
 	// Other
-	Help bool `yaml:"-"`
+	Version bool `yaml:"-"`
+	Help    bool `yaml:"-"`
 
 	// Internal
 	profiles profiles.Profiles

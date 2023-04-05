@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter"
 	"github.com/celogeek/go-comic-converter/v2/internal/epub"
+	"github.com/tcnksm/go-latest"
 )
 
 func main() {
@@ -15,6 +17,43 @@ func main() {
 	}
 	cmd.InitParse()
 	cmd.Parse()
+
+	if cmd.Options.Version {
+		bi, ok := debug.ReadBuildInfo()
+		if !ok {
+			fmt.Fprintln(os.Stderr, "failed to fetch current version")
+			os.Exit(1)
+		}
+
+		githubTag := &latest.GithubTag{
+			Owner:      "celogeek",
+			Repository: "go-comic-converter",
+		}
+		v, err := githubTag.Fetch()
+		if err != nil || len(v.Versions) < 1 {
+			fmt.Fprintln(os.Stderr, "failed to fetch the latest version")
+			os.Exit(1)
+		}
+		latest_version := v.Versions[0]
+
+		fmt.Printf(`go-comic-converter
+  Path             : %s
+  Sum              : %s
+  Version          : %s
+  Available Version: %s
+
+To install the latest version:
+$ go install github.com/celogeek/go-comic-converter/v%d@%s
+`,
+			bi.Main.Path,
+			bi.Main.Sum,
+			bi.Main.Version,
+			latest_version.Original(),
+			latest_version.Segments()[0],
+			latest_version.Original(),
+		)
+		return
+	}
 
 	if cmd.Options.Save {
 		cmd.Options.SaveDefault()
