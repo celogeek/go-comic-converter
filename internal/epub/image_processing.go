@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 
+	_ "golang.org/x/image/webp"
+
 	"github.com/disintegration/gift"
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
@@ -225,7 +227,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 
 func isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png":
+	case ".jpg", ".jpeg", ".png", ".webp":
 		{
 			return true
 		}
