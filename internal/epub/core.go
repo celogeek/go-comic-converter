@@ -1,6 +1,7 @@
 package epub
 
 import (
+	"encoding/xml"
 	"fmt"
 	"image/color"
 	"path/filepath"
@@ -92,6 +93,7 @@ func (e *ePub) render(templateString string, data any) string {
 
 func (e *ePub) getParts() ([]*epubPart, error) {
 	images, err := LoadImages(e.Input, e.ImageOptions)
+
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +141,37 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	return parts, nil
 }
 
+func (e *ePub) getToc(title string, images []*Image) ([]byte, error) {
+	paths := map[string]*TocPart{
+		".": {},
+	}
+	for _, img := range images {
+		currentPath := "."
+		for _, path := range strings.Split(img.Path, string(filepath.Separator)) {
+			parentPath := currentPath
+			currentPath = filepath.Join(currentPath, path)
+			if _, ok := paths[currentPath]; ok {
+				continue
+			}
+			part := &TocPart{
+				Title: TocTitle{
+					Value: path,
+					Link:  fmt.Sprintf("Text/%d_p%d.xhtml", img.Id, img.Part),
+				},
+			}
+			paths[currentPath] = part
+			if paths[parentPath].Children == nil {
+				paths[parentPath].Children = &TocChildren{}
+			}
+			paths[parentPath].Children.Tags = append(paths[parentPath].Children.Tags, part)
+		}
+	}
+	if paths["."].Children == nil {
+		return []byte{}, nil
+	}
+	return xml.MarshalIndent(paths["."].Children.Tags, "        ", "  ")
+}
+
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
@@ -170,6 +203,11 @@ func (e *ePub) Write() error {
 		if totalParts > 1 {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
+		toc, err := e.getToc(title, part.Images)
+		if err != nil {
+			return err
+		}
+
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
 			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{
@@ -180,8 +218,15 @@ func (e *ePub) Write() error {
 				"Part":   i + 1,
 				"Total":  totalParts,
 			})},
-			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e})},
-			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e})},
+			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{
+				"Info":  e,
+				"Title": title,
+			})},
+			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{
+				"Title": title,
+				"TOC":   string(toc),
+				"Last":  part.Images[len(part.Images)-1],
+			})},
 			{"OEBPS/Text/style.css", styleTmpl},
 			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
 				"Info":  e,
