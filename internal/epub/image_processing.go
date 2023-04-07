@@ -34,8 +34,9 @@ type Image struct {
 }
 
 type imageTask struct {
-	Id     int
-	Reader io.ReadCloser
+	Id       int
+	Reader   io.ReadCloser
+	Filename string
 }
 
 func colorIsBlank(c color.Color) bool {
@@ -123,6 +124,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	imageOutput := make(chan *Image)
 
 	// processing
+	bar := NewBar(imageCount, "Processing", 1, 2)
 	wg := &sync.WaitGroup{}
 
 	for i := 0; i < options.Workers; i++ {
@@ -134,7 +136,9 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 				// Decode image
 				src, _, err := image.Decode(img.Reader)
 				if err != nil {
-					panic(err)
+					bar.Clear()
+					fmt.Fprintf(os.Stderr, "error processing image %s: %s\n", img.Filename, err)
+					os.Exit(1)
 				}
 
 				if options.Crop {
@@ -193,7 +197,6 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 		close(imageOutput)
 	}()
 
-	bar := NewBar(imageCount, "Processing", 1, 2)
 	for image := range imageOutput {
 		if !(options.NoBlankPage && image.Width == 1 && image.Height == 1) {
 			images = append(images, image)
@@ -261,8 +264,9 @@ func loadDir(input string) (int, chan *imageTask, error) {
 				os.Exit(1)
 			}
 			output <- &imageTask{
-				Id:     i,
-				Reader: f,
+				Id:       i,
+				Reader:   f,
+				Filename: img,
 			}
 		}
 	}()
@@ -300,8 +304,9 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 				os.Exit(1)
 			}
 			output <- &imageTask{
-				Id:     i,
-				Reader: f,
+				Id:       i,
+				Reader:   f,
+				Filename: img.Name,
 			}
 		}
 	}()
@@ -367,8 +372,9 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 				io.Copy(b, r)
 
 				output <- &imageTask{
-					Id:     idx,
-					Reader: io.NopCloser(b),
+					Id:       idx,
+					Reader:   io.NopCloser(b),
+					Filename: f.Name,
 				}
 			}
 		}
@@ -401,8 +407,9 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 			}
 
 			output <- &imageTask{
-				Id:     i,
-				Reader: io.NopCloser(b),
+				Id:       i,
+				Reader:   io.NopCloser(b),
+				Filename: fmt.Sprintf("page %d", i+1),
 			}
 		}
 	}()
