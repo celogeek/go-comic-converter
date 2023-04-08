@@ -32,11 +32,12 @@ type ImageOptions struct {
 }
 
 type EpubOptions struct {
-	Input   string
-	Output  string
-	Title   string
-	Author  string
-	LimitMb int
+	Input                      string
+	Output                     string
+	Title                      string
+	Author                     string
+	LimitMb                    int
+	StripFirstDirectoryFromToc bool
 
 	*ImageOptions
 }
@@ -166,10 +167,18 @@ func (e *ePub) getToc(title string, images []*Image) ([]byte, error) {
 			paths[parentPath].Children.Tags = append(paths[parentPath].Children.Tags, part)
 		}
 	}
-	if paths["."].Children == nil {
+
+	children := paths["."].Children
+
+	if children != nil && e.StripFirstDirectoryFromToc && len(children.Tags) == 1 {
+		children = children.Tags[0].Children
+	}
+
+	if children == nil {
 		return []byte{}, nil
 	}
-	return xml.MarshalIndent(paths["."].Children.Tags, "        ", "  ")
+
+	return xml.MarshalIndent(children.Tags, "        ", "  ")
 }
 
 func (e *ePub) Write() error {
