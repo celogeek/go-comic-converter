@@ -36,7 +36,7 @@ func main() {
 		}
 		latest_version := v.Versions[0]
 
-		fmt.Printf(`go-comic-converter
+		fmt.Fprintf(os.Stderr, `go-comic-converter
   Path             : %s
   Sum              : %s
   Version          : %s
