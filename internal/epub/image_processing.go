@@ -16,13 +16,13 @@ import (
 	"strings"
 	"sync"
 
-	_ "golang.org/x/image/webp"
-
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/sortpath"
 	"github.com/disintegration/gift"
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
 	"golang.org/x/image/tiff"
+	_ "golang.org/x/image/webp"
 )
 
 type Image struct {
@@ -138,6 +138,7 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 				img.Path,
 			})
 		}
+
 		return images, nil
 	}
 
@@ -233,15 +234,6 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 		return nil, fmt.Errorf("image not found")
 	}
 
-	sort.Slice(images, func(i, j int) bool {
-		if images[i].Id < images[j].Id {
-			return true
-		} else if images[i].Id == images[j].Id && images[i].Part < images[j].Part {
-			return true
-		}
-		return false
-	})
-
 	return images, nil
 }
 
@@ -275,7 +267,7 @@ func loadDir(input string) (int, chan *imageTask, error) {
 		return 0, nil, fmt.Errorf("image not found")
 	}
 
-	sort.Strings(images)
+	sort.Sort(sortpath.By(images))
 
 	output := make(chan *imageTask)
 	go func() {
@@ -320,21 +312,28 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 		return 0, nil, fmt.Errorf("no images found")
 	}
 
-	sort.SliceStable(images, func(i, j int) bool {
-		return strings.Compare(images[i].Name, images[j].Name) < 0
-	})
+	names := []string{}
+	for _, img := range images {
+		names = append(names, img.Name)
+	}
+	sort.Sort(sortpath.By(names))
+
+	indexedNames := make(map[string]int)
+	for i, name := range names {
+		indexedNames[name] = i
+	}
 
 	output := make(chan *imageTask)
 	go func() {
 		defer close(output)
-		for i, img := range images {
+		for _, img := range images {
 			f, err := img.Open()
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
 			output <- &imageTask{
-				Id:       i,
+				Id:       indexedNames[img.Name],
 				Reader:   f,
 				Path:     filepath.Dir(filepath.Clean(img.Name)),
 				Filename: img.Name,
@@ -373,7 +372,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 		return 0, nil, fmt.Errorf("no images found")
 	}
 
-	sort.Strings(names)
+	sort.Sort(sortpath.By(names))
 
 	indexedNames := make(map[string]int)
 	for i, name := range names {
