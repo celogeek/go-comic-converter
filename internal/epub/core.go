@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -101,6 +102,16 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(images, func(i, j int) bool {
+		if images[i].Id < images[j].Id {
+			return true
+		} else if images[i].Id == images[j].Id {
+			return images[i].Part < images[j].Part
+		} else {
+			return false
+		}
+	})
 
 	parts := make([]*epubPart, 0)
 	cover := images[0]
