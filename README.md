@@ -37,12 +37,12 @@ You can check if a new version is available with:
 $ go-comic-converter -version
 go-comic-converter
   Path             : github.com/celogeek/go-comic-converter/v2
-  Sum              : ...
-  Version          : v2.0.2
-  Available Version: v2.0.2
+  Sum              : h1:yRolZP27Qw4Wt+tN28S3G4TLbZiyIngNq3lsvtHV7SI=
+  Version          : v2.0.5
+  Available Version: v2.0.5
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.0.2
+$ go install github.com/celogeek/go-comic-converter/v2@v2.0.5
 ```
 
 # Supported image files
