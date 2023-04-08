@@ -90,10 +90,6 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 
 	fmt.Fprintln(os.Stderr, cmd.Options)
 
-	if cmd.Options.Dry {
-		return
-	}
-
 	profile := cmd.Options.GetProfile()
 	if err := epub.NewEpub(&epub.EpubOptions{
 		Input:                      cmd.Options.Input,
@@ -102,6 +98,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Title:                      cmd.Options.Title,
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
+		Dry:                        cmd.Options.Dry,
 		ImageOptions: &epub.ImageOptions{
 			ViewWidth:           profile.Width,
 			ViewHeight:          profile.Height,

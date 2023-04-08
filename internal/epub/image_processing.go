@@ -92,7 +92,7 @@ BOTTOM:
 	return imgArea
 }
 
-func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
+func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) {
 	images := make([]*Image, 0)
 
 	fi, err := os.Stat(path)
@@ -121,6 +121,22 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if dry {
+		for img := range imageInput {
+			images = append(images, &Image{
+				img.Id,
+				0,
+				nil,
+				0,
+				0,
+				false,
+				false, // NeedSpace reajust during parts computation
+				img.Path,
+			})
+		}
+		return images, nil
 	}
 
 	imageOutput := make(chan *Image)
