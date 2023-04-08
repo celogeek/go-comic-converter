@@ -9,9 +9,8 @@
     <nav epub:type="toc" id="toc">
       <h1>Table of content</h1>
       <ol>
-        <li><a href="Text/part.xhtml">Title</a></li>
+        <li><a href="Text/part.xhtml">{{ .Title }}</a></li>
 {{ .TOC }}
-        <li><a href="Text/{{ .Last.Id }}_p{{ .Last.Part}}.xhtml">Last page</a></li>
       </ol>
     </nav>
   </body>

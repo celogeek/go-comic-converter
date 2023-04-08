@@ -234,7 +234,6 @@ func (e *ePub) Write() error {
 			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{
 				"Title": title,
 				"TOC":   string(toc),
-				"Last":  part.Images[len(part.Images)-1],
 			})},
 			{"OEBPS/Text/style.css", styleTmpl},
 			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
