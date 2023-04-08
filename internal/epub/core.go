@@ -1,8 +1,10 @@
 package epub
 
 import (
+	"encoding/xml"
 	"fmt"
 	"image/color"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -10,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"gopkg.in/yaml.v3"
 )
 
 type ImageOptions struct {
@@ -31,11 +34,13 @@ type ImageOptions struct {
 }
 
 type EpubOptions struct {
-	Input   string
-	Output  string
-	Title   string
-	Author  string
-	LimitMb int
+	Input                      string
+	Output                     string
+	Title                      string
+	Author                     string
+	LimitMb                    int
+	StripFirstDirectoryFromToc bool
+	Dry                        bool
 
 	*ImageOptions
 }
@@ -91,7 +96,8 @@ func (e *ePub) render(templateString string, data any) string {
 }
 
 func (e *ePub) getParts() ([]*epubPart, error) {
-	images, err := LoadImages(e.Input, e.ImageOptions)
+	images, err := LoadImages(e.Input, e.ImageOptions, e.Dry)
+
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +107,15 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	if e.HasCover {
 		images = images[1:]
 	}
+
+	if e.Dry {
+		parts = append(parts, &epubPart{
+			Cover:  cover,
+			Images: images,
+		})
+		return parts, nil
+	}
+
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 
 	xhtmlSize := uint64(1024)
@@ -139,6 +154,42 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	return parts, nil
 }
 
+func (e *ePub) getToc(images []*Image) *TocChildren {
+	paths := map[string]*TocPart{
+		".": {},
+	}
+	for _, img := range images {
+		currentPath := "."
+		for _, path := range strings.Split(img.Path, string(filepath.Separator)) {
+			parentPath := currentPath
+			currentPath = filepath.Join(currentPath, path)
+			if _, ok := paths[currentPath]; ok {
+				continue
+			}
+			part := &TocPart{
+				Title: TocTitle{
+					Value: path,
+					Link:  fmt.Sprintf("Text/%d_p%d.xhtml", img.Id, img.Part),
+				},
+			}
+			paths[currentPath] = part
+			if paths[parentPath].Children == nil {
+				paths[parentPath].Children = &TocChildren{}
+			}
+			paths[parentPath].Children.Tags = append(paths[parentPath].Children.Tags, part)
+		}
+	}
+
+	children := paths["."].Children
+
+	if children != nil && e.StripFirstDirectoryFromToc && len(children.Tags) == 1 {
+		children = children.Tags[0].Children
+	}
+
+	return children
+
+}
+
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
@@ -149,6 +200,16 @@ func (e *ePub) Write() error {
 	if err != nil {
 		return err
 	}
+
+	if e.Dry {
+		tocChildren := e.getToc(epubParts[0].Images)
+		fmt.Fprintf(os.Stderr, "TOC:\n- %s\n", e.Title)
+		if tocChildren != nil {
+			yaml.NewEncoder(os.Stderr).Encode(tocChildren)
+		}
+		return nil
+	}
+
 	totalParts := len(epubParts)
 
 	bar := NewBar(totalParts, "Writing Part", 2, 2)
@@ -170,6 +231,16 @@ func (e *ePub) Write() error {
 		if totalParts > 1 {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
+
+		tocChildren := e.getToc(part.Images)
+		toc := []byte{}
+		if tocChildren != nil {
+			toc, err = xml.MarshalIndent(tocChildren.Tags, "        ", "  ")
+			if err != nil {
+				return err
+			}
+		}
+
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
 			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{
@@ -180,8 +251,14 @@ func (e *ePub) Write() error {
 				"Part":   i + 1,
 				"Total":  totalParts,
 			})},
-			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{"Info": e})},
-			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{"Info": e})},
+			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{
+				"Info":  e,
+				"Title": title,
+			})},
+			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{
+				"Title": title,
+				"TOC":   string(toc),
+			})},
 			{"OEBPS/Text/style.css", styleTmpl},
 			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
 				"Info":  e,

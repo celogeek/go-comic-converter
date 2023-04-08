@@ -20,18 +20,19 @@ type Options struct {
 	Dry     bool   `yaml:"-"`
 
 	// Config
-	Profile             string `yaml:"profile"`
-	Quality             int    `yaml:"quality"`
-	Crop                bool   `yaml:"crop"`
-	Brightness          int    `yaml:"brightness"`
-	Contrast            int    `yaml:"contrast"`
-	AutoRotate          bool   `yaml:"auto_rotate"`
-	AutoSplitDoublePage bool   `yaml:"auto_split_double_page"`
-	NoBlankPage         bool   `yaml:"no_blank_page"`
-	Manga               bool   `yaml:"manga"`
-	HasCover            bool   `yaml:"has_cover"`
-	AddPanelView        bool   `yaml:"add_panel_view"`
-	LimitMb             int    `yaml:"limit_mb"`
+	Profile                    string `yaml:"profile"`
+	Quality                    int    `yaml:"quality"`
+	Crop                       bool   `yaml:"crop"`
+	Brightness                 int    `yaml:"brightness"`
+	Contrast                   int    `yaml:"contrast"`
+	AutoRotate                 bool   `yaml:"auto_rotate"`
+	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
+	NoBlankPage                bool   `yaml:"no_blank_page"`
+	Manga                      bool   `yaml:"manga"`
+	HasCover                   bool   `yaml:"has_cover"`
+	AddPanelView               bool   `yaml:"add_panel_view"`
+	LimitMb                    int    `yaml:"limit_mb"`
+	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -48,19 +49,20 @@ type Options struct {
 
 func New() *Options {
 	return &Options{
-		Profile:             "",
-		Quality:             85,
-		Crop:                true,
-		Brightness:          0,
-		Contrast:            0,
-		AutoRotate:          false,
-		AutoSplitDoublePage: false,
-		NoBlankPage:         false,
-		Manga:               false,
-		HasCover:            true,
-		AddPanelView:        false,
-		LimitMb:             0,
-		profiles:            profiles.New(),
+		Profile:                    "",
+		Quality:                    85,
+		Crop:                       true,
+		Brightness:                 0,
+		Contrast:                   0,
+		AutoRotate:                 false,
+		AutoSplitDoublePage:        false,
+		NoBlankPage:                false,
+		Manga:                      false,
+		HasCover:                   true,
+		AddPanelView:               false,
+		LimitMb:                    0,
+		StripFirstDirectoryFromToc: false,
+		profiles:                   profiles.New(),
 	}
 }
 
@@ -72,11 +74,11 @@ Options:`
 
 func (o *Options) String() string {
 	return fmt.Sprintf(`%s
-    Input              : %s
-    Output             : %s
-    Author             : %s
-    Title              : %s
-    Workers            : %d%s
+    Input                     : %s
+    Output                    : %s
+    Author                    : %s
+    Title                     : %s
+    Workers                   : %d%s
 `,
 		o.Header(),
 		o.Input,
@@ -126,18 +128,19 @@ func (o *Options) ShowDefault() string {
 	}
 
 	return fmt.Sprintf(`
-    Profile            : %s
-    Quality            : %d
-    Crop               : %v
-    Brightness         : %d
-    Contrast           : %d
-    AutoRotate         : %v
-    AutoSplitDoublePage: %v
-    NoBlankPage        : %v
-    Manga              : %v
-    HasCover           : %v
-    AddPanelView       : %v
-    LimitMb            : %s`,
+    Profile                   : %s
+    Quality                   : %d
+    Crop                      : %v
+    Brightness                : %d
+    Contrast                  : %d
+    AutoRotate                : %v
+    AutoSplitDoublePage       : %v
+    NoBlankPage               : %v
+    Manga                     : %v
+    HasCover                  : %v
+    AddPanelView              : %v
+    LimitMb                   : %s
+    StripFirstDirectoryFromToc: %v`,
 		profileDesc,
 		o.Quality,
 		o.Crop,
@@ -150,6 +153,7 @@ func (o *Options) ShowDefault() string {
 		o.HasCover,
 		o.AddPanelView,
 		limitmb,
+		o.StripFirstDirectoryFromToc,
 	)
 }
 

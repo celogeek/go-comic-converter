@@ -31,11 +31,13 @@ type Image struct {
 	Height    int
 	IsCover   bool
 	NeedSpace bool
+	Path      string
 }
 
 type imageTask struct {
 	Id       int
 	Reader   io.ReadCloser
+	Path     string
 	Filename string
 }
 
@@ -90,7 +92,7 @@ BOTTOM:
 	return imgArea
 }
 
-func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
+func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) {
 	images := make([]*Image, 0)
 
 	fi, err := os.Stat(path)
@@ -119,6 +121,22 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if dry {
+		for img := range imageInput {
+			images = append(images, &Image{
+				img.Id,
+				0,
+				nil,
+				0,
+				0,
+				false,
+				false, // NeedSpace reajust during parts computation
+				img.Path,
+			})
+		}
+		return images, nil
 	}
 
 	imageOutput := make(chan *Image)
@@ -162,6 +180,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 					dst.Bounds().Dy(),
 					img.Id == 0,
 					false,
+					img.Path,
 				}
 
 				// Auto split double page
@@ -185,6 +204,7 @@ func LoadImages(path string, options *ImageOptions) ([]*Image, error) {
 							dst.Bounds().Dy(),
 							false,
 							false, // NeedSpace reajust during parts computation
+							img.Path,
 						}
 					}
 				}
@@ -235,6 +255,7 @@ func isSupportedImage(path string) bool {
 
 func loadDir(input string) (int, chan *imageTask, error) {
 	images := make([]string, 0)
+	input = filepath.Clean(input)
 	err := filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -263,9 +284,16 @@ func loadDir(input string) (int, chan *imageTask, error) {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
+			p := filepath.Dir(img)
+			if p == input {
+				p = ""
+			} else {
+				p = p[len(input)+1:]
+			}
 			output <- &imageTask{
 				Id:       i,
 				Reader:   f,
+				Path:     p,
 				Filename: img,
 			}
 		}
@@ -306,6 +334,7 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 			output <- &imageTask{
 				Id:       i,
 				Reader:   f,
+				Path:     filepath.Dir(filepath.Clean(img.Name)),
 				Filename: img.Name,
 			}
 		}
@@ -374,6 +403,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 				output <- &imageTask{
 					Id:       idx,
 					Reader:   io.NopCloser(b),
+					Path:     filepath.Dir(filepath.Clean(f.Name)),
 					Filename: f.Name,
 				}
 			}
@@ -409,6 +439,7 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 			output <- &imageTask{
 				Id:       i,
 				Reader:   io.NopCloser(b),
+				Path:     "/",
 				Filename: fmt.Sprintf("page %d", i+1),
 			}
 		}
