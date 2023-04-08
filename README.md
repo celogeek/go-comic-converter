@@ -109,23 +109,29 @@ $ go-comic-converter -input ~/Downloads/mymanga.cbr -profile KS -auto -manga -li
 Go Comic Converter
 
 Options:
-    Input              : ~/Downloads/mymanga.cbr
-    Output             : ~/Downloads/mymanga.epub
-    Author             : GO Comic Converter
-    Title              : mymanga
-    Workers            : 8
-    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : true
-    AutoSplitDoublePage: true
-    NoBlankPage        : false
-    Manga              : true
-    HasCover           : true
-    AddPanelView       : false
-    LimitMb            : 200 Mb
+    Input                     : ~/Downloads/mymanga.cbr
+    Output                    : ~/Downloads/mymanga.epub
+    Author                    : GO Comic Converter
+    Title                     : mymanga
+    Workers                   : 8
+    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : true
+    AutoSplitDoublePage       : true
+    NoBlankPage               : false
+    Manga                     : true
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: true
+
+TOC:
+- mymanga
+- Chapter 1
+- Chapter 2
 ```
 
 ## Change default settings
@@ -137,18 +143,19 @@ $ go-comic-converter -show
 Go Comic Converter
 
 Options:
-    Profile            :
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : false
-    AutoSplitDoublePage: false
-    NoBlankPage        : false
-    Manga              : false
-    HasCover           : true
-    AddPanelView       : false
-    LimitMb            : nolimit
+    Profile                   :
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : false
+    AutoSplitDoublePage       : false
+    NoBlankPage               : false
+    Manga                     : false
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : nolimit
+    StripFirstDirectoryFromToc: false
 ```
 
 ### Change default settings
@@ -158,20 +165,21 @@ $ go-comic-converter -manga -auto -profile KS -limitmb 200 -save
 Go Comic Converter
 
 Options:
-    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : true
-    AutoSplitDoublePage: true
-    NoBlankPage        : false
-    Manga              : true
-    HasCover           : true
-    AddPanelView       : false
-    LimitMb            : 200 Mb
+    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : true
+    AutoSplitDoublePage       : true
+    NoBlankPage               : false
+    Manga                     : true
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: false
 
-Saving to ~/.go-comic-converter.yaml
+Saving to /Users/vincent/.go-comic-converter.yaml
 ```
 
 If you want to change a setting, you can change only one of them
@@ -181,46 +189,54 @@ $ go-comic-converter -manga=0 -save
 Go Comic Converter
 
 Options:
-    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : true
-    AutoSplitDoublePage: true
-    NoBlankPage        : false
-    Manga              : false
-    HasCover           : true
-    AddPanelView       : false
-    LimitMb            : 200 Mb
+    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : true
+    AutoSplitDoublePage       : true
+    NoBlankPage               : false
+    Manga                     : false
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: false
 
-Saving to ~/.go-comic-converter.yaml
+Saving to /Users/vincent/.go-comic-converter.yaml
 ```
 
 ### Check
 You can test the command dry above like
 ```
 $ go-comic-converter -input ~/Downloads/mymanga.cbr -dry
+
 Go Comic Converter
 
 Options:
-    Input              : ~/Downloads/mymanga.cbr
-    Output             : ~/Downloads/mymanga.epub
-    Author             : GO Comic Converter
-    Title              : mymanga
-    Workers            : 8
-    Profile            : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : true
-    AutoSplitDoublePage: true
-    NoBlankPage        : false
-    Manga              : true
-    HasCover           : true
-    AddPanelView       : false
-    LimitMb            : 200 Mb
+    Input                     : ~/Downloads/mymanga.cbr
+    Output                    : ~/Downloads/mymanga.epub
+    Author                    : GO Comic Converter
+    Title                     : mymanga
+    Workers                   : 8
+    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : true
+    AutoSplitDoublePage       : true
+    NoBlankPage               : false
+    Manga                     : false
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: false
+
+TOC:
+- mymanga
+- Chapter 1
+- Chapter 2
 ```
 
 ### Reset default
@@ -319,6 +335,8 @@ Config:
     	Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.
   -limitmb int
     	Limit size of the ePub: Default nolimit (0), Minimum 20
+  -strip
+    	Strip first directory from the TOC if only 1
 
 Default config:
   -show
