@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"gopkg.in/yaml.v3"
 )
 
 type ImageOptions struct {
@@ -42,6 +41,8 @@ type EpubOptions struct {
 	LimitMb                    int
 	StripFirstDirectoryFromToc bool
 	Dry                        bool
+	DryVerbose                 bool
+	SortPathMode               int
 
 	*ImageOptions
 }
@@ -97,7 +98,7 @@ func (e *ePub) render(templateString string, data any) string {
 }
 
 func (e *ePub) getParts() ([]*epubPart, error) {
-	images, err := LoadImages(e.Input, e.ImageOptions, e.Dry)
+	images, err := e.LoadImages()
 
 	if err != nil {
 		return nil, err
@@ -201,6 +202,32 @@ func (e *ePub) getToc(images []*Image) *TocChildren {
 
 }
 
+func (e *ePub) getTree(images []*Image, skip_files bool) string {
+	r := []string{}
+
+	c := []string{}
+	for _, img := range images {
+		n := []string{}
+		if len(img.Path) > 0 {
+			n = strings.Split(filepath.Clean(img.Path), string(filepath.Separator))
+		}
+		for l, p := range n {
+			f := fmt.Sprintf("%%%ds- %%s", l*2)
+			if len(c) > l && c[l] == p {
+				continue
+			}
+			r = append(r, fmt.Sprintf(f, "", p))
+		}
+		c = n
+		if skip_files {
+			continue
+		}
+		f := fmt.Sprintf("%%%ds- %%s", len(n)*2+2)
+		r = append(r, fmt.Sprintf(f, "", img.Name))
+	}
+	return strings.Join(r, "\n")
+}
+
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
@@ -213,10 +240,9 @@ func (e *ePub) Write() error {
 	}
 
 	if e.Dry {
-		tocChildren := e.getToc(epubParts[0].Images)
-		fmt.Fprintf(os.Stderr, "TOC:\n- %s\n", e.Title)
-		if tocChildren != nil {
-			yaml.NewEncoder(os.Stderr).Encode(tocChildren)
+		fmt.Fprintf(os.Stderr, "TOC:\n- %s\n%s\n", e.Title, e.getTree(epubParts[0].Images, true))
+		if e.DryVerbose {
+			fmt.Fprintf(os.Stderr, "\nFiles:\n%s\n", e.getTree(epubParts[0].Images, false))
 		}
 		return nil
 	}

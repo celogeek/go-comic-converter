@@ -99,6 +99,8 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
 		Dry:                        cmd.Options.Dry,
+		DryVerbose:                 cmd.Options.DryVerbose,
+		SortPathMode:               cmd.Options.SortPathMode,
 		ImageOptions: &epub.ImageOptions{
 			ViewWidth:           profile.Width,
 			ViewHeight:          profile.Height,

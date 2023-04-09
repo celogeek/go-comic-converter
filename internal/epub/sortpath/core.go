@@ -7,14 +7,19 @@ import (
 	"strings"
 )
 
-var split_path_regex = regexp.MustCompile(`^(.*?)(\d+(?:\.\d+)?)$`)
+// Strings follow with numbers like: s1, s1.2, s2-3, ...
+var split_path_regex = regexp.MustCompile(`^(.*?)(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?$`)
 
 type part struct {
-	name   string
-	number float64
+	fullname string
+	name     string
+	number   float64
 }
 
 func (a part) Compare(b part) float64 {
+	if a.number == 0 || b.number == 0 {
+		return float64(strings.Compare(a.fullname, b.fullname))
+	}
 	if a.name == b.name {
 		return a.number - b.number
 	} else {
@@ -25,16 +30,19 @@ func (a part) Compare(b part) float64 {
 func parsePart(p string) part {
 	r := split_path_regex.FindStringSubmatch(p)
 	if len(r) == 0 {
-		return part{p, 0}
+		return part{p, p, 0}
 	}
 	n, err := strconv.ParseFloat(r[2], 64)
 	if err != nil {
-		return part{p, 0}
+		return part{p, p, 0}
 	}
-	return part{r[1], n}
+	return part{p, r[1], n}
 }
 
-func parse(filename string) []part {
+// mode=0 alpha for path and file
+// mode=1 alphanum for path and alpha for file
+// mode=2 alphanum for path and file
+func parse(filename string, mode int) []part {
 	pathname, name := filepath.Split(strings.ToLower(filename))
 	pathname = strings.TrimSuffix(pathname, string(filepath.Separator))
 	ext := filepath.Ext(name)
@@ -42,9 +50,17 @@ func parse(filename string) []part {
 
 	f := []part{}
 	for _, p := range strings.Split(pathname, string(filepath.Separator)) {
-		f = append(f, parsePart(p))
+		if mode > 0 { // alphanum for path
+			f = append(f, parsePart(p))
+		} else {
+			f = append(f, part{p, p, 0})
+		}
 	}
-	f = append(f, parsePart(name))
+	if mode == 2 { // alphanum for file
+		f = append(f, parsePart(name))
+	} else {
+		f = append(f, part{name, name, 0})
+	}
 	return f
 }
 
@@ -74,10 +90,10 @@ func (b by) Swap(i, j int) {
 	b.paths[i], b.paths[j] = b.paths[j], b.paths[i]
 }
 
-func By(filenames []string) by {
+func By(filenames []string, mode int) by {
 	p := [][]part{}
 	for _, filename := range filenames {
-		p = append(p, parse(filename))
+		p = append(p, parse(filename, mode))
 	}
 	return by{filenames, p}
 }

@@ -127,11 +127,64 @@ Options:
     AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
+    SortPathMode              : path=alphanum, file=alpha
 
 TOC:
 - mymanga
 - Chapter 1
 - Chapter 2
+```
+
+## Dry verbose
+
+You can choose different way to sort path and files, depending of your source. You can preview the sorted result with the option `dry-verbose` associated with `dry`.
+
+The option `sort` allow you to change the sorting order.
+
+```
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile KS -auto -manga -limitmb 200 -dry -dry-verbose -sort 2
+Go Comic Converter
+
+Options:
+    Input                     : ~/Downloads/mymanga.cbr
+    Output                    : ~/Downloads/mymanga.epub
+    Author                    : GO Comic Converter
+    Title                     : mymanga
+    Workers                   : 8
+    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Quality                   : 85
+    Crop                      : true
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : true
+    AutoSplitDoublePage       : true
+    NoBlankPage               : false
+    Manga                     : true
+    HasCover                  : true
+    AddPanelView              : false
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: true
+    SortPathMode              : path=alphanum, file=alphanum
+
+TOC:
+- mymanga
+- Chapter 1
+- Chapter 2
+- Chapter 3
+
+Files:
+- Chapter 1
+    - img1.jpg
+    - img2.jpg
+    - img10.jpg
+- Chapter 2
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+- Chapter 3
+    - img1.jpg
+    - img2-3.jpg
+    - img4.jpg
 ```
 
 ## Change default settings
@@ -156,6 +209,7 @@ Options:
     AddPanelView              : false
     LimitMb                   : nolimit
     StripFirstDirectoryFromToc: false
+    SortPathMode              : path=alphanum, file=alpha
 ```
 
 ### Change default settings
@@ -178,6 +232,7 @@ Options:
     AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
+    SortPathMode              : path=alphanum, file=alpha
 
 Saving to /Users/vincent/.go-comic-converter.yaml
 ```
@@ -202,41 +257,9 @@ Options:
     AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
+    SortPathMode              : path=alphanum, file=alpha
 
 Saving to /Users/vincent/.go-comic-converter.yaml
-```
-
-### Check
-You can test the command dry above like
-```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -dry
-
-Go Comic Converter
-
-Options:
-    Input                     : ~/Downloads/mymanga.cbr
-    Output                    : ~/Downloads/mymanga.epub
-    Author                    : GO Comic Converter
-    Title                     : mymanga
-    Workers                   : 8
-    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
-    Quality                   : 85
-    Crop                      : true
-    Brightness                : 0
-    Contrast                  : 0
-    AutoRotate                : true
-    AutoSplitDoublePage       : true
-    NoBlankPage               : false
-    Manga                     : false
-    HasCover                  : true
-    AddPanelView              : false
-    LimitMb                   : 200 Mb
-    StripFirstDirectoryFromToc: false
-
-TOC:
-- mymanga
-- Chapter 1
-- Chapter 2
 ```
 
 ### Reset default
@@ -283,6 +306,8 @@ Output:
     	Number of workers
   -dry
     	Dry run to show all options
+  -dry-verbose
+    	Display also sorted files after the TOC
 
 Config:
   -profile string
@@ -337,6 +362,11 @@ Config:
     	Limit size of the ePub: Default nolimit (0), Minimum 20
   -strip
     	Strip first directory from the TOC if only 1
+  -sort int (default 1)
+    	Sort path mode
+    	0 = alpha for path and file
+    	1 = alphanum for path and alpha for file
+    	2 = alphanum for path and file
 
 Default config:
   -show

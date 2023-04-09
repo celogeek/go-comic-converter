@@ -81,6 +81,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the epub")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
+	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
 
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
@@ -97,6 +98,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.AddPanelView, "addpanelview", c.Options.AddPanelView, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
+	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -258,6 +260,10 @@ func (c *Converter) Validate() error {
 	// Contrast
 	if c.Options.Contrast < -100 || c.Options.Contrast > 100 {
 		return errors.New("contrast should be between -100 and 100")
+	}
+
+	if c.Options.SortPathMode < 0 || c.Options.SortPathMode > 2 {
+		return errors.New("sort should be 0, 1 or 2")
 	}
 
 	return nil

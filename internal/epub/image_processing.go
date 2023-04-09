@@ -34,13 +34,14 @@ type Image struct {
 	IsCover   bool
 	NeedSpace bool
 	Path      string
+	Name      string
 }
 
 type imageTask struct {
-	Id       int
-	Reader   io.ReadCloser
-	Path     string
-	Filename string
+	Id     int
+	Reader io.ReadCloser
+	Path   string
+	Name   string
 }
 
 func colorIsBlank(c color.Color) bool {
@@ -94,10 +95,10 @@ BOTTOM:
 	return imgArea
 }
 
-func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) {
+func (e *ePub) LoadImages() ([]*Image, error) {
 	images := make([]*Image, 0)
 
-	fi, err := os.Stat(path)
+	fi, err := os.Stat(e.Input)
 	if err != nil {
 		return nil, err
 	}
@@ -108,15 +109,15 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 	)
 
 	if fi.IsDir() {
-		imageCount, imageInput, err = loadDir(path)
+		imageCount, imageInput, err = loadDir(e.Input, e.SortPathMode)
 	} else {
-		switch ext := strings.ToLower(filepath.Ext(path)); ext {
+		switch ext := strings.ToLower(filepath.Ext(e.Input)); ext {
 		case ".cbz", ".zip":
-			imageCount, imageInput, err = loadCbz(path)
+			imageCount, imageInput, err = loadCbz(e.Input, e.SortPathMode)
 		case ".cbr", ".rar":
-			imageCount, imageInput, err = loadCbr(path)
+			imageCount, imageInput, err = loadCbr(e.Input, e.SortPathMode)
 		case ".pdf":
-			imageCount, imageInput, err = loadPdf(path)
+			imageCount, imageInput, err = loadPdf(e.Input)
 		default:
 			err = fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar, .pdf", ext)
 		}
@@ -125,17 +126,19 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 		return nil, err
 	}
 
-	if dry {
+	if e.Dry {
 		for img := range imageInput {
+			img.Reader.Close()
 			images = append(images, &Image{
-				img.Id,
-				0,
-				nil,
-				0,
-				0,
-				false,
-				false, // NeedSpace reajust during parts computation
-				img.Path,
+				Id:        img.Id,
+				Part:      0,
+				Data:      nil,
+				Width:     0,
+				Height:    0,
+				IsCover:   false,
+				NeedSpace: false, // NeedSpace reajust during parts computation
+				Path:      img.Path,
+				Name:      img.Name,
 			})
 		}
 
@@ -148,7 +151,7 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 	bar := NewBar(imageCount, "Processing", 1, 2)
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < options.Workers; i++ {
+	for i := 0; i < e.ImageOptions.Workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -156,58 +159,61 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 			for img := range imageInput {
 				// Decode image
 				src, _, err := image.Decode(img.Reader)
+				img.Reader.Close()
 				if err != nil {
 					bar.Clear()
-					fmt.Fprintf(os.Stderr, "error processing image %s: %s\n", img.Filename, err)
+					fmt.Fprintf(os.Stderr, "error processing image %s%s: %s\n", img.Path, img.Name, err)
 					os.Exit(1)
 				}
 
-				if options.Crop {
+				if e.ImageOptions.Crop {
 					g := gift.New(gift.Crop(findMarging(src)))
 					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
 					g.Draw(newSrc, src)
 					src = newSrc
 				}
 
-				g := NewGift(options)
+				g := NewGift(e.ImageOptions)
 
 				// Convert image
-				dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)
+				dst := image.NewPaletted(g.Bounds(src.Bounds()), e.ImageOptions.Palette)
 				g.Draw(dst, src)
 
 				imageOutput <- &Image{
-					img.Id,
-					0,
-					newImageData(img.Id, 0, dst, options.Quality),
-					dst.Bounds().Dx(),
-					dst.Bounds().Dy(),
-					img.Id == 0,
-					false,
-					img.Path,
+					Id:        img.Id,
+					Part:      0,
+					Data:      newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
+					Width:     dst.Bounds().Dx(),
+					Height:    dst.Bounds().Dy(),
+					IsCover:   img.Id == 0,
+					NeedSpace: false,
+					Path:      img.Path,
+					Name:      img.Name,
 				}
 
 				// Auto split double page
 				// Except for cover
 				// Only if the src image have width > height and is bigger than the view
-				if (!options.HasCover || img.Id > 0) &&
-					options.AutoSplitDoublePage &&
+				if (!e.ImageOptions.HasCover || img.Id > 0) &&
+					e.ImageOptions.AutoSplitDoublePage &&
 					src.Bounds().Dx() > src.Bounds().Dy() &&
-					src.Bounds().Dx() > options.ViewHeight &&
-					src.Bounds().Dy() > options.ViewWidth {
-					gifts := NewGiftSplitDoublePage(options)
+					src.Bounds().Dx() > e.ImageOptions.ViewHeight &&
+					src.Bounds().Dy() > e.ImageOptions.ViewWidth {
+					gifts := NewGiftSplitDoublePage(e.ImageOptions)
 					for i, g := range gifts {
 						part := i + 1
-						dst := image.NewPaletted(g.Bounds(src.Bounds()), options.Palette)
+						dst := image.NewPaletted(g.Bounds(src.Bounds()), e.ImageOptions.Palette)
 						g.Draw(dst, src)
 						imageOutput <- &Image{
-							img.Id,
-							part,
-							newImageData(img.Id, part, dst, options.Quality),
-							dst.Bounds().Dx(),
-							dst.Bounds().Dy(),
-							false,
-							false, // NeedSpace reajust during parts computation
-							img.Path,
+							Id:        img.Id,
+							Part:      part,
+							Data:      newImageData(img.Id, part, dst, e.ImageOptions.Quality),
+							Width:     dst.Bounds().Dx(),
+							Height:    dst.Bounds().Dy(),
+							IsCover:   false,
+							NeedSpace: false, // NeedSpace reajust during parts computation
+							Path:      img.Path,
+							Name:      img.Name,
 						}
 					}
 				}
@@ -221,7 +227,7 @@ func LoadImages(path string, options *ImageOptions, dry bool) ([]*Image, error) 
 	}()
 
 	for image := range imageOutput {
-		if !(options.NoBlankPage && image.Width == 1 && image.Height == 1) {
+		if !(e.ImageOptions.NoBlankPage && image.Width == 1 && image.Height == 1) {
 			images = append(images, image)
 		}
 		if image.Part == 0 {
@@ -247,7 +253,7 @@ func isSupportedImage(path string) bool {
 	return false
 }
 
-func loadDir(input string) (int, chan *imageTask, error) {
+func loadDir(input string, sortpathmode int) (int, chan *imageTask, error) {
 	images := make([]string, 0)
 	input = filepath.Clean(input)
 	err := filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
@@ -267,7 +273,7 @@ func loadDir(input string) (int, chan *imageTask, error) {
 		return 0, nil, fmt.Errorf("image not found")
 	}
 
-	sort.Sort(sortpath.By(images))
+	sort.Sort(sortpath.By(images, sortpathmode))
 
 	output := make(chan *imageTask)
 	go func() {
@@ -278,24 +284,25 @@ func loadDir(input string) (int, chan *imageTask, error) {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-			p := filepath.Dir(img)
+
+			p, fn := filepath.Split(img)
 			if p == input {
 				p = ""
 			} else {
 				p = p[len(input)+1:]
 			}
 			output <- &imageTask{
-				Id:       i,
-				Reader:   f,
-				Path:     p,
-				Filename: img,
+				Id:     i,
+				Reader: f,
+				Path:   p,
+				Name:   fn,
 			}
 		}
 	}()
 	return len(images), output, nil
 }
 
-func loadCbz(input string) (int, chan *imageTask, error) {
+func loadCbz(input string, sortpathmode int) (int, chan *imageTask, error) {
 	r, err := zip.OpenReader(input)
 	if err != nil {
 		return 0, nil, err
@@ -316,7 +323,7 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 	for _, img := range images {
 		names = append(names, img.Name)
 	}
-	sort.Sort(sortpath.By(names))
+	sort.Sort(sortpath.By(names, sortpathmode))
 
 	indexedNames := make(map[string]int)
 	for i, name := range names {
@@ -332,18 +339,19 @@ func loadCbz(input string) (int, chan *imageTask, error) {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
+			p, fn := filepath.Split(filepath.Clean(img.Name))
 			output <- &imageTask{
-				Id:       indexedNames[img.Name],
-				Reader:   f,
-				Path:     filepath.Dir(filepath.Clean(img.Name)),
-				Filename: img.Name,
+				Id:     indexedNames[img.Name],
+				Reader: f,
+				Path:   p,
+				Name:   fn,
 			}
 		}
 	}()
 	return len(images), output, nil
 }
 
-func loadCbr(input string) (int, chan *imageTask, error) {
+func loadCbr(input string, sortpathmode int) (int, chan *imageTask, error) {
 	// listing and indexing
 	rl, err := rardecode.OpenReader(input, "")
 	if err != nil {
@@ -372,7 +380,7 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 		return 0, nil, fmt.Errorf("no images found")
 	}
 
-	sort.Sort(sortpath.By(names))
+	sort.Sort(sortpath.By(names, sortpathmode))
 
 	indexedNames := make(map[string]int)
 	for i, name := range names {
@@ -401,11 +409,13 @@ func loadCbr(input string) (int, chan *imageTask, error) {
 				b := bytes.NewBuffer([]byte{})
 				io.Copy(b, r)
 
+				p, fn := filepath.Split(filepath.Clean(f.Name))
+
 				output <- &imageTask{
-					Id:       idx,
-					Reader:   io.NopCloser(b),
-					Path:     filepath.Dir(filepath.Clean(f.Name)),
-					Filename: f.Name,
+					Id:     idx,
+					Reader: io.NopCloser(b),
+					Path:   p,
+					Name:   fn,
 				}
 			}
 		}
@@ -421,6 +431,7 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 	}
 
 	nbPages := len(pdf.Pages())
+	pageFmt := fmt.Sprintf("page %%0%dd", len(fmt.Sprintf("%d", nbPages)))
 	output := make(chan *imageTask)
 	go func() {
 		defer close(output)
@@ -438,10 +449,10 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 			}
 
 			output <- &imageTask{
-				Id:       i,
-				Reader:   io.NopCloser(b),
-				Path:     "/",
-				Filename: fmt.Sprintf("page %d", i+1),
+				Id:     i,
+				Reader: io.NopCloser(b),
+				Path:   "",
+				Name:   fmt.Sprintf(pageFmt, i+1),
 			}
 		}
 	}()

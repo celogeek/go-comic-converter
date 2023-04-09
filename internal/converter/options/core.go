@@ -11,13 +11,14 @@ import (
 
 type Options struct {
 	// Output
-	Input   string `yaml:"-"`
-	Output  string `yaml:"-"`
-	Author  string `yaml:"-"`
-	Title   string `yaml:"-"`
-	Auto    bool   `yaml:"-"`
-	Workers int    `yaml:"-"`
-	Dry     bool   `yaml:"-"`
+	Input      string `yaml:"-"`
+	Output     string `yaml:"-"`
+	Author     string `yaml:"-"`
+	Title      string `yaml:"-"`
+	Auto       bool   `yaml:"-"`
+	Workers    int    `yaml:"-"`
+	Dry        bool   `yaml:"-"`
+	DryVerbose bool   `yaml:"-"`
 
 	// Config
 	Profile                    string `yaml:"profile"`
@@ -33,6 +34,7 @@ type Options struct {
 	AddPanelView               bool   `yaml:"add_panel_view"`
 	LimitMb                    int    `yaml:"limit_mb"`
 	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
+	SortPathMode               int    `yaml:"sort_path_mode"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -62,6 +64,7 @@ func New() *Options {
 		AddPanelView:               false,
 		LimitMb:                    0,
 		StripFirstDirectoryFromToc: false,
+		SortPathMode:               1,
 		profiles:                   profiles.New(),
 	}
 }
@@ -127,6 +130,16 @@ func (o *Options) ShowDefault() string {
 		limitmb = fmt.Sprintf("%d Mb", o.LimitMb)
 	}
 
+	sortpathmode := ""
+	switch o.SortPathMode {
+	case 0:
+		sortpathmode = "path=alpha, file=alpha"
+	case 1:
+		sortpathmode = "path=alphanum, file=alpha"
+	case 2:
+		sortpathmode = "path=alphanum, file=alphanum"
+	}
+
 	return fmt.Sprintf(`
     Profile                   : %s
     Quality                   : %d
@@ -140,7 +153,8 @@ func (o *Options) ShowDefault() string {
     HasCover                  : %v
     AddPanelView              : %v
     LimitMb                   : %s
-    StripFirstDirectoryFromToc: %v`,
+    StripFirstDirectoryFromToc: %v
+    SortPathMode              : %s`,
 		profileDesc,
 		o.Quality,
 		o.Crop,
@@ -154,6 +168,7 @@ func (o *Options) ShowDefault() string {
 		o.AddPanelView,
 		limitmb,
 		o.StripFirstDirectoryFromToc,
+		sortpathmode,
 	)
 }
 
