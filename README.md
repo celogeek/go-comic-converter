@@ -22,7 +22,7 @@ $ go install github.com/celogeek/go-comic-converter/v2@V2TAG
 
 Example:
 ```
-$ go install github.com/celogeek/go-comic-converter/v2@v2.0.1
+$ go install github.com/celogeek/go-comic-converter/v2@v2.0.6
 ```
 
 Add GOPATH to your PATH
@@ -37,12 +37,12 @@ You can check if a new version is available with:
 $ go-comic-converter -version
 go-comic-converter
   Path             : github.com/celogeek/go-comic-converter/v2
-  Sum              : h1:yRolZP27Qw4Wt+tN28S3G4TLbZiyIngNq3lsvtHV7SI=
-  Version          : v2.0.5
-  Available Version: v2.0.5
+  Sum              : h1:k1lhD90H0Cpno4VDFAR8OZYrnfV3SqUdVbYL+El9ZA4=
+  Version          : v2.0.6
+  Available Version: v2.0.6
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.0.5
+$ go install github.com/celogeek/go-comic-converter/v2@v2.0.6
 ```
 
 # Supported image files
