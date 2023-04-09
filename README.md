@@ -130,9 +130,10 @@ Options:
     SortPathMode              : path=alphanum, file=alpha
 
 TOC:
-- mymanga
-- Chapter 1
-- Chapter 2
+  - mymanga
+  - Chapter 1
+  - Chapter 2
+  - Chapter 3
 ```
 
 ## Dry verbose
@@ -167,21 +168,24 @@ Options:
     SortPathMode              : path=alphanum, file=alphanum
 
 TOC:
-- mymanga
-- Chapter 1
-- Chapter 2
-- Chapter 3
+  - mymanga
+  - Chapter 1
+  - Chapter 2
+  - Chapter 3
+
+Cover:
+  - Chapter 1
+    - img1.jpg
 
 Files:
-- Chapter 1
-    - img1.jpg
+  - Chapter 1
     - img2.jpg
     - img10.jpg
-- Chapter 2
+  - Chapter 2
     - img01.jpg
     - img02.jpg
     - img03.jpg
-- Chapter 3
+  - Chapter 3
     - img1.jpg
     - img2-3.jpg
     - img4.jpg
