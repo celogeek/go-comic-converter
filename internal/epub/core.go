@@ -225,6 +225,9 @@ func (e *ePub) getTree(images []*Image, skip_files bool) string {
 		f := fmt.Sprintf("%%%ds- %%s", len(n)*2+2)
 		r = append(r, fmt.Sprintf(f, "", img.Name))
 	}
+	if len(r) > 0 {
+		r = append(r, "")
+	}
 	return strings.Join(r, "\n")
 }
 
@@ -242,7 +245,7 @@ func (e *ePub) Write() error {
 	if e.Dry {
 		fmt.Fprintf(os.Stderr, "TOC:\n- %s\n%s\n", e.Title, e.getTree(epubParts[0].Images, true))
 		if e.DryVerbose {
-			fmt.Fprintf(os.Stderr, "\nFiles:\n%s\n", e.getTree(epubParts[0].Images, false))
+			fmt.Fprintf(os.Stderr, "Files:\n%s\n", e.getTree(epubParts[0].Images, false))
 		}
 		return nil
 	}
