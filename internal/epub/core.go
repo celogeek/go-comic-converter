@@ -203,32 +203,20 @@ func (e *ePub) getToc(images []*Image) *TocChildren {
 }
 
 func (e *ePub) getTree(images []*Image, skip_files bool) string {
-	r := []string{}
-
-	c := []string{}
+	t := NewTree()
 	for _, img := range images {
-		n := []string{}
-		if len(img.Path) > 0 {
-			n = strings.Split(filepath.Clean(img.Path), string(filepath.Separator))
-		}
-		for l, p := range n {
-			f := fmt.Sprintf("%%%ds- %%s", l*2)
-			if len(c) > l && c[l] == p {
-				continue
-			}
-			r = append(r, fmt.Sprintf(f, "", p))
-		}
-		c = n
 		if skip_files {
-			continue
+			t.Add(img.Path)
+		} else {
+			t.Add(filepath.Join(img.Path, img.Name))
 		}
-		f := fmt.Sprintf("%%%ds- %%s", len(n)*2+2)
-		r = append(r, fmt.Sprintf(f, "", img.Name))
 	}
-	if len(r) > 0 {
-		r = append(r, "")
+	c := t.Root()
+	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
+		c = c.Children[0]
 	}
-	return strings.Join(r, "\n")
+
+	return c.toString("")
 }
 
 func (e *ePub) Write() error {
@@ -243,9 +231,13 @@ func (e *ePub) Write() error {
 	}
 
 	if e.Dry {
-		fmt.Fprintf(os.Stderr, "TOC:\n- %s\n%s\n", e.Title, e.getTree(epubParts[0].Images, true))
+		p := epubParts[0]
+		fmt.Fprintf(os.Stderr, "TOC:\n  - %s\n%s\n", e.Title, e.getTree(p.Images, true))
 		if e.DryVerbose {
-			fmt.Fprintf(os.Stderr, "Files:\n%s\n", e.getTree(epubParts[0].Images, false))
+			if e.HasCover {
+				fmt.Fprintf(os.Stderr, "Cover:\n%s\n", e.getTree([]*Image{p.Cover}, false))
+			}
+			fmt.Fprintf(os.Stderr, "Files:\n%s\n", e.getTree(p.Images, false))
 		}
 		return nil
 	}
