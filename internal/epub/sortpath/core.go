@@ -7,18 +7,18 @@ import (
 	"strings"
 )
 
-var split_path_regex = regexp.MustCompile(`^(.*?)(\d+)$`)
+var split_path_regex = regexp.MustCompile(`^(.*?)(\d+(?:\.\d+)?)$`)
 
 type part struct {
 	name   string
-	number int
+	number float64
 }
 
-func (a part) Compare(b part) int {
+func (a part) Compare(b part) float64 {
 	if a.name == b.name {
 		return a.number - b.number
 	} else {
-		return strings.Compare(a.name, b.name)
+		return float64(strings.Compare(a.name, b.name))
 	}
 }
 
@@ -27,11 +27,11 @@ func parsePart(p string) part {
 	if len(r) == 0 {
 		return part{p, 0}
 	}
-	n, err := strconv.ParseInt(r[2], 10, 32)
+	n, err := strconv.ParseFloat(r[2], 64)
 	if err != nil {
 		return part{p, 0}
 	}
-	return part{r[1], int(n)}
+	return part{r[1], n}
 }
 
 func parse(filename string) []part {
@@ -48,7 +48,7 @@ func parse(filename string) []part {
 	return f
 }
 
-func comparePart(a, b []part) int {
+func comparePart(a, b []part) float64 {
 	m := len(a)
 	if m > len(b) {
 		m = len(b)
@@ -59,7 +59,7 @@ func comparePart(a, b []part) int {
 			return c
 		}
 	}
-	return len(a) - len(b)
+	return float64(len(a) - len(b))
 }
 
 type by struct {
