@@ -117,12 +117,11 @@ func (o *Options) ShowDefault() string {
 	profile := o.GetProfile()
 	if profile != nil {
 		profileDesc = fmt.Sprintf(
-			"%s - %s - %dx%d - %d levels of gray",
+			"%s - %s - %dx%d",
 			o.Profile,
 			profile.Description,
 			profile.Width,
 			profile.Height,
-			len(profile.Palette),
 		)
 	}
 	limitmb := "nolimit"

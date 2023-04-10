@@ -176,7 +176,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 				g := NewGift(e.ImageOptions)
 
 				// Convert image
-				dst := image.NewPaletted(g.Bounds(src.Bounds()), e.ImageOptions.Palette)
+				dst := image.NewGray(g.Bounds(src.Bounds()))
 				g.Draw(dst, src)
 
 				imageOutput <- &Image{
@@ -202,7 +202,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 					gifts := NewGiftSplitDoublePage(e.ImageOptions)
 					for i, g := range gifts {
 						part := i + 1
-						dst := image.NewPaletted(g.Bounds(src.Bounds()), e.ImageOptions.Palette)
+						dst := image.NewGray(g.Bounds(src.Bounds()))
 						g.Draw(dst, src)
 						imageOutput <- &Image{
 							Id:        img.Id,

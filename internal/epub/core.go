@@ -3,7 +3,6 @@ package epub
 import (
 	"encoding/xml"
 	"fmt"
-	"image/color"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,7 +20,6 @@ type ImageOptions struct {
 	ViewHeight          int
 	Quality             int
 	Algo                string
-	Palette             color.Palette
 	Brightness          int
 	Contrast            int
 	AutoRotate          bool

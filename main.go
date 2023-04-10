@@ -106,7 +106,6 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			ViewHeight:          profile.Height,
 			Quality:             cmd.Options.Quality,
 			Crop:                cmd.Options.Crop,
-			Palette:             profile.Palette,
 			Brightness:          cmd.Options.Brightness,
 			Contrast:            cmd.Options.Contrast,
 			AutoRotate:          cmd.Options.AutoRotate,
