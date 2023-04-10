@@ -114,7 +114,7 @@ Options:
     Author                    : GO Comic Converter
     Title                     : mymanga
     Workers                   : 8
-    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Profile                   : KS - Kindle Scribe - 1860x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -152,7 +152,7 @@ Options:
     Author                    : GO Comic Converter
     Title                     : mymanga
     Workers                   : 8
-    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Profile                   : KS - Kindle Scribe - 1860x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -223,7 +223,7 @@ $ go-comic-converter -manga -auto -profile KS -limitmb 200 -save
 Go Comic Converter
 
 Options:
-    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Profile                   : KS - Kindle Scribe - 1860x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -248,7 +248,7 @@ $ go-comic-converter -manga=0 -save
 Go Comic Converter
 
 Options:
-    Profile                   : KS - Kindle Scribe - 1860x2480 - 16 levels of gray
+    Profile                   : KS - Kindle Scribe - 1860x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -316,30 +316,30 @@ Output:
 Config:
   -profile string
     	Profile to use:
-    	    - K1      (   600x670 ) -  4 levels of gray - Kindle 1
-    	    - K11     ( 1072x1448 ) - 16 levels of gray - Kindle 11
-    	    - K2      (   600x670 ) - 15 levels of gray - Kindle 2
-    	    - K34     (   600x800 ) - 16 levels of gray - Kindle Keyboard/Touch
-    	    - K578    (   600x800 ) - 16 levels of gray - Kindle
-    	    - KDX     (  824x1000 ) - 16 levels of gray - Kindle DX/DXG
-    	    - KPW     (  758x1024 ) - 16 levels of gray - Kindle Paperwhite 1/2
-    	    - KV      ( 1072x1448 ) - 16 levels of gray - Kindle Paperwhite 3/4/Voyage/Oasis
-    	    - KPW5    ( 1236x1648 ) - 16 levels of gray - Kindle Paperwhite 5/Signature Edition
-    	    - KO      ( 1264x1680 ) - 16 levels of gray - Kindle Oasis 2/3
-    	    - KS      ( 1860x2480 ) - 16 levels of gray - Kindle Scribe
-    	    - KoMT    (   600x800 ) - 16 levels of gray - Kobo Mini/Touch
-    	    - KoG     (  768x1024 ) - 16 levels of gray - Kobo Glo
-    	    - KoGHD   ( 1072x1448 ) - 16 levels of gray - Kobo Glo HD
-    	    - KoA     (  758x1024 ) - 16 levels of gray - Kobo Aura
-    	    - KoAHD   ( 1080x1440 ) - 16 levels of gray - Kobo Aura HD
-    	    - KoAH2O  ( 1080x1430 ) - 16 levels of gray - Kobo Aura H2O
-    	    - KoAO    ( 1404x1872 ) - 16 levels of gray - Kobo Aura ONE
-    	    - KoN     (  758x1024 ) - 16 levels of gray - Kobo Nia
-    	    - KoC     ( 1072x1448 ) - 16 levels of gray - Kobo Clara HD/Kobo Clara 2E
-    	    - KoL     ( 1264x1680 ) - 16 levels of gray - Kobo Libra H2O/Kobo Libra 2
-    	    - KoF     ( 1440x1920 ) - 16 levels of gray - Kobo Forma
-    	    - KoS     ( 1440x1920 ) - 16 levels of gray - Kobo Sage
-    	    - KoE     ( 1404x1872 ) - 16 levels of gray - Kobo Elipsa
+    	    - K1      (   600x670 ) - Kindle 1
+    	    - K11     ( 1072x1448 ) - Kindle 11
+    	    - K2      (   600x670 ) - Kindle 2
+    	    - K34     (   600x800 ) - Kindle Keyboard/Touch
+    	    - K578    (   600x800 ) - Kindle
+    	    - KDX     (  824x1000 ) - Kindle DX/DXG
+    	    - KPW     (  758x1024 ) - Kindle Paperwhite 1/2
+    	    - KV      ( 1072x1448 ) - Kindle Paperwhite 3/4/Voyage/Oasis
+    	    - KPW5    ( 1236x1648 ) - Kindle Paperwhite 5/Signature Edition
+    	    - KO      ( 1264x1680 ) - Kindle Oasis 2/3
+    	    - KS      ( 1860x2480 ) - Kindle Scribe
+    	    - KoMT    (   600x800 ) - Kobo Mini/Touch
+    	    - KoG     (  768x1024 ) - Kobo Glo
+    	    - KoGHD   ( 1072x1448 ) - Kobo Glo HD
+    	    - KoA     (  758x1024 ) - Kobo Aura
+    	    - KoAHD   ( 1080x1440 ) - Kobo Aura HD
+    	    - KoAH2O  ( 1080x1430 ) - Kobo Aura H2O
+    	    - KoAO    ( 1404x1872 ) - Kobo Aura ONE
+    	    - KoN     (  758x1024 ) - Kobo Nia
+    	    - KoC     ( 1072x1448 ) - Kobo Clara HD/Kobo Clara 2E
+    	    - KoL     ( 1264x1680 ) - Kobo Libra H2O/Kobo Libra 2
+    	    - KoF     ( 1440x1920 ) - Kobo Forma
+    	    - KoS     ( 1440x1920 ) - Kobo Sage
+    	    - KoE     ( 1404x1872 ) - Kobo Elipsa
   -quality int (default 85)
     	Quality of the image
   -crop (default true)
