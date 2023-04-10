@@ -10,10 +10,10 @@
     <dc:date>{{ $info.UpdatedAt }}</dc:date>
     <dc:creator>{{ $info.Author }}</dc:creator>
     <meta property="dcterms:modified">{{ $info.UpdatedAt }}</meta>
-    <meta name="fixed-layout" content="true"/>
     <meta name="original-resolution" content="{{ $info.ViewWidth }}x{{ $info.ViewHeight }}"/>
     <meta name="book-type" content="comic"/>
     <meta name="primary-writing-mode" content="horizontal-{{ if $info.Manga }}rl{{ else }}lr{{ end }}"/>
+    <meta property="rendition:layout">pre-paginated</meta>
     <meta property="rendition:orientation">portrait</meta>
     <meta name="orientation-lock" content="portrait"/>
 {{ if eq $info.AddPanelView true }}
