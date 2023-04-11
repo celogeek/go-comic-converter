@@ -247,7 +247,9 @@ func (e *ePub) Write() error {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
 		if totalParts > 1 {
-			suffix = fmt.Sprintf(" Part %02d of %02d", i+1, totalParts)
+			fmtLen := len(fmt.Sprint(totalParts))
+			fmtPart := fmt.Sprintf(" Part %%0%dd of %%0%dd", fmtLen, fmtLen)
+			suffix = fmt.Sprintf(fmtPart, i+1, totalParts)
 		}
 
 		path := fmt.Sprintf("%s%s%s", e.Output[0:len(e.Output)-len(ext)], suffix, ext)
