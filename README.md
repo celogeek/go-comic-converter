@@ -89,8 +89,8 @@ go-comic-converter -profile KS -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -
 ```
 
 If you have more than 1 file the output will be:
-  - ~/Download/MyComic PART_01.epub
-  - ~/Download/MyComic PART_02.epub
+  - ~/Download/MyComic Part 01 of 03.epub
+  - ~/Download/MyComic Part 02 of 03.epub
   - ...
 
 The ePub include as a first page:
