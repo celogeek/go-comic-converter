@@ -93,6 +93,38 @@ func (e *ePub) render(templateString string, data any) string {
 	return stripBlank.ReplaceAllString(result.String(), "\n")
 }
 
+func (e *ePub) writeImage(wz *epubZip, img *Image) error {
+	err := wz.WriteFile(
+		fmt.Sprintf("OEBPS/%s", img.TextPath()),
+		e.render(textTmpl, map[string]any{
+			"Title":    fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
+			"ViewPort": fmt.Sprintf("width=%d, height=%d", e.ViewWidth, e.ViewHeight),
+			"ImageStyle": fmt.Sprintf(
+				"width:%dpx; height:%dpx;",
+				img.Width,
+				img.Height,
+			),
+			"ImagePath": img.ImgPath(),
+		}),
+	)
+
+	if err == nil {
+		err = wz.WriteImage(img.Data)
+	}
+
+	return err
+}
+
+func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
+	return wz.WriteFile(
+		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
+		e.render(blankTmpl, map[string]any{
+			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
+			"ViewPort": fmt.Sprintf("width=%d, height=%d", e.ViewWidth, e.ViewHeight),
+		}),
+	)
+}
+
 func (e *ePub) getParts() ([]*epubPart, error) {
 	images, err := e.LoadImages()
 
@@ -210,8 +242,11 @@ func (e *ePub) Write() error {
 			{"META-INF/com.apple.ibooks.display-options.xml", appleBooksTmpl},
 			{"OEBPS/content.opf", e.getContent(title, part, i+1, totalParts).String()},
 			{"OEBPS/toc.xhtml", e.getToc(title, part.Images)},
-			{"OEBPS/Text/style.css", styleTmpl},
-			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
+			{"OEBPS/Text/style.css", e.render(styleTmpl, map[string]any{
+				"PageWidth":  e.ViewWidth,
+				"PageHeight": e.ViewHeight,
+			})},
+			{"OEBPS/Text/title.xhtml", e.render(titleTmpl, map[string]any{
 				"Info":  e,
 				"Part":  i + 1,
 				"Total": totalParts,
@@ -230,41 +265,19 @@ func (e *ePub) Write() error {
 		// Cover exist or part > 1
 		// If no cover, part 2 and more will include the image as a cover
 		if e.HasCover || i > 0 {
-			if err := wz.WriteFile(fmt.Sprintf("OEBPS/%s", part.Cover.TextPath()), e.render(textTmpl, map[string]any{
-				"Info":  e,
-				"Image": part.Cover,
-				"Manga": e.Manga,
-				"Top":   fmt.Sprintf("%d", (e.ViewHeight-part.Cover.Height)/2),
-			})); err != nil {
-				return err
-			}
-			if err := wz.WriteImage(part.Cover.Data); err != nil {
+			if err := e.writeImage(wz, part.Cover); err != nil {
 				return err
 			}
 		}
 
 		for i, img := range part.Images {
-			if err := wz.WriteFile(fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part), e.render(textTmpl, map[string]any{
-				"Info":  e,
-				"Image": img,
-				"Top":   fmt.Sprintf("%d", (e.ViewHeight-img.Height)/2),
-			})); err != nil {
-				return err
-			}
-
-			if err := wz.WriteImage(img.Data); err != nil {
+			if err := e.writeImage(wz, img); err != nil {
 				return err
 			}
 
 			// Double Page or Last Image
 			if img.DoublePage || (i+1 == len(part.Images)) {
-				if err := wz.WriteFile(
-					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
-					e.render(blankTmpl, map[string]any{
-						"Info":  e,
-						"Image": img,
-					}),
-				); err != nil {
+				if err := e.writeBlank(wz, img); err != nil {
 					return err
 				}
 			}

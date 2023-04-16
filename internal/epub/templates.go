@@ -11,8 +11,8 @@ var appleBooksTmpl string
 //go:embed "templates/style.css.tmpl"
 var styleTmpl string
 
-//go:embed "templates/part.xhtml.tmpl"
-var partTmpl string
+//go:embed "templates/title.xhtml.tmpl"
+var titleTmpl string
 
 //go:embed "templates/text.xhtml.tmpl"
 var textTmpl string
