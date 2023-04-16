@@ -226,6 +226,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 						part := i + 1
 						dst := image.NewGray(g.Bounds(src.Bounds()))
 						g.Draw(dst, src)
+
 						imageOutput <- &Image{
 							Id:         img.Id,
 							Part:       part,
