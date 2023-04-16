@@ -7,8 +7,8 @@
     <meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
   </head>
   <body>
-    <div style="position:absolute; top:{{ .Top }}px">
-      <img style="width:{{ .Image.Width }}px; height:{{ .Image.Height }}px" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg"/>
+    <div>
+      <img style="width:{{ .Image.Width }}px; height:{{ .Image.Height }}px; top:{{ .Top }}px" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg"/>
     </div>
   </body>
 </html>
