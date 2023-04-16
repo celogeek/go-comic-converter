@@ -26,15 +26,35 @@ import (
 )
 
 type Image struct {
-	Id        int
-	Part      int
-	Data      *ImageData
-	Width     int
-	Height    int
-	IsCover   bool
-	NeedSpace bool
-	Path      string
-	Name      string
+	Id         int
+	Part       int
+	Data       *ImageData
+	Width      int
+	Height     int
+	IsCover    bool
+	DoublePage bool
+	Path       string
+	Name       string
+}
+
+func (i *Image) Key(prefix string) string {
+	return fmt.Sprintf("%s_%d_p%d", prefix, i.Id, i.Part)
+}
+
+func (i *Image) SpaceKey(prefix string) string {
+	return fmt.Sprintf("%s_%d_sp", prefix, i.Id)
+}
+
+func (i *Image) TextPath() string {
+	return fmt.Sprintf("Text/%d_p%d.xhtml", i.Id, i.Part)
+}
+
+func (i *Image) ImgPath() string {
+	return fmt.Sprintf("Images/%d_p%d.jpg", i.Id, i.Part)
+}
+
+func (i *Image) SpacePath() string {
+	return fmt.Sprintf("Text/%d_sp.xhtml", i.Id)
 }
 
 type imageTask struct {
@@ -130,15 +150,15 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 		for img := range imageInput {
 			img.Reader.Close()
 			images = append(images, &Image{
-				Id:        img.Id,
-				Part:      0,
-				Data:      nil,
-				Width:     0,
-				Height:    0,
-				IsCover:   false,
-				NeedSpace: false, // NeedSpace reajust during parts computation
-				Path:      img.Path,
-				Name:      img.Name,
+				Id:         img.Id,
+				Part:       0,
+				Data:       nil,
+				Width:      0,
+				Height:     0,
+				IsCover:    false,
+				DoublePage: false,
+				Path:       img.Path,
+				Name:       img.Name,
 			})
 		}
 
@@ -180,15 +200,17 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 				g.Draw(dst, src)
 
 				imageOutput <- &Image{
-					Id:        img.Id,
-					Part:      0,
-					Data:      newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
-					Width:     dst.Bounds().Dx(),
-					Height:    dst.Bounds().Dy(),
-					IsCover:   img.Id == 0,
-					NeedSpace: false,
-					Path:      img.Path,
-					Name:      img.Name,
+					Id:      img.Id,
+					Part:    0,
+					Data:    newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
+					Width:   dst.Bounds().Dx(),
+					Height:  dst.Bounds().Dy(),
+					IsCover: img.Id == 0,
+					DoublePage: src.Bounds().Dx() > src.Bounds().Dy() &&
+						src.Bounds().Dx() > e.ImageOptions.ViewHeight &&
+						src.Bounds().Dy() > e.ImageOptions.ViewWidth,
+					Path: img.Path,
+					Name: img.Name,
 				}
 
 				// Auto split double page
@@ -205,15 +227,15 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 						dst := image.NewGray(g.Bounds(src.Bounds()))
 						g.Draw(dst, src)
 						imageOutput <- &Image{
-							Id:        img.Id,
-							Part:      part,
-							Data:      newImageData(img.Id, part, dst, e.ImageOptions.Quality),
-							Width:     dst.Bounds().Dx(),
-							Height:    dst.Bounds().Dy(),
-							IsCover:   false,
-							NeedSpace: false, // NeedSpace reajust during parts computation
-							Path:      img.Path,
-							Name:      img.Name,
+							Id:         img.Id,
+							Part:       part,
+							Data:       newImageData(img.Id, part, dst, e.ImageOptions.Quality),
+							Width:      dst.Bounds().Dx(),
+							Height:     dst.Bounds().Dy(),
+							IsCover:    false,
+							DoublePage: false,
+							Path:       img.Path,
+							Name:       img.Name,
 						}
 					}
 				}

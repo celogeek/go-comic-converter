@@ -1,22 +1,54 @@
 package epub
 
 import (
-	"encoding/xml"
+	"path/filepath"
+	"strings"
+
+	"github.com/beevik/etree"
 )
 
-type TocTitle struct {
-	XMLName xml.Name `xml:"a"`
-	Value   string   `xml:",innerxml"`
-	Link    string   `xml:"href,attr"`
-}
+func (e *ePub) getToc(title string, images []*Image) string {
+	doc := etree.NewDocument()
+	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
+	doc.CreateDirective("DOCTYPE html")
 
-type TocChildren struct {
-	XMLName xml.Name `xml:"ol"`
-	Tags    []*TocPart
-}
+	html := doc.CreateElement("html")
+	html.CreateAttr("xmlns", "http://www.w3.org/1999/xhtml")
+	html.CreateAttr("xmlns:epub", "http://www.idpf.org/2007/ops")
 
-type TocPart struct {
-	XMLName  xml.Name `xml:"li"`
-	Title    TocTitle
-	Children *TocChildren `xml:",omitempty"`
+	html.CreateElement("head").CreateElement("title").CreateText(title)
+	body := html.CreateElement("body")
+	nav := body.CreateElement("nav")
+	nav.CreateAttr("epub:type", "toc")
+	nav.CreateAttr("id", "toc")
+	nav.CreateElement("h2").CreateText(title)
+
+	ol := etree.NewElement("ol")
+	paths := map[string]*etree.Element{".": ol}
+	for _, img := range images {
+		currentPath := "."
+		for _, path := range strings.Split(img.Path, string(filepath.Separator)) {
+			parentPath := currentPath
+			currentPath = filepath.Join(currentPath, path)
+			if _, ok := paths[currentPath]; ok {
+				continue
+			}
+			t := paths[parentPath].CreateElement("li")
+			link := t.CreateElement("a")
+			link.CreateAttr("href", img.TextPath())
+			link.CreateText(path)
+			paths[currentPath] = t
+		}
+	}
+
+	if len(ol.ChildElements()) == 1 && e.StripFirstDirectoryFromToc {
+		ol = ol.ChildElements()[0]
+	}
+	if len(ol.ChildElements()) > 0 {
+		nav.AddChild(ol)
+	}
+
+	doc.Indent(2)
+	r, _ := doc.WriteToString()
+	return r
 }

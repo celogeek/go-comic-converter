@@ -5,14 +5,8 @@ import _ "embed"
 //go:embed "templates/container.xml.tmpl"
 var containerTmpl string
 
-//go:embed "templates/content.opf.tmpl"
-var contentTmpl string
-
-//go:embed "templates/toc.ncx.tmpl"
-var tocTmpl string
-
-//go:embed "templates/nav.xhtml.tmpl"
-var navTmpl string
+//go:embed "templates/applebooks.xml.tmpl"
+var appleBooksTmpl string
 
 //go:embed "templates/style.css.tmpl"
 var styleTmpl string

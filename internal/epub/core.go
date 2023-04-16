@@ -1,7 +1,6 @@
 package epub
 
 import (
-	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -134,7 +133,6 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	currentSize := baseSize
 	currentImages := make([]*Image, 0)
 	part := 1
-	imgIsOnRightSide := false
 
 	for _, img := range images {
 		imgSize := img.Data.CompressedSize() + xhtmlSize
@@ -144,14 +142,11 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 				Images: currentImages,
 			})
 			part += 1
-			imgIsOnRightSide = false
 			currentSize = baseSize
 			currentImages = make([]*Image, 0)
 		}
 		currentSize += imgSize
-		img.NeedSpace = img.Part == 1 && imgIsOnRightSide
 		currentImages = append(currentImages, img)
-		imgIsOnRightSide = !imgIsOnRightSide
 	}
 	if len(currentImages) > 0 {
 		parts = append(parts, &epubPart{
@@ -161,59 +156,6 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	}
 
 	return parts, nil
-}
-
-func (e *ePub) getToc(images []*Image) *TocChildren {
-	paths := map[string]*TocPart{
-		".": {},
-	}
-	for _, img := range images {
-		currentPath := "."
-		for _, path := range strings.Split(img.Path, string(filepath.Separator)) {
-			parentPath := currentPath
-			currentPath = filepath.Join(currentPath, path)
-			if _, ok := paths[currentPath]; ok {
-				continue
-			}
-			part := &TocPart{
-				Title: TocTitle{
-					Value: path,
-					Link:  fmt.Sprintf("Text/%d_p%d.xhtml", img.Id, img.Part),
-				},
-			}
-			paths[currentPath] = part
-			if paths[parentPath].Children == nil {
-				paths[parentPath].Children = &TocChildren{}
-			}
-			paths[parentPath].Children.Tags = append(paths[parentPath].Children.Tags, part)
-		}
-	}
-
-	children := paths["."].Children
-
-	if children != nil && e.StripFirstDirectoryFromToc && len(children.Tags) == 1 {
-		children = children.Tags[0].Children
-	}
-
-	return children
-
-}
-
-func (e *ePub) getTree(images []*Image, skip_files bool) string {
-	t := NewTree()
-	for _, img := range images {
-		if skip_files {
-			t.Add(img.Path)
-		} else {
-			t.Add(filepath.Join(img.Path, img.Name))
-		}
-	}
-	c := t.Root()
-	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
-		c = c.Children[0]
-	}
-
-	return c.toString("")
 }
 
 func (e *ePub) Write() error {
@@ -263,33 +205,11 @@ func (e *ePub) Write() error {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
 
-		tocChildren := e.getToc(part.Images)
-		toc := []byte{}
-		if tocChildren != nil {
-			toc, err = xml.MarshalIndent(tocChildren.Tags, "        ", "  ")
-			if err != nil {
-				return err
-			}
-		}
-
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
-			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{
-				"Info":   e,
-				"Cover":  part.Cover,
-				"Images": part.Images,
-				"Title":  title,
-				"Part":   i + 1,
-				"Total":  totalParts,
-			})},
-			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{
-				"Info":  e,
-				"Title": title,
-			})},
-			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{
-				"Title": title,
-				"TOC":   string(toc),
-			})},
+			{"META-INF/com.apple.ibooks.display-options.xml", appleBooksTmpl},
+			{"OEBPS/content.opf", e.getContent(title, part, i+1, totalParts).String()},
+			{"OEBPS/toc.xhtml", e.getToc(title, part.Images)},
 			{"OEBPS/Text/style.css", styleTmpl},
 			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
 				"Info":  e,
@@ -310,7 +230,17 @@ func (e *ePub) Write() error {
 		// Cover exist or part > 1
 		// If no cover, part 2 and more will include the image as a cover
 		if e.HasCover || i > 0 {
-			wz.WriteImage(part.Cover.Data)
+			if err := wz.WriteFile(fmt.Sprintf("OEBPS/%s", part.Cover.TextPath()), e.render(textTmpl, map[string]any{
+				"Info":  e,
+				"Image": part.Cover,
+				"Manga": e.Manga,
+				"Top":   fmt.Sprintf("%d", (e.ViewHeight-part.Cover.Height)/2),
+			})); err != nil {
+				return err
+			}
+			if err := wz.WriteImage(part.Cover.Data); err != nil {
+				return err
+			}
 		}
 
 		for i, img := range part.Images {
