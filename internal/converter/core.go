@@ -95,7 +95,6 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.NoBlankPage, "noblankpage", c.Options.NoBlankPage, "Remove blank pages")
 	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
 	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
-	c.AddBoolParam(&c.Options.AddPanelView, "addpanelview", c.Options.AddPanelView, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")

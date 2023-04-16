@@ -113,7 +113,6 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankPage:         cmd.Options.NoBlankPage,
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
-			AddPanelView:        cmd.Options.AddPanelView,
 			Workers:             cmd.Options.Workers,
 		},
 	}).Write(); err != nil {

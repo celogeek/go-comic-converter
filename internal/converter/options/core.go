@@ -31,7 +31,6 @@ type Options struct {
 	NoBlankPage                bool   `yaml:"no_blank_page"`
 	Manga                      bool   `yaml:"manga"`
 	HasCover                   bool   `yaml:"has_cover"`
-	AddPanelView               bool   `yaml:"add_panel_view"`
 	LimitMb                    int    `yaml:"limit_mb"`
 	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
 	SortPathMode               int    `yaml:"sort_path_mode"`
@@ -61,7 +60,6 @@ func New() *Options {
 		NoBlankPage:                false,
 		Manga:                      false,
 		HasCover:                   true,
-		AddPanelView:               false,
 		LimitMb:                    0,
 		StripFirstDirectoryFromToc: false,
 		SortPathMode:               1,
@@ -150,7 +148,6 @@ func (o *Options) ShowDefault() string {
     NoBlankPage               : %v
     Manga                     : %v
     HasCover                  : %v
-    AddPanelView              : %v
     LimitMb                   : %s
     StripFirstDirectoryFromToc: %v
     SortPathMode              : %s`,
@@ -164,7 +161,6 @@ func (o *Options) ShowDefault() string {
 		o.NoBlankPage,
 		o.Manga,
 		o.HasCover,
-		o.AddPanelView,
 		limitmb,
 		o.StripFirstDirectoryFromToc,
 		sortpathmode,

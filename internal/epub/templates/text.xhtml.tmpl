@@ -4,38 +4,11 @@
   <head>
     <title>Page {{ .Image.Id }}_p{{ .Image.Part}}</title>
     <link href="style.css" type="text/css" rel="stylesheet"/>
-    <link href="panelview.css" type="text/css" rel="stylesheet"/>
-    <meta name="viewport" content="width={{ .Image.Width }}, height={{ .Image.Height }}"/>
+    <meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
   </head>
   <body>
-    <div>
+    <div style="position:absolute; top:{{ .Top }}px">
       <img style="width:{{ .Image.Width }}px; height:{{ .Image.Height }}px" src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg"/>
-    </div>
-    <div id="PV">
-      <div id="PV-TL">
-        <a class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TL-P", "ordinal":{{ if .Manga }}2{{ else }}1{{ end }}}'></a>
-      </div>
-      <div id="PV-TR">
-        <a class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-TR-P", "ordinal":{{ if .Manga }}1{{ else }}2{{ end }}}'></a>
-      </div>
-      <div id="PV-BL">
-        <a class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BL-P", "ordinal":{{ if .Manga }}4{{ else }}3{{ end }}}'></a>
-      </div>
-      <div id="PV-BR">
-        <a class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-BR-P", "ordinal":{{ if .Manga }}3{{ else }}4{{ end }}}'></a>
-      </div>
-    </div>
-    <div class="PV-P" id="PV-TL-P">
-      <img src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
-    </div>
-    <div class="PV-P" id="PV-TR-P">
-      <img src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
-    </div>
-    <div class="PV-P" id="PV-BL-P">
-      <img src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
-    </div>
-    <div class="PV-P" id="PV-BR-P">
-      <img src="../Images/{{ .Image.Id }}_p{{ .Image.Part}}.jpg" width="{{ zoom .Image.Width 1.5 }}" height="{{ zoom .Image.Height 1.5 }}"/>
     </div>
   </body>
 </html>

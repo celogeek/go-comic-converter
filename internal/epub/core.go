@@ -27,7 +27,6 @@ type ImageOptions struct {
 	NoBlankPage         bool
 	Manga               bool
 	HasCover            bool
-	AddPanelView        bool
 	Workers             int
 }
 
@@ -298,9 +297,6 @@ func (e *ePub) Write() error {
 				"Total": totalParts,
 			})},
 		}
-		if e.AddPanelView {
-			content = append(content, zipContent{"OEBPS/Text/panelview.css", panelViewTmpl})
-		}
 
 		if err = wz.WriteMagic(); err != nil {
 			return err
@@ -317,24 +313,21 @@ func (e *ePub) Write() error {
 			wz.WriteImage(part.Cover.Data)
 		}
 
-		for _, img := range part.Images {
-			var content string
-			if e.AddPanelView {
-				content = e.render(textTmpl, map[string]any{
-					"Image": img,
-					"Manga": e.Manga,
-				})
-			} else {
-				content = e.render(textNoPanelTmpl, map[string]any{
-					"Image": img,
-				})
-			}
-
-			if err := wz.WriteFile(fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part), content); err != nil {
+		for i, img := range part.Images {
+			if err := wz.WriteFile(fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part), e.render(textTmpl, map[string]any{
+				"Info":  e,
+				"Image": img,
+				"Top":   fmt.Sprintf("%d", (e.ViewHeight-img.Height)/2),
+			})); err != nil {
 				return err
 			}
 
-			if img.NeedSpace {
+			if err := wz.WriteImage(img.Data); err != nil {
+				return err
+			}
+
+			// Double Page or Last Image
+			if img.DoublePage || (i+1 == len(part.Images)) {
 				if err := wz.WriteFile(
 					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 					e.render(blankTmpl, map[string]any{
@@ -344,10 +337,6 @@ func (e *ePub) Write() error {
 				); err != nil {
 					return err
 				}
-			}
-
-			if err := wz.WriteImage(img.Data); err != nil {
-				return err
 			}
 		}
 		bar.Add(1)
