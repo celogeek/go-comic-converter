@@ -77,7 +77,7 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 		{"item", TagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 	}
 
-	if part.Cover != nil {
+	if e.HasCover || currentPart > 1 {
 		items = append(items, iTag(part.Cover), hTag(part.Cover))
 	}
 
