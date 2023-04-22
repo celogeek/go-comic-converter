@@ -95,7 +95,7 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 }
 
 func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int) []Tag {
-	isOnTheRight := true
+	isOnTheRight := !e.Manga
 	getSpread := func(doublePageNoBlank bool) string {
 		isOnTheRight = !isOnTheRight
 		if doublePageNoBlank {
@@ -111,7 +111,7 @@ func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int
 	}
 
 	spine := []Tag{
-		{"itemref", TagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
+		{"itemref", TagAttrs{"idref": "page_title", "properties": getSpread(true)}, ""},
 	}
 	for _, img := range part.Images {
 		spine = append(spine, Tag{
