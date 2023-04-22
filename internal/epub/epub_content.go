@@ -95,7 +95,7 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 }
 
 func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int) []Tag {
-	isOnTheRight := !e.Manga
+	isOnTheRight := true
 	getSpread := func(doublePageNoBlank bool) string {
 		isOnTheRight = !isOnTheRight
 		if doublePageNoBlank {
