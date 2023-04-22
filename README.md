@@ -115,6 +115,8 @@ Options:
     Title                     : mymanga
     Workers                   : 8
     Profile                   : KS - Kindle Scribe - 1860x2480
+    ViewRatio                 : 1:1.5
+    View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -152,6 +154,8 @@ Options:
     Title                     : mymanga
     Workers                   : 8
     Profile                   : KS - Kindle Scribe - 1860x2480
+    ViewRatio                 : 1:1.5
+    View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -221,6 +225,8 @@ Go Comic Converter
 
 Options:
     Profile                   : KS - Kindle Scribe - 1860x2480
+    ViewRatio                 : 1:1.5
+    View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -245,6 +251,8 @@ Go Comic Converter
 
 Options:
     Profile                   : KS - Kindle Scribe - 1860x2480
+    ViewRatio                 : 1:1.5
+    View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
     Brightness                : 0
@@ -300,12 +308,6 @@ Output:
     	Author of the epub
   -title string
     	Title of the epub
-  -workers int (default CPU)
-    	Number of workers
-  -dry
-    	Dry run to show all options
-  -dry-verbose
-    	Display also sorted files after the TOC
 
 Config:
   -profile string
@@ -373,6 +375,14 @@ Default config:
     	Reset your parameters to default
 
 Other:
+  -workers int (default CPU)
+    	Number of workers
+  -dry
+    	Dry run to show all options
+  -dry-verbose
+    	Display also sorted files after the TOC
+  -quiet
+    	Disable progress bar
   -version
     	Show current and available version
   -help
