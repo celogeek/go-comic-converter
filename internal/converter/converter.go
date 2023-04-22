@@ -79,9 +79,6 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Output, "output", "", "Output of the epub (directory or epub): (default [INPUT].epub)")
 	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the epub")
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the epub")
-	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
-	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
-	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
 
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
@@ -105,6 +102,10 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
 	c.AddSection("Other")
+	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
+	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
+	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
+	c.AddBoolParam(&c.Options.Quiet, "quiet", false, "Disable progress bar")
 	c.AddBoolParam(&c.Options.Version, "version", false, "Show current and available version")
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }

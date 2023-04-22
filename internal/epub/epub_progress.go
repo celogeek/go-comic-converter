@@ -7,7 +7,10 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func NewBar(max int, description string, currentJob, totalJob int) *progressbar.ProgressBar {
+func NewBar(quiet bool, max int, description string, currentJob, totalJob int) *progressbar.ProgressBar {
+	if quiet {
+		return progressbar.DefaultSilent(int64(max))
+	}
 	fmtJob := fmt.Sprintf("%%0%dd", len(fmt.Sprint(totalJob)))
 	fmtDesc := fmt.Sprintf("[%s/%s] %%-15s", fmtJob, fmtJob)
 	return progressbar.NewOptions(max,

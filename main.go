@@ -100,8 +100,6 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Title:                      cmd.Options.Title,
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
-		Dry:                        cmd.Options.Dry,
-		DryVerbose:                 cmd.Options.DryVerbose,
 		SortPathMode:               cmd.Options.SortPathMode,
 		ImageOptions: &epub.ImageOptions{
 			ViewWidth:           perfectWidth,
@@ -117,6 +115,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			HasCover:            cmd.Options.HasCover,
 			Workers:             cmd.Options.Workers,
 		},
+		Dry:        cmd.Options.Dry,
+		DryVerbose: cmd.Options.DryVerbose,
+		Quiet:      cmd.Options.Quiet,
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

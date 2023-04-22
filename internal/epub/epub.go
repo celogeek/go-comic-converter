@@ -39,6 +39,7 @@ type EpubOptions struct {
 	Dry                        bool
 	DryVerbose                 bool
 	SortPathMode               int
+	Quiet                      bool
 
 	*ImageOptions
 }
@@ -211,7 +212,7 @@ func (e *ePub) Write() error {
 
 	totalParts := len(epubParts)
 
-	bar := NewBar(totalParts, "Writing Part", 2, 2)
+	bar := NewBar(e.Quiet, totalParts, "Writing Part", 2, 2)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""

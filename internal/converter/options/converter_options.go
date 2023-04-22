@@ -12,14 +12,10 @@ import (
 
 type Options struct {
 	// Output
-	Input      string `yaml:"-"`
-	Output     string `yaml:"-"`
-	Author     string `yaml:"-"`
-	Title      string `yaml:"-"`
-	Auto       bool   `yaml:"-"`
-	Workers    int    `yaml:"-"`
-	Dry        bool   `yaml:"-"`
-	DryVerbose bool   `yaml:"-"`
+	Input  string `yaml:"-"`
+	Output string `yaml:"-"`
+	Author string `yaml:"-"`
+	Title  string `yaml:"-"`
 
 	// Config
 	Profile                    string `yaml:"profile"`
@@ -27,6 +23,7 @@ type Options struct {
 	Crop                       bool   `yaml:"crop"`
 	Brightness                 int    `yaml:"brightness"`
 	Contrast                   int    `yaml:"contrast"`
+	Auto                       bool   `yaml:"-"`
 	AutoRotate                 bool   `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
 	NoBlankPage                bool   `yaml:"no_blank_page"`
@@ -42,8 +39,12 @@ type Options struct {
 	Reset bool `yaml:"-"`
 
 	// Other
-	Version bool `yaml:"-"`
-	Help    bool `yaml:"-"`
+	Workers    int  `yaml:"-"`
+	Dry        bool `yaml:"-"`
+	DryVerbose bool `yaml:"-"`
+	Quiet      bool `yaml:"-"`
+	Version    bool `yaml:"-"`
+	Help       bool `yaml:"-"`
 
 	// Internal
 	profiles profiles.Profiles

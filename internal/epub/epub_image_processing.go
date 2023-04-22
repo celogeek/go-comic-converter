@@ -198,7 +198,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 	imageOutput := make(chan *Image)
 
 	// processing
-	bar := NewBar(imageCount, "Processing", 1, 2)
+	bar := NewBar(e.Quiet, imageCount, "Processing", 1, 2)
 	wg := &sync.WaitGroup{}
 
 	for i := 0; i < e.ImageOptions.Workers; i++ {
