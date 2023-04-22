@@ -24,20 +24,32 @@ type positionFilter struct {
 }
 
 func (p *positionFilter) Bounds(srcBounds image.Rectangle) image.Rectangle {
-	return image.Rect(0, 0, p.viewWidth, p.viewHeight)
+	w, h := p.viewWidth, p.viewHeight
+	srcw, srch := srcBounds.Dx(), srcBounds.Dy()
+
+	if w <= 0 || h <= 0 || srcw <= 0 || srch <= 0 {
+		return image.Rect(0, 0, 0, 0)
+	}
+
+	return image.Rect(0, 0, w, h)
 }
 
 func (p *positionFilter) Draw(dst draw.Image, src image.Image, options *gift.Options) {
+	if dst.Bounds().Dx() == 0 || dst.Bounds().Dy() == 0 {
+		return
+	}
+
 	draw.Draw(dst, dst.Bounds(), image.White, dst.Bounds().Min, draw.Over)
 
 	srcBounds := src.Bounds()
-	left, top := (p.viewWidth-srcBounds.Dx())/2, (p.viewHeight-srcBounds.Dy())/2
-	if p.align == PositionLeft {
-		left = 0
+	left, top := 0, (dst.Bounds().Dy()-srcBounds.Dy())/2
+
+	if p.align == PositionCenter {
+		left = (dst.Bounds().Dx() - srcBounds.Dx()) / 2
 	}
 
 	if p.align == PositionRight {
-		left = p.viewWidth - srcBounds.Dx()
+		left = dst.Bounds().Dx() - srcBounds.Dx()
 	}
 
 	draw.Draw(
@@ -45,8 +57,8 @@ func (p *positionFilter) Draw(dst draw.Image, src image.Image, options *gift.Opt
 		image.Rect(
 			left,
 			top,
-			p.viewWidth,
-			p.viewHeight,
+			dst.Bounds().Dx(),
+			dst.Bounds().Dy(),
 		),
 		src,
 		srcBounds.Min,
