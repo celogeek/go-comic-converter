@@ -97,13 +97,8 @@ func (e *ePub) writeImage(wz *epubZip, img *Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
 		e.render(textTmpl, map[string]any{
-			"Title":    fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
-			"ViewPort": fmt.Sprintf("width=%d, height=%d", e.ViewWidth, e.ViewHeight),
-			"ImageStyle": fmt.Sprintf(
-				"width:%dpx; height:%dpx;",
-				img.Width,
-				img.Height,
-			),
+			"Title":     fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
+			"ViewPort":  fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
 			"ImagePath": img.ImgPath(),
 		}),
 	)
@@ -120,7 +115,7 @@ func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 		e.render(blankTmpl, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
-			"ViewPort": fmt.Sprintf("width=%d, height=%d", e.ViewWidth, e.ViewHeight),
+			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
 		}),
 	)
 }
