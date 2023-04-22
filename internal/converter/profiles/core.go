@@ -12,6 +12,19 @@ type Profile struct {
 	Height      int
 }
 
+const perfectRatio = 1.5
+
+func (p Profile) PerfectDim() (int, int) {
+	width, height := float64(p.Width), float64(p.Height)
+	perfectWidth, perfectHeight := height/perfectRatio, width*perfectRatio
+	if perfectWidth > width {
+		perfectWidth = width
+	} else {
+		perfectHeight = height
+	}
+	return int(perfectWidth), int(perfectHeight)
+}
+
 type Profiles []Profile
 
 func New() Profiles {
