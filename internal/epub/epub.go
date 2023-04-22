@@ -2,6 +2,8 @@ package epub
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,7 +12,12 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/disintegration/gift"
 	"github.com/gofrs/uuid"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gomonobold"
 )
 
 type ImageOptions struct {
@@ -122,8 +129,64 @@ func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
 	)
 }
 
-func (e ePub) getTitleImageData(img *Image, currentPart, totalPart int) *ImageData {
-	return newData("OEBPS/Images/title.jpg", img.Raw, e.Quality)
+func (e ePub) getTitleImageData(title string, img *Image, currentPart, totalPart int) *ImageData {
+	// Create a blur version of the cover
+	g := gift.New(gift.GaussianBlur(8))
+	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
+	g.Draw(dst, img.Raw)
+
+	// Calculate size of title
+	f, _ := truetype.Parse(gomonobold.TTF)
+	borderSize := 4
+	var fontSize, textWidth, textHeight int
+	for fontSize = 64; fontSize >= 12; fontSize -= 1 {
+		face := truetype.NewFace(f, &truetype.Options{Size: float64(fontSize), DPI: 72})
+		textWidth = font.MeasureString(face, title).Ceil()
+		textHeight = face.Metrics().Ascent.Ceil() + face.Metrics().Descent.Ceil()
+		if textWidth+2*borderSize < img.Width && 3*textHeight+2*borderSize < img.Height {
+			break
+		}
+	}
+
+	// Draw rectangle in the middle of the image
+	textPosStart := img.Height/2 - textHeight/2
+	textPosEnd := img.Height/2 + textHeight/2
+	marginSize := fontSize
+	borderArea := image.Rect(0, textPosStart-borderSize-marginSize, img.Width, textPosEnd+borderSize+marginSize)
+	textArea := image.Rect(borderSize, textPosStart-marginSize, img.Width-borderSize, textPosEnd+marginSize)
+
+	draw.Draw(
+		dst,
+		borderArea,
+		image.Black,
+		image.Point{},
+		draw.Over,
+	)
+
+	draw.Draw(
+		dst,
+		textArea,
+		image.White,
+		image.Point{},
+		draw.Over,
+	)
+
+	// Draw text
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFontSize(float64(fontSize))
+	c.SetFont(f)
+	c.SetClip(textArea)
+	c.SetDst(dst)
+	c.SetSrc(image.Black)
+
+	textLeft := img.Width/2 - textWidth/2
+	if textLeft < borderSize {
+		textLeft = borderSize
+	}
+	c.DrawString(title, freetype.Pt(textLeft, img.Height/2+textHeight/4))
+
+	return newData("OEBPS/Images/title.jpg", dst, e.Quality)
 }
 
 func (e *ePub) getParts() ([]*epubPart, error) {
@@ -269,7 +332,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteImage(e.getTitleImageData(part.Cover, i+1, totalParts)); err != nil {
+		if err := wz.WriteImage(e.getTitleImageData(title, part.Cover, i+1, totalParts)); err != nil {
 			return err
 		}
 
