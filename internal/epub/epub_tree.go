@@ -51,3 +51,20 @@ func (n *Node) toString(indent string) string {
 	}
 	return r.String()
 }
+
+func (e *ePub) getTree(images []*Image, skip_files bool) string {
+	t := NewTree()
+	for _, img := range images {
+		if skip_files {
+			t.Add(img.Path)
+		} else {
+			t.Add(filepath.Join(img.Path, img.Name))
+		}
+	}
+	c := t.Root()
+	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
+		c = c.Children[0]
+	}
+
+	return c.toString("")
+}

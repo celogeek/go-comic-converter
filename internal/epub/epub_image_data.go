@@ -22,6 +22,10 @@ func (img *ImageData) CompressedSize() uint64 {
 
 func newImageData(id int, part int, img image.Image, quality int) *ImageData {
 	name := fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", id, part)
+	return newData(name, img, quality)
+}
+
+func newData(name string, img image.Image, quality int) *ImageData {
 	data := bytes.NewBuffer([]byte{})
 	if err := jpeg.Encode(data, img, &jpeg.Options{Quality: quality}); err != nil {
 		panic(err)

@@ -1,7 +1,6 @@
 package epub
 
 import (
-	"encoding/xml"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,7 +26,6 @@ type ImageOptions struct {
 	NoBlankPage         bool
 	Manga               bool
 	HasCover            bool
-	AddPanelView        bool
 	Workers             int
 }
 
@@ -41,6 +39,7 @@ type EpubOptions struct {
 	Dry                        bool
 	DryVerbose                 bool
 	SortPathMode               int
+	Quiet                      bool
 
 	*ImageOptions
 }
@@ -95,6 +94,34 @@ func (e *ePub) render(templateString string, data any) string {
 	return stripBlank.ReplaceAllString(result.String(), "\n")
 }
 
+func (e *ePub) writeImage(wz *epubZip, img *Image) error {
+	err := wz.WriteFile(
+		fmt.Sprintf("OEBPS/%s", img.TextPath()),
+		e.render(textTmpl, map[string]any{
+			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
+			"ImagePath":  img.ImgPath(),
+			"ImageStyle": img.ImgStyle(e.ViewWidth, e.ViewHeight, e.Manga),
+		}),
+	)
+
+	if err == nil {
+		err = wz.WriteImage(img.Data)
+	}
+
+	return err
+}
+
+func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
+	return wz.WriteFile(
+		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
+		e.render(blankTmpl, map[string]any{
+			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
+			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
+		}),
+	)
+}
+
 func (e *ePub) getParts() ([]*epubPart, error) {
 	images, err := e.LoadImages()
 
@@ -129,13 +156,15 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 
 	xhtmlSize := uint64(1024)
-	// descriptor files + image
+	// descriptor files + title
 	baseSize := uint64(16*1024) + cover.Data.CompressedSize()
+	if e.HasCover {
+		baseSize += cover.Data.CompressedSize()
+	}
 
 	currentSize := baseSize
 	currentImages := make([]*Image, 0)
 	part := 1
-	imgIsOnRightSide := false
 
 	for _, img := range images {
 		imgSize := img.Data.CompressedSize() + xhtmlSize
@@ -145,14 +174,14 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 				Images: currentImages,
 			})
 			part += 1
-			imgIsOnRightSide = false
 			currentSize = baseSize
+			if !e.HasCover {
+				currentSize += cover.Data.CompressedSize()
+			}
 			currentImages = make([]*Image, 0)
 		}
 		currentSize += imgSize
-		img.NeedSpace = img.Part == 1 && imgIsOnRightSide
 		currentImages = append(currentImages, img)
-		imgIsOnRightSide = !imgIsOnRightSide
 	}
 	if len(currentImages) > 0 {
 		parts = append(parts, &epubPart{
@@ -162,59 +191,6 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	}
 
 	return parts, nil
-}
-
-func (e *ePub) getToc(images []*Image) *TocChildren {
-	paths := map[string]*TocPart{
-		".": {},
-	}
-	for _, img := range images {
-		currentPath := "."
-		for _, path := range strings.Split(img.Path, string(filepath.Separator)) {
-			parentPath := currentPath
-			currentPath = filepath.Join(currentPath, path)
-			if _, ok := paths[currentPath]; ok {
-				continue
-			}
-			part := &TocPart{
-				Title: TocTitle{
-					Value: path,
-					Link:  fmt.Sprintf("Text/%d_p%d.xhtml", img.Id, img.Part),
-				},
-			}
-			paths[currentPath] = part
-			if paths[parentPath].Children == nil {
-				paths[parentPath].Children = &TocChildren{}
-			}
-			paths[parentPath].Children.Tags = append(paths[parentPath].Children.Tags, part)
-		}
-	}
-
-	children := paths["."].Children
-
-	if children != nil && e.StripFirstDirectoryFromToc && len(children.Tags) == 1 {
-		children = children.Tags[0].Children
-	}
-
-	return children
-
-}
-
-func (e *ePub) getTree(images []*Image, skip_files bool) string {
-	t := NewTree()
-	for _, img := range images {
-		if skip_files {
-			t.Add(img.Path)
-		} else {
-			t.Add(filepath.Join(img.Path, img.Name))
-		}
-	}
-	c := t.Root()
-	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
-		c = c.Children[0]
-	}
-
-	return c.toString("")
 }
 
 func (e *ePub) Write() error {
@@ -242,7 +218,7 @@ func (e *ePub) Write() error {
 
 	totalParts := len(epubParts)
 
-	bar := NewBar(totalParts, "Writing Part", 2, 2)
+	bar := NewBar(e.Quiet, totalParts, "Writing Part", 2, 2)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
@@ -264,42 +240,21 @@ func (e *ePub) Write() error {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
 
-		tocChildren := e.getToc(part.Images)
-		toc := []byte{}
-		if tocChildren != nil {
-			toc, err = xml.MarshalIndent(tocChildren.Tags, "        ", "  ")
-			if err != nil {
-				return err
-			}
-		}
-
 		content := []zipContent{
 			{"META-INF/container.xml", containerTmpl},
-			{"OEBPS/content.opf", e.render(contentTmpl, map[string]any{
-				"Info":   e,
-				"Cover":  part.Cover,
-				"Images": part.Images,
-				"Title":  title,
-				"Part":   i + 1,
-				"Total":  totalParts,
+			{"META-INF/com.apple.ibooks.display-options.xml", appleBooksTmpl},
+			{"OEBPS/content.opf", e.getContent(title, part, i+1, totalParts).String()},
+			{"OEBPS/toc.xhtml", e.getToc(title, part.Images)},
+			{"OEBPS/Text/style.css", e.render(styleTmpl, map[string]any{
+				"PageWidth":  e.ViewWidth,
+				"PageHeight": e.ViewHeight,
 			})},
-			{"OEBPS/toc.ncx", e.render(tocTmpl, map[string]any{
-				"Info":  e,
-				"Title": title,
+			{"OEBPS/Text/title.xhtml", e.render(textTmpl, map[string]any{
+				"Title":      title,
+				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
+				"ImagePath":  "Images/title.jpg",
+				"ImageStyle": part.Cover.ImgStyle(e.ViewWidth, e.ViewHeight, e.Manga),
 			})},
-			{"OEBPS/nav.xhtml", e.render(navTmpl, map[string]any{
-				"Title": title,
-				"TOC":   string(toc),
-			})},
-			{"OEBPS/Text/style.css", styleTmpl},
-			{"OEBPS/Text/part.xhtml", e.render(partTmpl, map[string]any{
-				"Info":  e,
-				"Part":  i + 1,
-				"Total": totalParts,
-			})},
-		}
-		if e.AddPanelView {
-			content = append(content, zipContent{"OEBPS/Text/panelview.css", panelViewTmpl})
 		}
 
 		if err = wz.WriteMagic(); err != nil {
@@ -310,44 +265,28 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
+		if err := wz.WriteImage(e.createTitleImageDate(title, part.Cover, i+1, totalParts)); err != nil {
+			return err
+		}
 
 		// Cover exist or part > 1
 		// If no cover, part 2 and more will include the image as a cover
 		if e.HasCover || i > 0 {
-			wz.WriteImage(part.Cover.Data)
+			if err := e.writeImage(wz, part.Cover); err != nil {
+				return err
+			}
 		}
 
-		for _, img := range part.Images {
-			var content string
-			if e.AddPanelView {
-				content = e.render(textTmpl, map[string]any{
-					"Image": img,
-					"Manga": e.Manga,
-				})
-			} else {
-				content = e.render(textNoPanelTmpl, map[string]any{
-					"Image": img,
-				})
-			}
-
-			if err := wz.WriteFile(fmt.Sprintf("OEBPS/Text/%d_p%d.xhtml", img.Id, img.Part), content); err != nil {
+		for i, img := range part.Images {
+			if err := e.writeImage(wz, img); err != nil {
 				return err
 			}
 
-			if img.NeedSpace {
-				if err := wz.WriteFile(
-					fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
-					e.render(blankTmpl, map[string]any{
-						"Info":  e,
-						"Image": img,
-					}),
-				); err != nil {
+			// Double Page or Last Image
+			if img.DoublePage || (i+1 == len(part.Images)) {
+				if err := e.writeBlank(wz, img); err != nil {
 					return err
 				}
-			}
-
-			if err := wz.WriteImage(img.Data); err != nil {
-				return err
 			}
 		}
 		bar.Add(1)

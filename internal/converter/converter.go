@@ -79,9 +79,6 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Output, "output", "", "Output of the epub (directory or epub): (default [INPUT].epub)")
 	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the epub")
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the epub")
-	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
-	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
-	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
 
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
@@ -95,7 +92,6 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.NoBlankPage, "noblankpage", c.Options.NoBlankPage, "Remove blank pages")
 	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
 	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
-	c.AddBoolParam(&c.Options.AddPanelView, "addpanelview", c.Options.AddPanelView, "Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the ePub: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
@@ -106,6 +102,10 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
 	c.AddSection("Other")
+	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
+	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
+	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
+	c.AddBoolParam(&c.Options.Quiet, "quiet", false, "Disable progress bar")
 	c.AddBoolParam(&c.Options.Version, "version", false, "Show current and available version")
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }

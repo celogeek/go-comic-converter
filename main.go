@@ -91,6 +91,8 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	fmt.Fprintln(os.Stderr, cmd.Options)
 
 	profile := cmd.Options.GetProfile()
+	perfectWidth, perfectHeight := profile.PerfectDim()
+
 	if err := epub.NewEpub(&epub.EpubOptions{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
@@ -98,12 +100,10 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Title:                      cmd.Options.Title,
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
-		Dry:                        cmd.Options.Dry,
-		DryVerbose:                 cmd.Options.DryVerbose,
 		SortPathMode:               cmd.Options.SortPathMode,
 		ImageOptions: &epub.ImageOptions{
-			ViewWidth:           profile.Width,
-			ViewHeight:          profile.Height,
+			ViewWidth:           perfectWidth,
+			ViewHeight:          perfectHeight,
 			Quality:             cmd.Options.Quality,
 			Crop:                cmd.Options.Crop,
 			Brightness:          cmd.Options.Brightness,
@@ -113,9 +113,11 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankPage:         cmd.Options.NoBlankPage,
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
-			AddPanelView:        cmd.Options.AddPanelView,
 			Workers:             cmd.Options.Workers,
 		},
+		Dry:        cmd.Options.Dry,
+		DryVerbose: cmd.Options.DryVerbose,
+		Quiet:      cmd.Options.Quiet,
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

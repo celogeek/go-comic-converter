@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
@@ -11,14 +12,10 @@ import (
 
 type Options struct {
 	// Output
-	Input      string `yaml:"-"`
-	Output     string `yaml:"-"`
-	Author     string `yaml:"-"`
-	Title      string `yaml:"-"`
-	Auto       bool   `yaml:"-"`
-	Workers    int    `yaml:"-"`
-	Dry        bool   `yaml:"-"`
-	DryVerbose bool   `yaml:"-"`
+	Input  string `yaml:"-"`
+	Output string `yaml:"-"`
+	Author string `yaml:"-"`
+	Title  string `yaml:"-"`
 
 	// Config
 	Profile                    string `yaml:"profile"`
@@ -26,12 +23,12 @@ type Options struct {
 	Crop                       bool   `yaml:"crop"`
 	Brightness                 int    `yaml:"brightness"`
 	Contrast                   int    `yaml:"contrast"`
+	Auto                       bool   `yaml:"-"`
 	AutoRotate                 bool   `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
 	NoBlankPage                bool   `yaml:"no_blank_page"`
 	Manga                      bool   `yaml:"manga"`
 	HasCover                   bool   `yaml:"has_cover"`
-	AddPanelView               bool   `yaml:"add_panel_view"`
 	LimitMb                    int    `yaml:"limit_mb"`
 	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
 	SortPathMode               int    `yaml:"sort_path_mode"`
@@ -42,8 +39,12 @@ type Options struct {
 	Reset bool `yaml:"-"`
 
 	// Other
-	Version bool `yaml:"-"`
-	Help    bool `yaml:"-"`
+	Workers    int  `yaml:"-"`
+	Dry        bool `yaml:"-"`
+	DryVerbose bool `yaml:"-"`
+	Quiet      bool `yaml:"-"`
+	Version    bool `yaml:"-"`
+	Help       bool `yaml:"-"`
 
 	// Internal
 	profiles profiles.Profiles
@@ -61,7 +62,6 @@ func New() *Options {
 		NoBlankPage:                false,
 		Manga:                      false,
 		HasCover:                   true,
-		AddPanelView:               false,
 		LimitMb:                    0,
 		StripFirstDirectoryFromToc: false,
 		SortPathMode:               1,
@@ -113,7 +113,7 @@ func (o *Options) LoadDefault() error {
 }
 
 func (o *Options) ShowDefault() string {
-	var profileDesc string
+	var profileDesc, viewDesc string
 	profile := o.GetProfile()
 	if profile != nil {
 		profileDesc = fmt.Sprintf(
@@ -122,6 +122,13 @@ func (o *Options) ShowDefault() string {
 			profile.Description,
 			profile.Width,
 			profile.Height,
+		)
+
+		perfectWidth, perfectHeight := profile.PerfectDim()
+		viewDesc = fmt.Sprintf(
+			"%dx%d",
+			perfectWidth,
+			perfectHeight,
 		)
 	}
 	limitmb := "nolimit"
@@ -141,6 +148,8 @@ func (o *Options) ShowDefault() string {
 
 	return fmt.Sprintf(`
     Profile                   : %s
+    ViewRatio                 : 1:%s
+    View                      : %s
     Quality                   : %d
     Crop                      : %v
     Brightness                : %d
@@ -150,11 +159,12 @@ func (o *Options) ShowDefault() string {
     NoBlankPage               : %v
     Manga                     : %v
     HasCover                  : %v
-    AddPanelView              : %v
     LimitMb                   : %s
     StripFirstDirectoryFromToc: %v
     SortPathMode              : %s`,
 		profileDesc,
+		strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"),
+		viewDesc,
 		o.Quality,
 		o.Crop,
 		o.Brightness,
@@ -164,7 +174,6 @@ func (o *Options) ShowDefault() string {
 		o.NoBlankPage,
 		o.Manga,
 		o.HasCover,
-		o.AddPanelView,
 		limitmb,
 		o.StripFirstDirectoryFromToc,
 		sortpathmode,

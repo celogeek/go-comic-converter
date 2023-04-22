@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
@@ -18,23 +19,78 @@ import (
 
 	"github.com/celogeek/go-comic-converter/v2/internal/epub/sortpath"
 	"github.com/disintegration/gift"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gomonobold"
 	"golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 )
 
 type Image struct {
-	Id        int
-	Part      int
-	Data      *ImageData
-	Width     int
-	Height    int
-	IsCover   bool
-	NeedSpace bool
-	Path      string
-	Name      string
+	Id         int
+	Part       int
+	Raw        image.Image
+	Data       *ImageData
+	Width      int
+	Height     int
+	IsCover    bool
+	DoublePage bool
+	Path       string
+	Name       string
+}
+
+func (i *Image) Key(prefix string) string {
+	return fmt.Sprintf("%s_%d_p%d", prefix, i.Id, i.Part)
+}
+
+func (i *Image) SpaceKey(prefix string) string {
+	return fmt.Sprintf("%s_%d_sp", prefix, i.Id)
+}
+
+func (i *Image) TextPath() string {
+	return fmt.Sprintf("Text/%d_p%d.xhtml", i.Id, i.Part)
+}
+
+func (i *Image) ImgPath() string {
+	return fmt.Sprintf("Images/%d_p%d.jpg", i.Id, i.Part)
+}
+
+func (i *Image) ImgStyle(viewWidth, viewHeight int, manga bool) string {
+	marginW, marginH := float64(viewWidth-i.Width)/2, float64(viewHeight-i.Height)/2
+	left, top := marginW*100/float64(viewWidth), marginH*100/float64(viewHeight)
+	var align string
+	switch i.Part {
+	case 0:
+		align = fmt.Sprintf("left:%.2f%%", left)
+	case 1:
+		if manga {
+			align = "left:0"
+		} else {
+			align = "right:0"
+		}
+	case 2:
+		if manga {
+			align = "right:0"
+		} else {
+			align = "left:0"
+		}
+	}
+
+	return fmt.Sprintf(
+		"width:%dpx; height:%dpx; top:%.2f%%; %s;",
+		i.Width,
+		i.Height,
+		top,
+		align,
+	)
+}
+
+func (i *Image) SpacePath() string {
+	return fmt.Sprintf("Text/%d_sp.xhtml", i.Id)
 }
 
 type imageTask struct {
@@ -130,15 +186,9 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 		for img := range imageInput {
 			img.Reader.Close()
 			images = append(images, &Image{
-				Id:        img.Id,
-				Part:      0,
-				Data:      nil,
-				Width:     0,
-				Height:    0,
-				IsCover:   false,
-				NeedSpace: false, // NeedSpace reajust during parts computation
-				Path:      img.Path,
-				Name:      img.Name,
+				Id:   img.Id,
+				Path: img.Path,
+				Name: img.Name,
 			})
 		}
 
@@ -148,7 +198,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 	imageOutput := make(chan *Image)
 
 	// processing
-	bar := NewBar(imageCount, "Processing", 1, 2)
+	bar := NewBar(e.Quiet, imageCount, "Processing", 1, 2)
 	wg := &sync.WaitGroup{}
 
 	for i := 0; i < e.ImageOptions.Workers; i++ {
@@ -179,16 +229,24 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 				dst := image.NewGray(g.Bounds(src.Bounds()))
 				g.Draw(dst, src)
 
+				var raw image.Image
+				if img.Id == 0 {
+					raw = dst
+				}
+
 				imageOutput <- &Image{
-					Id:        img.Id,
-					Part:      0,
-					Data:      newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
-					Width:     dst.Bounds().Dx(),
-					Height:    dst.Bounds().Dy(),
-					IsCover:   img.Id == 0,
-					NeedSpace: false,
-					Path:      img.Path,
-					Name:      img.Name,
+					Id:      img.Id,
+					Part:    0,
+					Raw:     raw,
+					Data:    newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
+					Width:   dst.Bounds().Dx(),
+					Height:  dst.Bounds().Dy(),
+					IsCover: img.Id == 0,
+					DoublePage: src.Bounds().Dx() > src.Bounds().Dy() &&
+						src.Bounds().Dx() > e.ImageOptions.ViewHeight &&
+						src.Bounds().Dy() > e.ImageOptions.ViewWidth,
+					Path: img.Path,
+					Name: img.Name,
 				}
 
 				// Auto split double page
@@ -204,16 +262,17 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 						part := i + 1
 						dst := image.NewGray(g.Bounds(src.Bounds()))
 						g.Draw(dst, src)
+
 						imageOutput <- &Image{
-							Id:        img.Id,
-							Part:      part,
-							Data:      newImageData(img.Id, part, dst, e.ImageOptions.Quality),
-							Width:     dst.Bounds().Dx(),
-							Height:    dst.Bounds().Dy(),
-							IsCover:   false,
-							NeedSpace: false, // NeedSpace reajust during parts computation
-							Path:      img.Path,
-							Name:      img.Name,
+							Id:         img.Id,
+							Part:       part,
+							Data:       newImageData(img.Id, part, dst, e.ImageOptions.Quality),
+							Width:      dst.Bounds().Dx(),
+							Height:     dst.Bounds().Dy(),
+							IsCover:    false,
+							DoublePage: false,
+							Path:       img.Path,
+							Name:       img.Name,
 						}
 					}
 				}
@@ -458,4 +517,64 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 	}()
 
 	return nbPages, output, nil
+}
+
+func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, totalPart int) *ImageData {
+	// Create a blur version of the cover
+	g := gift.New(gift.GaussianBlur(8))
+	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
+	g.Draw(dst, img.Raw)
+
+	// Calculate size of title
+	f, _ := truetype.Parse(gomonobold.TTF)
+	borderSize := 4
+	var fontSize, textWidth, textHeight int
+	for fontSize = 64; fontSize >= 12; fontSize -= 1 {
+		face := truetype.NewFace(f, &truetype.Options{Size: float64(fontSize), DPI: 72})
+		textWidth = font.MeasureString(face, title).Ceil()
+		textHeight = face.Metrics().Ascent.Ceil() + face.Metrics().Descent.Ceil()
+		if textWidth+2*borderSize < img.Width && 3*textHeight+2*borderSize < img.Height {
+			break
+		}
+	}
+
+	// Draw rectangle in the middle of the image
+	textPosStart := img.Height/2 - textHeight/2
+	textPosEnd := img.Height/2 + textHeight/2
+	marginSize := fontSize
+	borderArea := image.Rect(0, textPosStart-borderSize-marginSize, img.Width, textPosEnd+borderSize+marginSize)
+	textArea := image.Rect(borderSize, textPosStart-marginSize, img.Width-borderSize, textPosEnd+marginSize)
+
+	draw.Draw(
+		dst,
+		borderArea,
+		image.Black,
+		image.Point{},
+		draw.Over,
+	)
+
+	draw.Draw(
+		dst,
+		textArea,
+		image.White,
+		image.Point{},
+		draw.Over,
+	)
+
+	// Draw text
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFontSize(float64(fontSize))
+	c.SetFont(f)
+	c.SetClip(textArea)
+	c.SetDst(dst)
+	c.SetSrc(image.Black)
+
+	textLeft := img.Width/2 - textWidth/2
+	if textLeft < borderSize {
+		textLeft = borderSize
+	}
+	c.DrawString(title, freetype.Pt(textLeft, img.Height/2+textHeight/4))
+
+	return newData("OEBPS/Images/title.jpg", dst, e.Quality)
 }

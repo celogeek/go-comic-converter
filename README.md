@@ -124,7 +124,6 @@ Options:
     NoBlankPage               : false
     Manga                     : true
     HasCover                  : true
-    AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
     SortPathMode              : path=alphanum, file=alpha
@@ -162,7 +161,6 @@ Options:
     NoBlankPage               : false
     Manga                     : true
     HasCover                  : true
-    AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
     SortPathMode              : path=alphanum, file=alphanum
@@ -210,7 +208,6 @@ Options:
     NoBlankPage               : false
     Manga                     : false
     HasCover                  : true
-    AddPanelView              : false
     LimitMb                   : nolimit
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
@@ -233,7 +230,6 @@ Options:
     NoBlankPage               : false
     Manga                     : true
     HasCover                  : true
-    AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
@@ -258,7 +254,6 @@ Options:
     NoBlankPage               : false
     Manga                     : false
     HasCover                  : true
-    AddPanelView              : false
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
@@ -284,7 +279,6 @@ Options:
     NoBlankPage        : false
     Manga              : false
     HasCover           : true
-    AddPanelView       : false
     LimitMb            : nolimit
 
 Reset default to ~/.go-comic-converter.yaml
@@ -360,8 +354,6 @@ Config:
     	Manga mode (right to left)
   -hascover (default true)
     	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.
-  -addpanelview
-    	Add an embeded panel view. On kindle you may not need this option as it is handled by the kindle.
   -limitmb int
     	Limit size of the ePub: Default nolimit (0), Minimum 20
   -strip

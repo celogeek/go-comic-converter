@@ -2,14 +2,14 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
   <head>
-    <title>Part {{ .Part }}</title>
+    <meta charset="utf-8" />
+    <title>{{ .Title }}</title>
     <link href="style.css" type="text/css" rel="stylesheet"/>
-    <meta name="viewport" content="width={{ .Info.ViewWidth }}, height={{ .Info.ViewHeight }}"/>
+    <meta name="viewport" content="{{ .ViewPort }}"/>
   </head>
   <body>
-    <h1>{{ .Info.Title }}</h1>
-{{ if gt .Total 1 }}
-    <h1>Part {{ .Part }} / {{ .Total }}</h1>
-{{ end }}
+    <div>
+      <img src="../{{ .ImagePath }}" alt="{{ .Title }}" style="{{ .ImageStyle }}"/>
+    </div>
   </body>
 </html>
