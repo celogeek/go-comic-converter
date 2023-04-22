@@ -37,12 +37,18 @@ func (e *ePub) getToc(title string, images []*Image) string {
 			link := t.CreateElement("a")
 			link.CreateAttr("href", img.TextPath())
 			link.CreateText(path)
-			paths[currentPath] = t
+			paths[currentPath] = t.CreateElement("ol")
 		}
 	}
 
 	if len(ol.ChildElements()) == 1 && e.StripFirstDirectoryFromToc {
-		ol = ol.ChildElements()[0]
+		ol = ol.FindElement("/li/ol")
+	}
+
+	for _, v := range ol.FindElements("//ol") {
+		if len(v.ChildElements()) == 0 {
+			v.Parent().RemoveChild(v)
+		}
 	}
 
 	beginning := etree.NewElement("li")
