@@ -53,8 +53,8 @@ func (e *ePub) getToc(title string, images []*Image) string {
 
 	beginning := etree.NewElement("li")
 	beginningLink := beginning.CreateElement("a")
-	beginningLink.CreateAttr("href", images[0].TextPath())
-	beginningLink.CreateText("Start of the book")
+	beginningLink.CreateAttr("href", "Text/title.xhtml")
+	beginningLink.CreateText(title)
 	ol.InsertChildAt(0, beginning)
 
 	nav.AddChild(ol)

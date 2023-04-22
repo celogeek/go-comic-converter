@@ -75,6 +75,8 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 	items := []Tag{
 		{"item", TagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", TagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
+		{"item", TagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
+		{"item", TagAttrs{"id": "img_title", "href": "Images/title.jpg", "media-type": "image/jpeg"}, ""},
 	}
 
 	if e.HasCover || currentPart > 1 {
@@ -93,7 +95,6 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 }
 
 func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int) []Tag {
-	spine := []Tag{}
 	isOnTheRight := !e.Manga
 	getSpread := func(doublePageNoBlank bool) string {
 		isOnTheRight = !isOnTheRight
@@ -107,6 +108,10 @@ func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int
 		} else {
 			return "rendition:page-spread-left"
 		}
+	}
+
+	spine := []Tag{
+		{"itemref", TagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
 	}
 	for _, img := range part.Images {
 		spine = append(spine, Tag{

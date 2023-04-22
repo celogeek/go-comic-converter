@@ -122,6 +122,10 @@ func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
 	)
 }
 
+func (e ePub) getTitleImageData(img *Image, currentPart, totalPart int) *ImageData {
+	return newData("OEBPS/Images/title.jpg", img.Raw, e.Quality)
+}
+
 func (e *ePub) getParts() ([]*epubPart, error) {
 	images, err := e.LoadImages()
 
@@ -243,10 +247,11 @@ func (e *ePub) Write() error {
 				"PageWidth":  e.ViewWidth,
 				"PageHeight": e.ViewHeight,
 			})},
-			{"OEBPS/Text/title.xhtml", e.render(titleTmpl, map[string]any{
-				"Info":  e,
-				"Part":  i + 1,
-				"Total": totalParts,
+			{"OEBPS/Text/title.xhtml", e.render(textTmpl, map[string]any{
+				"Title":      title,
+				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
+				"ImagePath":  "Images/title.jpg",
+				"ImageStyle": part.Cover.ImgStyle(e.ViewWidth, e.ViewHeight, e.Manga),
 			})},
 		}
 
@@ -257,6 +262,9 @@ func (e *ePub) Write() error {
 			if err := wz.WriteFile(content.Name, content.Content); err != nil {
 				return err
 			}
+		}
+		if err := wz.WriteImage(e.getTitleImageData(part.Cover, i+1, totalParts)); err != nil {
+			return err
 		}
 
 		// Cover exist or part > 1

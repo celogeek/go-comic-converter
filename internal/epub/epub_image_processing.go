@@ -28,6 +28,7 @@ import (
 type Image struct {
 	Id         int
 	Part       int
+	Raw        image.Image
 	Data       *ImageData
 	Width      int
 	Height     int
@@ -180,15 +181,9 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 		for img := range imageInput {
 			img.Reader.Close()
 			images = append(images, &Image{
-				Id:         img.Id,
-				Part:       0,
-				Data:       nil,
-				Width:      0,
-				Height:     0,
-				IsCover:    false,
-				DoublePage: false,
-				Path:       img.Path,
-				Name:       img.Name,
+				Id:   img.Id,
+				Path: img.Path,
+				Name: img.Name,
 			})
 		}
 
@@ -229,9 +224,15 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 				dst := image.NewGray(g.Bounds(src.Bounds()))
 				g.Draw(dst, src)
 
+				var raw image.Image
+				if img.Id == 0 {
+					raw = dst
+				}
+
 				imageOutput <- &Image{
 					Id:      img.Id,
 					Part:    0,
+					Raw:     raw,
 					Data:    newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
 					Width:   dst.Bounds().Dx(),
 					Height:  dst.Bounds().Dy(),

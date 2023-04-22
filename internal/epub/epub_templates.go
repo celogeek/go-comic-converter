@@ -11,9 +11,6 @@ var appleBooksTmpl string
 //go:embed "templates/epub_templates_style.css.tmpl"
 var styleTmpl string
 
-//go:embed "templates/epub_templates_title.xhtml.tmpl"
-var titleTmpl string
-
 //go:embed "templates/epub_templates_text.xhtml.tmpl"
 var textTmpl string
 
