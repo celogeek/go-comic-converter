@@ -160,8 +160,11 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 
 	xhtmlSize := uint64(1024)
-	// descriptor files + image
+	// descriptor files + title
 	baseSize := uint64(16*1024) + cover.Data.CompressedSize()
+	if e.HasCover {
+		baseSize += cover.Data.CompressedSize()
+	}
 
 	currentSize := baseSize
 	currentImages := make([]*Image, 0)
@@ -176,6 +179,9 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 			})
 			part += 1
 			currentSize = baseSize
+			if !e.HasCover {
+				currentSize += cover.Data.CompressedSize()
+			}
 			currentImages = make([]*Image, 0)
 		}
 		currentSize += imgSize
