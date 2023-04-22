@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
@@ -111,7 +112,7 @@ func (o *Options) LoadDefault() error {
 }
 
 func (o *Options) ShowDefault() string {
-	var profileDesc string
+	var profileDesc, viewDesc string
 	profile := o.GetProfile()
 	if profile != nil {
 		profileDesc = fmt.Sprintf(
@@ -120,6 +121,13 @@ func (o *Options) ShowDefault() string {
 			profile.Description,
 			profile.Width,
 			profile.Height,
+		)
+
+		perfectWidth, perfectHeight := profile.PerfectDim()
+		viewDesc = fmt.Sprintf(
+			"%dx%d",
+			perfectWidth,
+			perfectHeight,
 		)
 	}
 	limitmb := "nolimit"
@@ -139,6 +147,8 @@ func (o *Options) ShowDefault() string {
 
 	return fmt.Sprintf(`
     Profile                   : %s
+    ViewRatio                 : 1:%s
+    View                      : %s
     Quality                   : %d
     Crop                      : %v
     Brightness                : %d
@@ -152,6 +162,8 @@ func (o *Options) ShowDefault() string {
     StripFirstDirectoryFromToc: %v
     SortPathMode              : %s`,
 		profileDesc,
+		strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"),
+		viewDesc,
 		o.Quality,
 		o.Crop,
 		o.Brightness,
