@@ -44,9 +44,14 @@ func (e *ePub) getToc(title string, images []*Image) string {
 	if len(ol.ChildElements()) == 1 && e.StripFirstDirectoryFromToc {
 		ol = ol.ChildElements()[0]
 	}
-	if len(ol.ChildElements()) > 0 {
-		nav.AddChild(ol)
-	}
+
+	beginning := etree.NewElement("li")
+	beginningLink := beginning.CreateElement("a")
+	beginningLink.CreateAttr("href", images[0].TextPath())
+	beginningLink.CreateText("Start of the book")
+	ol.InsertChildAt(0, beginning)
+
+	nav.AddChild(ol)
 
 	doc.Indent(2)
 	r, _ := doc.WriteToString()

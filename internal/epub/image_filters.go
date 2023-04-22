@@ -20,8 +20,8 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 	}
 	g.Add(
 		filters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-		filters.Pixel(),
 		filters.Position(options.ViewWidth, options.ViewHeight, filters.PositionCenter),
+		filters.Pixel(),
 	)
 	return g
 }
