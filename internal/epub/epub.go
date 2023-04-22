@@ -97,9 +97,10 @@ func (e *ePub) writeImage(wz *epubZip, img *Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
 		e.render(textTmpl, map[string]any{
-			"Title":     fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
-			"ViewPort":  fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
-			"ImagePath": img.ImgPath(),
+			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
+			"ImagePath":  img.ImgPath(),
+			"ImageStyle": img.ImgStyle(e.ViewWidth, e.ViewHeight, e.Manga),
 		}),
 	)
 

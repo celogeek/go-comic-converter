@@ -20,7 +20,6 @@ func NewGift(options *ImageOptions) *gift.GIFT {
 	}
 	g.Add(
 		filters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-		filters.Position(options.ViewWidth, options.ViewHeight, filters.PositionCenter),
 		filters.Pixel(),
 	)
 	return g
@@ -37,7 +36,7 @@ func NewGiftSplitDoublePage(options *ImageOptions) []*gift.GIFT {
 		filters.CropSplitDoublePage(!options.Manga),
 	)
 
-	for i, g := range gifts {
+	for _, g := range gifts {
 		if options.Contrast != 0 {
 			g.Add(gift.Contrast(float32(options.Contrast)))
 		}
@@ -45,14 +44,8 @@ func NewGiftSplitDoublePage(options *ImageOptions) []*gift.GIFT {
 			g.Add(gift.Brightness(float32(options.Brightness)))
 		}
 
-		position := filters.PositionLeft
-		if (i == 1) == options.Manga {
-			position = filters.PositionRight
-		}
-
 		g.Add(
 			filters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-			filters.Position(options.ViewWidth, options.ViewHeight, position),
 		)
 	}
 
