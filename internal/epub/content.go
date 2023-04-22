@@ -24,7 +24,6 @@ func (e *ePub) getMeta(title string, part *epubPart, currentPart, totalPart int)
 		{"meta", TagAttrs{"property": "rendition:layout"}, "pre-paginated"},
 		{"meta", TagAttrs{"property": "rendition:spread"}, "auto"},
 		{"meta", TagAttrs{"property": "rendition:orientation"}, "auto"},
-		{"meta", TagAttrs{"property": "ibooks:specified-fonts"}, "true"},
 		{"meta", TagAttrs{"property": "schema:accessMode"}, "visual"},
 		{"meta", TagAttrs{"property": "schema:accessModeSufficient"}, "visual"},
 		{"meta", TagAttrs{"property": "schema:accessibilityHazard"}, "noFlashingHazard"},
@@ -151,7 +150,7 @@ func (e *ePub) getContent(title string, part *epubPart, currentPart, totalPart i
 	pkg.CreateAttr("xmlns", "http://www.idpf.org/2007/opf")
 	pkg.CreateAttr("unique-identifier", "ean")
 	pkg.CreateAttr("version", "3.0")
-	pkg.CreateAttr("prefix", "rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/")
+	pkg.CreateAttr("prefix", "rendition: http://www.idpf.org/vocab/rendition/#")
 
 	addToElement := func(elm *etree.Element, meth func(title string, part *epubPart, currentPart, totalPart int) []Tag) {
 		for _, p := range meth(title, part, currentPart, totalPart) {
