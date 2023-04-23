@@ -16,7 +16,7 @@ type part struct {
 	number   float64
 }
 
-func (a part) Compare(b part) float64 {
+func (a part) compare(b part) float64 {
 	if a.number == 0 || b.number == 0 {
 		return float64(strings.Compare(a.fullname, b.fullname))
 	}
@@ -70,7 +70,7 @@ func comparePart(a, b []part) float64 {
 		m = len(b)
 	}
 	for i := 0; i < m; i++ {
-		c := a[i].Compare(b[i])
+		c := a[i].compare(b[i])
 		if c != 0 {
 			return c
 		}
