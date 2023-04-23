@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	"github.com/gofrs/uuid"
 )
 
@@ -97,7 +98,7 @@ func (e *ePub) render(templateString string, data any) string {
 func (e *ePub) writeImage(wz *epubZip, img *Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
-		e.render(textTmpl, map[string]any{
+		e.render(templates.Text, map[string]any{
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
 			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
 			"ImagePath":  img.ImgPath(),
@@ -115,7 +116,7 @@ func (e *ePub) writeImage(wz *epubZip, img *Image) error {
 func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
 	return wz.WriteFile(
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
-		e.render(blankTmpl, map[string]any{
+		e.render(templates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
 			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
 		}),
@@ -241,15 +242,15 @@ func (e *ePub) Write() error {
 		}
 
 		content := []zipContent{
-			{"META-INF/container.xml", containerTmpl},
-			{"META-INF/com.apple.ibooks.display-options.xml", appleBooksTmpl},
+			{"META-INF/container.xml", templates.Container},
+			{"META-INF/com.apple.ibooks.display-options.xml", templates.AppleBooks},
 			{"OEBPS/content.opf", e.getContent(title, part, i+1, totalParts).String()},
 			{"OEBPS/toc.xhtml", e.getToc(title, part.Images)},
-			{"OEBPS/Text/style.css", e.render(styleTmpl, map[string]any{
+			{"OEBPS/Text/style.css", e.render(templates.Style, map[string]any{
 				"PageWidth":  e.ViewWidth,
 				"PageHeight": e.ViewHeight,
 			})},
-			{"OEBPS/Text/title.xhtml", e.render(textTmpl, map[string]any{
+			{"OEBPS/Text/title.xhtml", e.render(templates.Text, map[string]any{
 				"Title":      title,
 				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.ViewWidth, e.ViewHeight),
 				"ImagePath":  "Images/title.jpg",
