@@ -1,34 +1,36 @@
-package epub
+package epubzip
 
 import (
 	"archive/zip"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 )
 
-type epubZip struct {
+type EpubZip struct {
 	w  *os.File
 	wz *zip.Writer
 }
 
-func newEpubZip(path string) (*epubZip, error) {
+func New(path string) (*EpubZip, error) {
 	w, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
 	wz := zip.NewWriter(w)
-	return &epubZip{w, wz}, nil
+	return &EpubZip{w, wz}, nil
 }
 
-func (e *epubZip) Close() error {
+func (e *EpubZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
 	}
 	return e.w.Close()
 }
 
-func (e *epubZip) WriteMagic() error {
+func (e *EpubZip) WriteMagic() error {
 	t := time.Now()
 	fh := &zip.FileHeader{
 		Name:               "mimetype",
@@ -50,7 +52,7 @@ func (e *epubZip) WriteMagic() error {
 	return err
 }
 
-func (e *epubZip) WriteImage(image *ImageData) error {
+func (e *EpubZip) WriteImage(image *imagedata.ImageData) error {
 	m, err := e.wz.CreateRaw(image.Header)
 	if err != nil {
 		return err
@@ -59,7 +61,7 @@ func (e *epubZip) WriteImage(image *ImageData) error {
 	return err
 }
 
-func (e *epubZip) WriteFile(file string, data any) error {
+func (e *EpubZip) WriteFile(file string, data any) error {
 	var content []byte
 	switch b := data.(type) {
 	case string:

@@ -10,6 +10,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/epubzip"
 	"github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	"github.com/gofrs/uuid"
 )
@@ -95,7 +96,7 @@ func (e *ePub) render(templateString string, data any) string {
 	return stripBlank.ReplaceAllString(result.String(), "\n")
 }
 
-func (e *ePub) writeImage(wz *epubZip, img *Image) error {
+func (e *ePub) writeImage(wz *epubzip.EpubZip, img *Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
 		e.render(templates.Text, map[string]any{
@@ -113,7 +114,7 @@ func (e *ePub) writeImage(wz *epubZip, img *Image) error {
 	return err
 }
 
-func (e *ePub) writeBlank(wz *epubZip, img *Image) error {
+func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *Image) error {
 	return wz.WriteFile(
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 		e.render(templates.Blank, map[string]any{
@@ -230,7 +231,7 @@ func (e *ePub) Write() error {
 		}
 
 		path := fmt.Sprintf("%s%s%s", e.Output[0:len(e.Output)-len(ext)], suffix, ext)
-		wz, err := newEpubZip(path)
+		wz, err := epubzip.New(path)
 		if err != nil {
 			return err
 		}

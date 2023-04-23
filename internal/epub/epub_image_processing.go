@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 	"github.com/celogeek/go-comic-converter/v2/internal/epub/sortpath"
 	"github.com/disintegration/gift"
 	"github.com/golang/freetype"
@@ -34,7 +35,7 @@ type Image struct {
 	Id         int
 	Part       int
 	Raw        image.Image
-	Data       *ImageData
+	Data       *imagedata.ImageData
 	Width      int
 	Height     int
 	IsCover    bool
@@ -238,7 +239,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 					Id:      img.Id,
 					Part:    0,
 					Raw:     raw,
-					Data:    newImageData(img.Id, 0, dst, e.ImageOptions.Quality),
+					Data:    imagedata.New(img.Id, 0, dst, e.ImageOptions.Quality),
 					Width:   dst.Bounds().Dx(),
 					Height:  dst.Bounds().Dy(),
 					IsCover: img.Id == 0,
@@ -266,7 +267,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 						imageOutput <- &Image{
 							Id:         img.Id,
 							Part:       part,
-							Data:       newImageData(img.Id, part, dst, e.ImageOptions.Quality),
+							Data:       imagedata.New(img.Id, part, dst, e.ImageOptions.Quality),
 							Width:      dst.Bounds().Dx(),
 							Height:     dst.Bounds().Dy(),
 							IsCover:    false,
@@ -519,7 +520,7 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 	return nbPages, output, nil
 }
 
-func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, totalPart int) *ImageData {
+func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, totalPart int) *imagedata.ImageData {
 	// Create a blur version of the cover
 	g := gift.New(gift.GaussianBlur(8))
 	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
@@ -576,5 +577,5 @@ func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, total
 	}
 	c.DrawString(title, freetype.Pt(textLeft, img.Height/2+textHeight/4))
 
-	return newData("OEBPS/Images/title.jpg", dst, e.Quality)
+	return imagedata.NewRaw("OEBPS/Images/title.jpg", dst, e.Quality)
 }
