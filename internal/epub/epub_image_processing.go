@@ -17,8 +17,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
-	"github.com/celogeek/go-comic-converter/v2/internal/epub/sortpath"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
+	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
 	"github.com/disintegration/gift"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
@@ -30,69 +31,6 @@ import (
 	"golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 )
-
-type Image struct {
-	Id         int
-	Part       int
-	Raw        image.Image
-	Data       *imagedata.ImageData
-	Width      int
-	Height     int
-	IsCover    bool
-	DoublePage bool
-	Path       string
-	Name       string
-}
-
-func (i *Image) Key(prefix string) string {
-	return fmt.Sprintf("%s_%d_p%d", prefix, i.Id, i.Part)
-}
-
-func (i *Image) SpaceKey(prefix string) string {
-	return fmt.Sprintf("%s_%d_sp", prefix, i.Id)
-}
-
-func (i *Image) TextPath() string {
-	return fmt.Sprintf("Text/%d_p%d.xhtml", i.Id, i.Part)
-}
-
-func (i *Image) ImgPath() string {
-	return fmt.Sprintf("Images/%d_p%d.jpg", i.Id, i.Part)
-}
-
-func (i *Image) ImgStyle(viewWidth, viewHeight int, manga bool) string {
-	marginW, marginH := float64(viewWidth-i.Width)/2, float64(viewHeight-i.Height)/2
-	left, top := marginW*100/float64(viewWidth), marginH*100/float64(viewHeight)
-	var align string
-	switch i.Part {
-	case 0:
-		align = fmt.Sprintf("left:%.2f%%", left)
-	case 1:
-		if manga {
-			align = "left:0"
-		} else {
-			align = "right:0"
-		}
-	case 2:
-		if manga {
-			align = "right:0"
-		} else {
-			align = "left:0"
-		}
-	}
-
-	return fmt.Sprintf(
-		"width:%dpx; height:%dpx; top:%.2f%%; %s;",
-		i.Width,
-		i.Height,
-		top,
-		align,
-	)
-}
-
-func (i *Image) SpacePath() string {
-	return fmt.Sprintf("Text/%d_sp.xhtml", i.Id)
-}
 
 type imageTask struct {
 	Id     int
@@ -152,8 +90,8 @@ BOTTOM:
 	return imgArea
 }
 
-func (e *ePub) LoadImages() ([]*Image, error) {
-	images := make([]*Image, 0)
+func (e *ePub) LoadImages() ([]*epubimage.Image, error) {
+	images := make([]*epubimage.Image, 0)
 
 	fi, err := os.Stat(e.Input)
 	if err != nil {
@@ -186,7 +124,7 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 	if e.Dry {
 		for img := range imageInput {
 			img.Reader.Close()
-			images = append(images, &Image{
+			images = append(images, &epubimage.Image{
 				Id:   img.Id,
 				Path: img.Path,
 				Name: img.Name,
@@ -196,13 +134,13 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 		return images, nil
 	}
 
-	imageOutput := make(chan *Image)
+	imageOutput := make(chan *epubimage.Image)
 
 	// processing
-	bar := NewBar(e.Quiet, imageCount, "Processing", 1, 2)
+	bar := e.NewBar(imageCount, "Processing", 1, 2)
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < e.ImageOptions.Workers; i++ {
+	for i := 0; i < e.Workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -217,14 +155,14 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 					os.Exit(1)
 				}
 
-				if e.ImageOptions.Crop {
+				if e.Image.Crop {
 					g := gift.New(gift.Crop(findMarging(src)))
 					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
 					g.Draw(newSrc, src)
 					src = newSrc
 				}
 
-				g := NewGift(e.ImageOptions)
+				g := epubimage.NewGift(e.Options.Image)
 
 				// Convert image
 				dst := image.NewGray(g.Bounds(src.Bounds()))
@@ -235,17 +173,17 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 					raw = dst
 				}
 
-				imageOutput <- &Image{
+				imageOutput <- &epubimage.Image{
 					Id:      img.Id,
 					Part:    0,
 					Raw:     raw,
-					Data:    imagedata.New(img.Id, 0, dst, e.ImageOptions.Quality),
+					Data:    epubimagedata.New(img.Id, 0, dst, e.Image.Quality),
 					Width:   dst.Bounds().Dx(),
 					Height:  dst.Bounds().Dy(),
 					IsCover: img.Id == 0,
 					DoublePage: src.Bounds().Dx() > src.Bounds().Dy() &&
-						src.Bounds().Dx() > e.ImageOptions.ViewHeight &&
-						src.Bounds().Dy() > e.ImageOptions.ViewWidth,
+						src.Bounds().Dx() > e.Image.ViewHeight &&
+						src.Bounds().Dy() > e.Image.ViewWidth,
 					Path: img.Path,
 					Name: img.Name,
 				}
@@ -253,21 +191,21 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 				// Auto split double page
 				// Except for cover
 				// Only if the src image have width > height and is bigger than the view
-				if (!e.ImageOptions.HasCover || img.Id > 0) &&
-					e.ImageOptions.AutoSplitDoublePage &&
+				if (!e.Image.HasCover || img.Id > 0) &&
+					e.Image.AutoSplitDoublePage &&
 					src.Bounds().Dx() > src.Bounds().Dy() &&
-					src.Bounds().Dx() > e.ImageOptions.ViewHeight &&
-					src.Bounds().Dy() > e.ImageOptions.ViewWidth {
-					gifts := NewGiftSplitDoublePage(e.ImageOptions)
+					src.Bounds().Dx() > e.Image.ViewHeight &&
+					src.Bounds().Dy() > e.Image.ViewWidth {
+					gifts := epubimage.NewGiftSplitDoublePage(e.Options.Image)
 					for i, g := range gifts {
 						part := i + 1
 						dst := image.NewGray(g.Bounds(src.Bounds()))
 						g.Draw(dst, src)
 
-						imageOutput <- &Image{
+						imageOutput <- &epubimage.Image{
 							Id:         img.Id,
 							Part:       part,
-							Data:       imagedata.New(img.Id, part, dst, e.ImageOptions.Quality),
+							Data:       epubimagedata.New(img.Id, part, dst, e.Image.Quality),
 							Width:      dst.Bounds().Dx(),
 							Height:     dst.Bounds().Dy(),
 							IsCover:    false,
@@ -286,11 +224,11 @@ func (e *ePub) LoadImages() ([]*Image, error) {
 		close(imageOutput)
 	}()
 
-	for image := range imageOutput {
-		if !(e.ImageOptions.NoBlankPage && image.Width == 1 && image.Height == 1) {
-			images = append(images, image)
+	for img := range imageOutput {
+		if !(e.Image.NoBlankPage && img.Width == 1 && img.Height == 1) {
+			images = append(images, img)
 		}
-		if image.Part == 0 {
+		if img.Part == 0 {
 			bar.Add(1)
 		}
 	}
@@ -520,7 +458,7 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 	return nbPages, output, nil
 }
 
-func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, totalPart int) *imagedata.ImageData {
+func (e *ePub) createTitleImageData(title string, img *epubimage.Image, currentPart, totalPart int) *epubimagedata.ImageData {
 	// Create a blur version of the cover
 	g := gift.New(gift.GaussianBlur(8))
 	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
@@ -577,5 +515,5 @@ func (e *ePub) createTitleImageDate(title string, img *Image, currentPart, total
 	}
 	c.DrawString(title, freetype.Pt(textLeft, img.Height/2+textHeight/4))
 
-	return imagedata.NewRaw("OEBPS/Images/title.jpg", dst, e.Quality)
+	return epubimagedata.NewRaw("OEBPS/Images/title.jpg", dst, e.Image.Quality)
 }

@@ -1,4 +1,4 @@
-package tree
+package epubtree
 
 import (
 	"path/filepath"

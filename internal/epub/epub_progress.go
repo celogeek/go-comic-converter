@@ -7,8 +7,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func NewBar(quiet bool, max int, description string, currentJob, totalJob int) *progressbar.ProgressBar {
-	if quiet {
+func (e *ePub) NewBar(max int, description string, currentJob, totalJob int) *progressbar.ProgressBar {
+	if e.Quiet {
 		return progressbar.DefaultSilent(int64(max))
 	}
 	fmtJob := fmt.Sprintf("%%0%dd", len(fmt.Sprint(totalJob)))

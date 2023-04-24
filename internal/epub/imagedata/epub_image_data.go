@@ -1,4 +1,4 @@
-package imagedata
+package epubimagedata
 
 import (
 	"archive/zip"

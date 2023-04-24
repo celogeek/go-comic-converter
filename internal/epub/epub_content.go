@@ -4,10 +4,17 @@ import (
 	"fmt"
 
 	"github.com/beevik/etree"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 )
 
 type Content struct {
 	doc *etree.Document
+}
+
+func (c *Content) String() string {
+	c.doc.Indent(2)
+	r, _ := c.doc.WriteToString()
+	return r
 }
 
 type TagAttrs map[string]string
@@ -31,7 +38,7 @@ func (e *ePub) getMeta(title string, part *epubPart, currentPart, totalPart int)
 		{"meta", TagAttrs{"property": "schema:accessibilityHazard"}, "noSoundHazard"},
 		{"meta", TagAttrs{"name": "book-type", "content": "comic"}, ""},
 		{"opf:meta", TagAttrs{"name": "fixed-layout", "content": "true"}, ""},
-		{"opf:meta", TagAttrs{"name": "original-resolution", "content": fmt.Sprintf("%dx%d", e.ViewWidth, e.ViewHeight)}, ""},
+		{"opf:meta", TagAttrs{"name": "original-resolution", "content": fmt.Sprintf("%dx%d", e.Image.ViewWidth, e.Image.ViewHeight)}, ""},
 		{"dc:title", TagAttrs{}, title},
 		{"dc:identifier", TagAttrs{"id": "ean"}, fmt.Sprintf("urn:uuid:%s", e.UID)},
 		{"dc:language", TagAttrs{}, "en"},
@@ -41,7 +48,7 @@ func (e *ePub) getMeta(title string, part *epubPart, currentPart, totalPart int)
 		{"dc:date", TagAttrs{}, e.UpdatedAt},
 	}
 
-	if e.Manga {
+	if e.Image.Manga {
 		metas = append(metas, Tag{"meta", TagAttrs{"name": "primary-writing-mode", "content": "horizontal-rl"}, ""})
 	} else {
 		metas = append(metas, Tag{"meta", TagAttrs{"name": "primary-writing-mode", "content": "horizontal-lr"}, ""})
@@ -63,13 +70,13 @@ func (e *ePub) getMeta(title string, part *epubPart, currentPart, totalPart int)
 }
 
 func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart int) []Tag {
-	iTag := func(img *Image) Tag {
+	iTag := func(img *epubimage.Image) Tag {
 		return Tag{"item", TagAttrs{"id": img.Key("img"), "href": img.ImgPath(), "media-type": "image/jpeg"}, ""}
 	}
-	hTag := func(img *Image) Tag {
+	hTag := func(img *epubimage.Image) Tag {
 		return Tag{"item", TagAttrs{"id": img.Key("page"), "href": img.TextPath(), "media-type": "application/xhtml+xml"}, ""}
 	}
-	sTag := func(img *Image) Tag {
+	sTag := func(img *epubimage.Image) Tag {
 		return Tag{"item", TagAttrs{"id": img.SpaceKey("page"), "href": img.SpacePath(), "media-type": "application/xhtml+xml"}, ""}
 	}
 	items := []Tag{
@@ -79,7 +86,7 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 		{"item", TagAttrs{"id": "img_title", "href": "Images/title.jpg", "media-type": "image/jpeg"}, ""},
 	}
 
-	if e.HasCover || currentPart > 1 {
+	if e.Image.HasCover || currentPart > 1 {
 		items = append(items, iTag(part.Cover), hTag(part.Cover))
 	}
 
@@ -95,12 +102,12 @@ func (e *ePub) getManifest(title string, part *epubPart, currentPart, totalPart 
 }
 
 func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int) []Tag {
-	isOnTheRight := !e.Manga
+	isOnTheRight := !e.Image.Manga
 	getSpread := func(doublePageNoBlank bool) string {
 		isOnTheRight = !isOnTheRight
 		if doublePageNoBlank {
 			// Center the double page then start back to comic mode (mange/normal)
-			isOnTheRight = !e.Manga
+			isOnTheRight = !e.Image.Manga
 			return "rendition:page-spread-center"
 		}
 		if isOnTheRight {
@@ -116,10 +123,10 @@ func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int
 	for _, img := range part.Images {
 		spine = append(spine, Tag{
 			"itemref",
-			TagAttrs{"idref": img.Key("page"), "properties": getSpread(img.DoublePage && e.NoBlankPage)},
+			TagAttrs{"idref": img.Key("page"), "properties": getSpread(img.DoublePage && e.Image.NoBlankPage)},
 			"",
 		})
-		if img.DoublePage && isOnTheRight && !e.NoBlankPage {
+		if img.DoublePage && isOnTheRight && !e.Image.NoBlankPage {
 			spine = append(spine, Tag{
 				"itemref",
 				TagAttrs{"idref": img.SpaceKey("page"), "properties": getSpread(false)},
@@ -127,7 +134,7 @@ func (e *ePub) getSpine(title string, part *epubPart, currentPart, totalPart int
 			})
 		}
 	}
-	if e.Manga == isOnTheRight {
+	if e.Image.Manga == isOnTheRight {
 		spine = append(spine, Tag{
 			"itemref",
 			TagAttrs{"idref": part.Images[len(part.Images)-1].SpaceKey("page"), "properties": getSpread(false)},
@@ -179,7 +186,7 @@ func (e *ePub) getContent(title string, part *epubPart, currentPart, totalPart i
 	addToElement(manifest, e.getManifest)
 
 	spine := pkg.CreateElement("spine")
-	if e.Manga {
+	if e.Image.Manga {
 		spine.CreateAttr("page-progression-direction", "rtl")
 	} else {
 		spine.CreateAttr("page-progression-direction", "ltr")
@@ -192,10 +199,4 @@ func (e *ePub) getContent(title string, part *epubPart, currentPart, totalPart i
 	return &Content{
 		doc,
 	}
-}
-
-func (c *Content) String() string {
-	c.doc.Indent(2)
-	r, _ := c.doc.WriteToString()
-	return r
 }

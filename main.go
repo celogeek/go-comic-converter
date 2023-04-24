@@ -7,6 +7,7 @@ import (
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter"
 	"github.com/celogeek/go-comic-converter/v2/internal/epub"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	"github.com/tcnksm/go-latest"
 )
 
@@ -93,7 +94,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	profile := cmd.Options.GetProfile()
 	perfectWidth, perfectHeight := profile.PerfectDim()
 
-	if err := epub.NewEpub(&epub.EpubOptions{
+	if err := epub.New(&epub.Options{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
 		LimitMb:                    cmd.Options.LimitMb,
@@ -101,7 +102,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
 		SortPathMode:               cmd.Options.SortPathMode,
-		ImageOptions: &epub.ImageOptions{
+		Image: &epubimage.Options{
 			ViewWidth:           perfectWidth,
 			ViewHeight:          perfectHeight,
 			Quality:             cmd.Options.Quality,
@@ -113,8 +114,8 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankPage:         cmd.Options.NoBlankPage,
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
-			Workers:             cmd.Options.Workers,
 		},
+		Workers:    cmd.Options.Workers,
 		Dry:        cmd.Options.Dry,
 		DryVerbose: cmd.Options.DryVerbose,
 		Quiet:      cmd.Options.Quiet,

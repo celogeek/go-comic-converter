@@ -3,11 +3,12 @@ package epub
 import (
 	"path/filepath"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
 )
 
-func (e *ePub) getTree(images []*Image, skip_files bool) string {
-	t := tree.New()
+func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
+	t := epubtree.New()
 	for _, img := range images {
 		if skip_files {
 			t.Add(img.Path)

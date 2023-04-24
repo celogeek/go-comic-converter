@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 )
 
-func (e *ePub) getToc(title string, images []*Image) string {
+func (e *ePub) getToc(title string, images []*epubimage.Image) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	doc.CreateDirective("DOCTYPE html")

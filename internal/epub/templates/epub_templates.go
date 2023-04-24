@@ -1,4 +1,4 @@
-package templates
+package epubtemplates
 
 import _ "embed"
 

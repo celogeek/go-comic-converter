@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
+	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 )
 
 type EpubZip struct {
@@ -52,7 +52,7 @@ func (e *EpubZip) WriteMagic() error {
 	return err
 }
 
-func (e *EpubZip) WriteImage(image *imagedata.ImageData) error {
+func (e *EpubZip) WriteImage(image *epubimagedata.ImageData) error {
 	m, err := e.wz.CreateRaw(image.Header)
 	if err != nil {
 		return err
