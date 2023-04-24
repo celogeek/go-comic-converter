@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
@@ -17,17 +16,14 @@ import (
 	"strings"
 	"sync"
 
+	epubfilters "github.com/celogeek/go-comic-converter/v2/internal/epub/filters"
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
 	"github.com/disintegration/gift"
-	"github.com/golang/freetype"
-	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/gofont/gomonobold"
 	"golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 )
@@ -458,62 +454,11 @@ func loadPdf(input string) (int, chan *imageTask, error) {
 	return nbPages, output, nil
 }
 
-func (e *ePub) createTitleImageData(title string, img *epubimage.Image, currentPart, totalPart int) *epubimagedata.ImageData {
+func (e *ePub) coverTitleImageData(title string, img *epubimage.Image, currentPart, totalPart int) *epubimagedata.ImageData {
 	// Create a blur version of the cover
-	g := gift.New(gift.GaussianBlur(8))
+	g := gift.New(epubfilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
 	g.Draw(dst, img.Raw)
-
-	// Calculate size of title
-	f, _ := truetype.Parse(gomonobold.TTF)
-	borderSize := 4
-	var fontSize, textWidth, textHeight int
-	for fontSize = 64; fontSize >= 12; fontSize -= 1 {
-		face := truetype.NewFace(f, &truetype.Options{Size: float64(fontSize), DPI: 72})
-		textWidth = font.MeasureString(face, title).Ceil()
-		textHeight = face.Metrics().Ascent.Ceil() + face.Metrics().Descent.Ceil()
-		if textWidth+2*borderSize < img.Width && 3*textHeight+2*borderSize < img.Height {
-			break
-		}
-	}
-
-	// Draw rectangle in the middle of the image
-	textPosStart := img.Height/2 - textHeight/2
-	textPosEnd := img.Height/2 + textHeight/2
-	marginSize := fontSize
-	borderArea := image.Rect(0, textPosStart-borderSize-marginSize, img.Width, textPosEnd+borderSize+marginSize)
-	textArea := image.Rect(borderSize, textPosStart-marginSize, img.Width-borderSize, textPosEnd+marginSize)
-
-	draw.Draw(
-		dst,
-		borderArea,
-		image.Black,
-		image.Point{},
-		draw.Over,
-	)
-
-	draw.Draw(
-		dst,
-		textArea,
-		image.White,
-		image.Point{},
-		draw.Over,
-	)
-
-	// Draw text
-	c := freetype.NewContext()
-	c.SetDPI(72)
-	c.SetFontSize(float64(fontSize))
-	c.SetFont(f)
-	c.SetClip(textArea)
-	c.SetDst(dst)
-	c.SetSrc(image.Black)
-
-	textLeft := img.Width/2 - textWidth/2
-	if textLeft < borderSize {
-		textLeft = borderSize
-	}
-	c.DrawString(title, freetype.Pt(textLeft, img.Height/2+textHeight/4))
 
 	return epubimagedata.NewRaw("OEBPS/Images/title.jpg", dst, e.Image.Quality)
 }

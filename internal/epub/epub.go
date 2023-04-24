@@ -252,7 +252,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteImage(e.createTitleImageData(title, part.Cover, i+1, totalParts)); err != nil {
+		if err := wz.WriteImage(e.coverTitleImageData(title, part.Cover, i+1, totalParts)); err != nil {
 			return err
 		}
 
