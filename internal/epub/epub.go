@@ -11,6 +11,8 @@ import (
 	"time"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/image_processing"
+	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
 	"github.com/gofrs/uuid"
@@ -48,7 +50,8 @@ type epubPart struct {
 func New(options *Options) *ePub {
 	uid, err := uuid.NewV4()
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	tmpl := template.New("parser")
@@ -69,11 +72,13 @@ func New(options *Options) *ePub {
 func (e *ePub) render(templateString string, data any) string {
 	tmpl, err := e.templateProcessor.Parse(templateString)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	result := &strings.Builder{}
 	if err := tmpl.Execute(result, data); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	stripBlank := regexp.MustCompile("\n+")
@@ -110,7 +115,14 @@ func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 }
 
 func (e *ePub) getParts() ([]*epubPart, error) {
-	images, err := e.LoadImages()
+	images, err := epubimageprocessing.LoadImages(&epubimageprocessing.Options{
+		Input:        e.Input,
+		SortPathMode: e.SortPathMode,
+		Quiet:        e.Quiet,
+		Dry:          e.Dry,
+		Workers:      e.Workers,
+		Image:        e.Image,
+	})
 
 	if err != nil {
 		return nil, err
@@ -205,7 +217,12 @@ func (e *ePub) Write() error {
 
 	totalParts := len(epubParts)
 
-	bar := e.NewBar(totalParts, "Writing Part", 2, 2)
+	bar := epubprogress.New(epubprogress.Options{
+		Max:         totalParts,
+		Description: "Writing Part",
+		CurrentJob:  2,
+		TotalJob:    2,
+	})
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
@@ -252,7 +269,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteImage(e.coverTitleImageData(title, part.Cover, i+1, totalParts)); err != nil {
+		if err := wz.WriteImage(epubimageprocessing.LoadCoverData(part.Cover, title, e.Image.Quality)); err != nil {
 			return err
 		}
 

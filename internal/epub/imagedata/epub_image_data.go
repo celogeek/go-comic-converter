@@ -8,6 +8,7 @@ import (
 	"hash/crc32"
 	"image"
 	"image/jpeg"
+	"os"
 	"time"
 )
 
@@ -28,18 +29,21 @@ func New(id int, part int, img image.Image, quality int) *ImageData {
 func NewRaw(name string, img image.Image, quality int) *ImageData {
 	data := bytes.NewBuffer([]byte{})
 	if err := jpeg.Encode(data, img, &jpeg.Options{Quality: quality}); err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	cdata := bytes.NewBuffer([]byte{})
 	wcdata, err := flate.NewWriter(cdata, flate.BestCompression)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	wcdata.Write(data.Bytes())
 	wcdata.Close()
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	t := time.Now()
 	return &ImageData{
