@@ -114,18 +114,16 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 				}
 
 				imageOutput <- &epubimage.Image{
-					Id:      img.Id,
-					Part:    0,
-					Raw:     raw,
-					Data:    epubimagedata.New(img.Id, 0, dst, o.Image.Quality),
-					Width:   dst.Bounds().Dx(),
-					Height:  dst.Bounds().Dy(),
-					IsCover: img.Id == 0,
-					DoublePage: src.Bounds().Dx() > src.Bounds().Dy() &&
-						src.Bounds().Dx() > o.Image.ViewHeight &&
-						src.Bounds().Dy() > o.Image.ViewWidth,
-					Path: img.Path,
-					Name: img.Name,
+					Id:         img.Id,
+					Part:       0,
+					Raw:        raw,
+					Data:       epubimagedata.New(img.Id, 0, dst, o.Image.Quality),
+					Width:      dst.Bounds().Dx(),
+					Height:     dst.Bounds().Dy(),
+					IsCover:    img.Id == 0,
+					DoublePage: src.Bounds().Dx() > src.Bounds().Dy(),
+					Path:       img.Path,
+					Name:       img.Name,
 				}
 
 				// Auto split double page
@@ -133,9 +131,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 				// Only if the src image have width > height and is bigger than the view
 				if (!o.Image.HasCover || img.Id > 0) &&
 					o.Image.AutoSplitDoublePage &&
-					src.Bounds().Dx() > src.Bounds().Dy() &&
-					src.Bounds().Dx() > o.Image.ViewHeight &&
-					src.Bounds().Dy() > o.Image.ViewWidth {
+					src.Bounds().Dx() > src.Bounds().Dy() {
 					gifts := epubimage.NewGiftSplitDoublePage(o.Image)
 					for i, g := range gifts {
 						part := i + 1
