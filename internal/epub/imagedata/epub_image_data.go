@@ -21,30 +21,42 @@ func (img *ImageData) CompressedSize() uint64 {
 	return img.Header.CompressedSize64 + 30 + uint64(len(img.Header.Name))
 }
 
+func exitWithError(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
+}
+
 func New(id int, part int, img image.Image, quality int) *ImageData {
 	name := fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", id, part)
 	return NewRaw(name, img, quality)
 }
 
 func NewRaw(name string, img image.Image, quality int) *ImageData {
-	data := bytes.NewBuffer([]byte{})
-	if err := jpeg.Encode(data, img, &jpeg.Options{Quality: quality}); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	var (
+		data, cdata bytes.Buffer
+		err         error
+	)
+
+	err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+	if err != nil {
+		exitWithError(err)
 	}
 
-	cdata := bytes.NewBuffer([]byte{})
-	wcdata, err := flate.NewWriter(cdata, flate.BestCompression)
+	wcdata, err := flate.NewWriter(&cdata, flate.BestCompression)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		exitWithError(err)
 	}
-	wcdata.Write(data.Bytes())
-	wcdata.Close()
+
+	_, err = wcdata.Write(data.Bytes())
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		exitWithError(err)
 	}
+
+	err = wcdata.Close()
+	if err != nil {
+		exitWithError(err)
+	}
+
 	t := time.Now()
 	return &ImageData{
 		&zip.FileHeader{

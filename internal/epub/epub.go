@@ -49,12 +49,7 @@ type epubPart struct {
 }
 
 func New(options *Options) *ePub {
-	uid, err := uuid.NewV4()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
+	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
 		"mod":  func(i, j int) bool { return i%j == 0 },
@@ -71,20 +66,12 @@ func New(options *Options) *ePub {
 }
 
 func (e *ePub) render(templateString string, data any) string {
-	tmpl, err := e.templateProcessor.Parse(templateString)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	var result strings.Builder
+	tmpl := template.Must(e.templateProcessor.Parse(templateString))
+	if err := tmpl.Execute(&result, data); err != nil {
+		panic(err)
 	}
-	result := &strings.Builder{}
-	if err := tmpl.Execute(result, data); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	stripBlank := regexp.MustCompile("\n+")
-
-	return stripBlank.ReplaceAllString(result.String(), "\n")
+	return regexp.MustCompile("\n+").ReplaceAllString(result.String(), "\n")
 }
 
 func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimage.Image) error {
