@@ -28,16 +28,18 @@ type Options struct {
 }
 
 func (o *Options) mustExtractImage(imageOpener func() (io.ReadCloser, error)) *bytes.Buffer {
+	var b bytes.Buffer
 	if o.Dry {
-		return &bytes.Buffer{}
+		return &b
 	}
+
 	f, err := imageOpener()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	defer f.Close()
-	var b bytes.Buffer
+
 	_, err = io.Copy(&b, f)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
