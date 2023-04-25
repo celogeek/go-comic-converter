@@ -269,7 +269,7 @@ func (c *Converter) Validate() error {
 	return nil
 }
 
-func (c Converter) Fatal(err error) {
+func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
 	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
 	os.Exit(1)
