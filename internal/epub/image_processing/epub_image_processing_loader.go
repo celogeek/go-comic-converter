@@ -3,6 +3,7 @@ package epubimageprocessing
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -26,6 +27,8 @@ type Options struct {
 	Workers      int
 	Image        *epubimage.Options
 }
+
+var errNoImagesFound = errors.New("no images found")
 
 func (o *Options) mustExtractImage(imageOpener func() (io.ReadCloser, error)) *bytes.Buffer {
 	var b bytes.Buffer
@@ -70,7 +73,7 @@ func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 	totalImages = len(images)
 
 	if totalImages == 0 {
-		err = fmt.Errorf("image not found")
+		err = errNoImagesFound
 		return
 	}
 
@@ -115,7 +118,7 @@ func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 
 	if totalImages == 0 {
 		r.Close()
-		err = fmt.Errorf("no images found")
+		err = errNoImagesFound
 		return
 	}
 
@@ -176,7 +179,7 @@ func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 
 	totalImages = len(names)
 	if totalImages == 0 {
-		err = fmt.Errorf("no images found")
+		err = errNoImagesFound
 		return
 	}
 

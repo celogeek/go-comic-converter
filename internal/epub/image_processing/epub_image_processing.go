@@ -172,7 +172,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	bar.Close()
 
 	if len(images) == 0 {
-		return nil, fmt.Errorf("image not found")
+		return nil, errNoImagesFound
 	}
 
 	return images, nil
