@@ -77,12 +77,12 @@ func (e *ePub) render(templateString string, data any) string {
 func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
-		e.render(epubtemplates.Text, map[string]any{
+		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
 			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.ViewWidth, e.Image.ViewHeight),
 			"ImagePath":  img.ImgPath(),
 			"ImageStyle": img.ImgStyle(e.Image.ViewWidth, e.Image.ViewHeight, e.Image.Manga),
-		}),
+		})),
 	)
 
 	if err == nil {
@@ -95,10 +95,10 @@ func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimage.Image) error {
 func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	return wz.WriteFile(
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
-		e.render(epubtemplates.Blank, map[string]any{
+		[]byte(e.render(epubtemplates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
 			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.ViewWidth, e.Image.ViewHeight),
-		}),
+		})),
 	)
 }
 
@@ -200,7 +200,7 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
-		Content any
+		Content string
 	}
 
 	epubParts, err := e.getParts()
@@ -280,8 +280,8 @@ func (e *ePub) Write() error {
 		if err = wz.WriteMagic(); err != nil {
 			return err
 		}
-		for _, content := range content {
-			if err := wz.WriteFile(content.Name, content.Content); err != nil {
+		for _, c := range content {
+			if err := wz.WriteFile(c.Name, []byte(c.Content)); err != nil {
 				return err
 			}
 		}

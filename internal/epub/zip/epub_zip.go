@@ -2,7 +2,6 @@ package epubzip
 
 import (
 	"archive/zip"
-	"fmt"
 	"os"
 	"time"
 
@@ -61,17 +60,7 @@ func (e *EpubZip) WriteImage(image *epubimagedata.ImageData) error {
 	return err
 }
 
-func (e *EpubZip) WriteFile(file string, data any) error {
-	var content []byte
-	switch b := data.(type) {
-	case string:
-		content = []byte(b)
-	case []byte:
-		content = b
-	default:
-		return fmt.Errorf("support string of []byte")
-	}
-
+func (e *EpubZip) WriteFile(file string, content []byte) error {
 	m, err := e.wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),
