@@ -207,7 +207,7 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 		c = c.Children[0]
 	}
 
-	return c.ToString("")
+	return c.WriteString("")
 }
 
 func (e *ePub) Write() error {

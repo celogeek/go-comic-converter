@@ -5,39 +5,39 @@ import (
 	"strings"
 )
 
-type Tree struct {
-	Nodes map[string]*Node
+type tree struct {
+	Nodes map[string]*node
 }
 
-type Node struct {
+type node struct {
 	Value    string
-	Children []*Node
+	Children []*node
 }
 
-func New() *Tree {
-	return &Tree{map[string]*Node{
-		".": {".", []*Node{}},
+func New() *tree {
+	return &tree{map[string]*node{
+		".": {".", []*node{}},
 	}}
 }
 
-func (n *Tree) Root() *Node {
+func (n *tree) Root() *node {
 	return n.Nodes["."]
 }
 
-func (n *Tree) Add(filename string) {
+func (n *tree) Add(filename string) {
 	cn := n.Root()
 	cp := ""
 	for _, p := range strings.Split(filepath.Clean(filename), string(filepath.Separator)) {
 		cp = filepath.Join(cp, p)
 		if _, ok := n.Nodes[cp]; !ok {
-			n.Nodes[cp] = &Node{Value: p, Children: []*Node{}}
+			n.Nodes[cp] = &node{Value: p, Children: []*node{}}
 			cn.Children = append(cn.Children, n.Nodes[cp])
 		}
 		cn = n.Nodes[cp]
 	}
 }
 
-func (n *Node) ToString(indent string) string {
+func (n *node) WriteString(indent string) string {
 	r := strings.Builder{}
 	if indent != "" {
 		r.WriteString(indent)
@@ -47,7 +47,7 @@ func (n *Node) ToString(indent string) string {
 	}
 	indent += "  "
 	for _, c := range n.Children {
-		r.WriteString(c.ToString(indent))
+		r.WriteString(c.WriteString(indent))
 	}
 	return r.String()
 }
