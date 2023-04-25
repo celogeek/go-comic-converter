@@ -1,4 +1,4 @@
-package epub
+package epubtemplates
 
 import (
 	"path/filepath"
@@ -8,7 +8,7 @@ import (
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 )
 
-func (e *ePub) getToc(title string, images []*epubimage.Image) string {
+func Toc(title string, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	doc.CreateDirective("DOCTYPE html")
@@ -42,7 +42,7 @@ func (e *ePub) getToc(title string, images []*epubimage.Image) string {
 		}
 	}
 
-	if len(ol.ChildElements()) == 1 && e.StripFirstDirectoryFromToc {
+	if len(ol.ChildElements()) == 1 && stripFirstDirectoryFromToc {
 		ol = ol.FindElement("/li/ol")
 	}
 

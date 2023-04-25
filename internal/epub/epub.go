@@ -14,6 +14,7 @@ import (
 	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/image_processing"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
+	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
 	"github.com/gofrs/uuid"
 )
@@ -192,6 +193,23 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	return parts, nil
 }
 
+func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
+	t := epubtree.New()
+	for _, img := range images {
+		if skip_files {
+			t.Add(img.Path)
+		} else {
+			t.Add(filepath.Join(img.Path, img.Name))
+		}
+	}
+	c := t.Root()
+	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
+		c = c.Children[0]
+	}
+
+	return c.ToString("")
+}
+
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
@@ -247,8 +265,19 @@ func (e *ePub) Write() error {
 		content := []zipContent{
 			{"META-INF/container.xml", epubtemplates.Container},
 			{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
-			{"OEBPS/content.opf", e.getContent(title, part, i+1, totalParts).String()},
-			{"OEBPS/toc.xhtml", e.getToc(title, part.Images)},
+			{"OEBPS/content.opf", epubtemplates.Content(&epubtemplates.ContentOptions{
+				Title:        title,
+				UID:          e.UID,
+				Author:       e.Author,
+				Publisher:    e.Publisher,
+				UpdatedAt:    e.UpdatedAt,
+				ImageOptions: e.Image,
+				Cover:        part.Cover,
+				Images:       part.Images,
+				Current:      i + 1,
+				Total:        totalParts,
+			})},
+			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, e.StripFirstDirectoryFromToc, part.Images)},
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
 				"PageWidth":  e.Image.ViewWidth,
 				"PageHeight": e.Image.ViewHeight,
