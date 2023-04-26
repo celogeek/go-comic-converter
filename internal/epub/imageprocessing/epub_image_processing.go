@@ -29,6 +29,17 @@ type tasks struct {
 	Name   string
 }
 
+// only accept jpg, png and webp as source file
+func isSupportedImage(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".jpg", ".jpeg", ".png", ".webp":
+		{
+			return true
+		}
+	}
+	return false
+}
+
 // extract and convert images
 func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	images := make([]*epubimage.Image, 0)
@@ -101,20 +112,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 					os.Exit(1)
 				}
 
-				if o.Image.Crop {
-					g := gift.New(gift.Crop(findMarging(src, cutRatioOptions{
-						Left:   o.Image.CropRatioLeft,
-						Up:     o.Image.CropRatioUp,
-						Right:  o.Image.CropRatioRight,
-						Bottom: o.Image.CropRatioBottom,
-					})))
-					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
-					g.Draw(newSrc, src)
-					src = newSrc
-				}
-
-				g := epubimage.NewGift(o.Image)
-
+				g := epubimage.NewGift(src, o.Image)
 				// Convert image
 				dst := image.NewGray(g.Bounds(src.Bounds()))
 				g.Draw(dst, src)

@@ -1,21 +1,16 @@
-package epubimageprocessing
+package epubfilters
 
 import (
 	"image"
 	"image/color"
-	"path/filepath"
-	"strings"
+
+	"github.com/disintegration/gift"
 )
 
-// only accept jpg, png and webp as source file
-func isSupportedImage(path string) bool {
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png", ".webp":
-		{
-			return true
-		}
-	}
-	return false
+func AutoCrop(img image.Image, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int) gift.Filter {
+	return gift.Crop(
+		findMarging(img, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}),
+	)
 }
 
 // check if the color is blank enough
