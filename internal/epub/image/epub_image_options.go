@@ -3,6 +3,7 @@ package epubimage
 // options for image transformation
 type Options struct {
 	Crop                bool
+	CropRatio           int
 	ViewWidth           int
 	ViewHeight          int
 	Quality             int

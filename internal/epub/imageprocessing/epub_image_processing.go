@@ -102,7 +102,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 				}
 
 				if o.Image.Crop {
-					g := gift.New(gift.Crop(findMarging(src)))
+					g := gift.New(gift.Crop(findMarging(src, o.Image.CropRatio)))
 					newSrc := image.NewNRGBA(g.Bounds(src.Bounds()))
 					g.Draw(newSrc, src)
 					src = newSrc

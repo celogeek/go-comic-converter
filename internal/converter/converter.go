@@ -98,6 +98,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
 	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
 	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
+	c.AddIntParam(&c.Options.CropRatio, "crop-ratio", c.Options.CropRatio, "Crop ratio: ratio of pixels allow to be non blank while cutting. 0 mean first non blank stop cutting. 5 may help to remove number.")
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
