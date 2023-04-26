@@ -10,7 +10,7 @@ func NewGift(options *Options) *gift.GIFT {
 	g.SetParallelization(false)
 
 	if options.AutoRotate {
-		g.Add(epubfilters.AutoRotate(options.ViewWidth, options.ViewHeight))
+		g.Add(epubfilters.AutoRotate())
 	}
 	if options.Contrast != 0 {
 		g.Add(gift.Contrast(float32(options.Contrast)))
