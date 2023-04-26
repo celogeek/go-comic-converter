@@ -1,4 +1,4 @@
-package epubfilters
+package epubimagefilters
 
 import (
 	"image"
@@ -7,6 +7,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
+// Lookup for margin and crop
 func AutoCrop(img image.Image, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int) gift.Filter {
 	return gift.Crop(
 		findMarging(img, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}),

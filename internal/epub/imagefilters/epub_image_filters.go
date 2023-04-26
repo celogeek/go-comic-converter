@@ -1,19 +1,19 @@
-package epubimage
+package epubimagefilters
 
 import (
 	"image"
 
-	epubfilters "github.com/celogeek/go-comic-converter/v2/internal/epub/filters"
+	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	"github.com/disintegration/gift"
 )
 
 // create filter to apply to the source
-func NewGift(img image.Image, options *Options) *gift.GIFT {
+func NewGift(img image.Image, options *epubimage.Options) *gift.GIFT {
 	g := gift.New()
 	g.SetParallelization(false)
 
 	if options.Crop {
-		g.Add(epubfilters.AutoCrop(
+		g.Add(AutoCrop(
 			img,
 			options.CropRatioLeft,
 			options.CropRatioUp,
@@ -34,25 +34,26 @@ func NewGift(img image.Image, options *Options) *gift.GIFT {
 	}
 
 	g.Add(
-		epubfilters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
-		epubfilters.Pixel(),
+		Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
+		Pixel(),
 	)
 	return g
 }
 
 // create filters to cut image into 2 equal pieces
-func NewGiftSplitDoublePage(options *Options) []*gift.GIFT {
+func NewGiftSplitDoublePage(options *epubimage.Options) []*gift.GIFT {
 	gifts := make([]*gift.GIFT, 2)
 
 	gifts[0] = gift.New(
-		epubfilters.CropSplitDoublePage(options.Manga),
+		CropSplitDoublePage(options.Manga),
 	)
 
 	gifts[1] = gift.New(
-		epubfilters.CropSplitDoublePage(!options.Manga),
+		CropSplitDoublePage(!options.Manga),
 	)
 
 	for _, g := range gifts {
+		g.SetParallelization(false)
 		if options.Contrast != 0 {
 			g.Add(gift.Contrast(float32(options.Contrast)))
 		}
@@ -61,7 +62,7 @@ func NewGiftSplitDoublePage(options *Options) []*gift.GIFT {
 		}
 
 		g.Add(
-			epubfilters.Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
+			Resize(options.ViewWidth, options.ViewHeight, gift.LanczosResampling),
 		)
 	}
 

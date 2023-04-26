@@ -14,9 +14,9 @@ import (
 	"strings"
 	"sync"
 
-	epubfilters "github.com/celogeek/go-comic-converter/v2/internal/epub/filters"
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
+	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	"github.com/disintegration/gift"
 	_ "golang.org/x/image/webp"
@@ -112,7 +112,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 					os.Exit(1)
 				}
 
-				g := epubimage.NewGift(src, o.Image)
+				g := epubimagefilters.NewGift(src, o.Image)
 				// Convert image
 				dst := image.NewGray(g.Bounds(src.Bounds()))
 				g.Draw(dst, src)
@@ -141,7 +141,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 				if (!o.Image.HasCover || img.Id > 0) &&
 					o.Image.AutoSplitDoublePage &&
 					src.Bounds().Dx() > src.Bounds().Dy() {
-					gifts := epubimage.NewGiftSplitDoublePage(o.Image)
+					gifts := epubimagefilters.NewGiftSplitDoublePage(o.Image)
 					for i, g := range gifts {
 						part := i + 1
 						dst := image.NewGray(g.Bounds(src.Bounds()))
@@ -190,7 +190,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 // create a title page with the cover
 func LoadCoverTitleData(img *epubimage.Image, title string, quality int) *epubimagedata.ImageData {
 	// Create a blur version of the cover
-	g := gift.New(epubfilters.CoverTitle(title))
+	g := gift.New(epubimagefilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
 	g.Draw(dst, img.Raw)
 

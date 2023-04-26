@@ -1,7 +1,4 @@
-/*
-Create a title with the cover image
-*/
-package epubfilters
+package epubimagefilters
 
 import (
 	"image"
@@ -14,6 +11,7 @@ import (
 	"golang.org/x/image/font/gofont/gomonobold"
 )
 
+// Create a title with the cover image
 func CoverTitle(title string) gift.Filter {
 	return &coverTitle{title}
 }

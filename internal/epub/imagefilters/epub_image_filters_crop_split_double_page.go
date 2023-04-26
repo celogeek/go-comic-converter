@@ -1,9 +1,4 @@
-/*
-cut a double page in 2 part: left and right.
-
-this will cut in the middle of the page.
-*/
-package epubfilters
+package epubimagefilters
 
 import (
 	"image"
@@ -12,6 +7,8 @@ import (
 	"github.com/disintegration/gift"
 )
 
+// Cut a double page in 2 part: left and right.
+// This will cut in the middle of the page.
 func CropSplitDoublePage(right bool) gift.Filter {
 	return &cropSplitDoublePage{right}
 }

@@ -1,9 +1,4 @@
-/*
-Resize image by keeping aspect ratio.
-
-This will reduce or enlarge image to fit into the viewWidth and viewHeight.
-*/
-package epubfilters
+package epubimagefilters
 
 import (
 	"image"
@@ -12,6 +7,8 @@ import (
 	"github.com/disintegration/gift"
 )
 
+// Resize image by keeping aspect ratio.
+// This will reduce or enlarge image to fit into the viewWidth and viewHeight.
 func Resize(viewWidth, viewHeight int, resampling gift.Resampling) gift.Filter {
 	return &resizeFilter{
 		viewWidth, viewHeight, resampling,
