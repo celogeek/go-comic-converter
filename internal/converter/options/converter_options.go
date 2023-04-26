@@ -24,7 +24,10 @@ type Options struct {
 	Profile                    string `yaml:"profile"`
 	Quality                    int    `yaml:"quality"`
 	Crop                       bool   `yaml:"crop"`
-	CropRatio                  int    `yaml:"crop_ratio"`
+	CropRatioLeft              int    `yaml:"crop_ratio_left"`
+	CropRatioUp                int    `yaml:"crop_ratio_up"`
+	CropRatioRight             int    `yaml:"crop_ratio_right"`
+	CropRatioBottom            int    `yaml:"crop_ratio_bottom"`
 	Brightness                 int    `yaml:"brightness"`
 	Contrast                   int    `yaml:"contrast"`
 	Auto                       bool   `yaml:"-"`
@@ -60,7 +63,10 @@ func New() *Options {
 		Profile:                    "",
 		Quality:                    85,
 		Crop:                       true,
-		CropRatio:                  5,
+		CropRatioLeft:              1,
+		CropRatioUp:                1,
+		CropRatioRight:             1,
+		CropRatioBottom:            3,
 		Brightness:                 0,
 		Contrast:                   0,
 		AutoRotate:                 false,
@@ -161,7 +167,7 @@ func (o *Options) ShowConfig() string {
     View                      : %s
     Quality                   : %d
     Crop                      : %v
-    CropRatio                 : %d
+    CropRatio                 : %d Left - %d Up - %d Right - %d Bottom
     Brightness                : %d
     Contrast                  : %d
     AutoRotate                : %v
@@ -177,7 +183,7 @@ func (o *Options) ShowConfig() string {
 		viewDesc,
 		o.Quality,
 		o.Crop,
-		o.CropRatio,
+		o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom,
 		o.Brightness,
 		o.Contrast,
 		o.AutoRotate,

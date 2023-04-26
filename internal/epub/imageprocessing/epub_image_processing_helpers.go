@@ -25,12 +25,16 @@ func colorIsBlank(c color.Color) bool {
 }
 
 // lookup for margin (blank) around the image
-func findMarging(img image.Image, cutRatio int) image.Rectangle {
+type cutRatioOptions struct {
+	Left, Up, Right, Bottom int
+}
+
+func findMarging(img image.Image, cutRatio cutRatioOptions) image.Rectangle {
 	imgArea := img.Bounds()
 
 LEFT:
 	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
-		allowNonBlank := imgArea.Dy() * cutRatio / 100
+		allowNonBlank := imgArea.Dy() * cutRatio.Left / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
 				allowNonBlank--
@@ -44,7 +48,7 @@ LEFT:
 
 UP:
 	for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
-		allowNonBlank := imgArea.Dx() * cutRatio / 100
+		allowNonBlank := imgArea.Dx() * cutRatio.Up / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
 				allowNonBlank--
@@ -58,7 +62,7 @@ UP:
 
 RIGHT:
 	for x := imgArea.Max.X - 1; x >= imgArea.Min.X; x-- {
-		allowNonBlank := imgArea.Dy() * cutRatio / 100
+		allowNonBlank := imgArea.Dy() * cutRatio.Right / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
 				allowNonBlank--
@@ -72,7 +76,7 @@ RIGHT:
 
 BOTTOM:
 	for y := imgArea.Max.Y - 1; y >= imgArea.Min.Y; y-- {
-		allowNonBlank := imgArea.Dx() * cutRatio / 100
+		allowNonBlank := imgArea.Dx() * cutRatio.Bottom / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
 				allowNonBlank--
