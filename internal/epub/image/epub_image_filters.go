@@ -5,6 +5,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
+// create filter to apply to the source
 func NewGift(options *Options) *gift.GIFT {
 	g := gift.New()
 	g.SetParallelization(false)
@@ -25,6 +26,7 @@ func NewGift(options *Options) *gift.GIFT {
 	return g
 }
 
+// create filters to cut image into 2 equal pieces
 func NewGiftSplitDoublePage(options *Options) []*gift.GIFT {
 	gifts := make([]*gift.GIFT, 2)
 

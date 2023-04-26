@@ -1,3 +1,6 @@
+/*
+Rotate image if the source width > height.
+*/
 package epubfilters
 
 import (

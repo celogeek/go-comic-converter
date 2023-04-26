@@ -1,3 +1,8 @@
+/*
+cut a double page in 2 part: left and right.
+
+this will cut in the middle of the page.
+*/
 package epubfilters
 
 import (

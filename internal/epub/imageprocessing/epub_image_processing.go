@@ -1,3 +1,6 @@
+/*
+Extract and transform image into a compressed jpeg.
+*/
 package epubimageprocessing
 
 import (
@@ -26,6 +29,7 @@ type tasks struct {
 	Name   string
 }
 
+// extract and convert images
 func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	images := make([]*epubimage.Image, 0)
 
@@ -39,6 +43,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 		imageInput chan *tasks
 	)
 
+	// get all images though a channel of bytes
 	if fi.IsDir() {
 		imageCount, imageInput, err = o.loadDir()
 	} else {
@@ -57,6 +62,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 		return nil, err
 	}
 
+	// dry run, skip convertion
 	if o.Dry {
 		for img := range imageInput {
 			images = append(images, &epubimage.Image{
@@ -178,7 +184,8 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	return images, nil
 }
 
-func LoadCoverData(img *epubimage.Image, title string, quality int) *epubimagedata.ImageData {
+// create a title page with the cover
+func LoadCoverTitleData(img *epubimage.Image, title string, quality int) *epubimagedata.ImageData {
 	// Create a blur version of the cover
 	g := gift.New(epubfilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))

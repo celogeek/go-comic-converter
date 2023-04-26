@@ -1,3 +1,10 @@
+/*
+Convert CBZ/CBR/Dir into Epub for e-reader devices (Kindle Devices, ...)
+
+My goal is to make a simple, crossplatform, and fast tool to convert comics into epub.
+
+Epub is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
+*/
 package main
 
 import (
@@ -57,29 +64,29 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	}
 
 	if cmd.Options.Save {
-		cmd.Options.SaveDefault()
+		cmd.Options.SaveConfig()
 		fmt.Fprintf(
 			os.Stderr,
 			"%s%s\n\nSaving to %s\n",
 			cmd.Options.Header(),
-			cmd.Options.ShowDefault(),
+			cmd.Options.ShowConfig(),
 			cmd.Options.FileName(),
 		)
 		return
 	}
 
 	if cmd.Options.Show {
-		fmt.Fprintln(os.Stderr, cmd.Options.Header(), cmd.Options.ShowDefault())
+		fmt.Fprintln(os.Stderr, cmd.Options.Header(), cmd.Options.ShowConfig())
 		return
 	}
 
 	if cmd.Options.Reset {
-		cmd.Options.ResetDefault()
+		cmd.Options.ResetConfig()
 		fmt.Fprintf(
 			os.Stderr,
 			"%s%s\n\nReset default to %s\n",
 			cmd.Options.Header(),
-			cmd.Options.ShowDefault(),
+			cmd.Options.ShowConfig(),
 			cmd.Options.FileName(),
 		)
 		return

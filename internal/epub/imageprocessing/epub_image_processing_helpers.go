@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// only accept jpg, png and webp as source file
 func isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".jpg", ".jpeg", ".png", ".webp":
@@ -17,11 +18,13 @@ func isSupportedImage(path string) bool {
 	return false
 }
 
+// check if the color is blank enough
 func colorIsBlank(c color.Color) bool {
 	g := color.GrayModel.Convert(c).(color.Gray)
 	return g.Y >= 0xf0
 }
 
+// lookup for margin (blank) around the image
 func findMarging(img image.Image) image.Rectangle {
 	imgArea := img.Bounds()
 

@@ -1,3 +1,6 @@
+/*
+Create a title with the cover image
+*/
 package epubfilters
 
 import (
@@ -19,10 +22,12 @@ type coverTitle struct {
 	title string
 }
 
+// size is the same as source
 func (p *coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	return srcBounds
 }
 
+// blur the src image, and create a box with the title in the middle
 func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options) {
 	// Create a blur version of the cover
 	g := gift.New(gift.GaussianBlur(4))

@@ -30,6 +30,7 @@ type Options struct {
 
 var errNoImagesFound = errors.New("no images found")
 
+// ensure copy image into a buffer
 func (o *Options) mustExtractImage(imageOpener func() (io.ReadCloser, error)) *bytes.Buffer {
 	var b bytes.Buffer
 	if o.Dry {
@@ -51,6 +52,7 @@ func (o *Options) mustExtractImage(imageOpener func() (io.ReadCloser, error)) *b
 	return &b
 }
 
+// load a directory of images
 func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 	images := make([]string, 0)
 
@@ -101,6 +103,7 @@ func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 	return
 }
 
+// load a zip file that include images
 func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 	r, err := zip.OpenReader(o.Input)
 	if err != nil {
@@ -150,6 +153,7 @@ func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 	return
 }
 
+// load a rar file that include images
 func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 	// listing and indexing
 	rl, err := rardecode.OpenReader(o.Input, "")
@@ -233,6 +237,7 @@ func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 	return
 }
 
+// extract image from a pdf
 func (o *Options) loadPdf() (totalImages int, output chan *tasks, err error) {
 	pdf := pdfread.Load(o.Input)
 	if pdf == nil {

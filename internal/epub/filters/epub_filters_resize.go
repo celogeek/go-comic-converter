@@ -1,3 +1,8 @@
+/*
+Resize image by keeping aspect ratio.
+
+This will reduce or enlarge image to fit into the viewWidth and viewHeight.
+*/
 package epubfilters
 
 import (
@@ -42,6 +47,5 @@ func (p *resizeFilter) Bounds(srcBounds image.Rectangle) image.Rectangle {
 }
 
 func (p *resizeFilter) Draw(dst draw.Image, src image.Image, options *gift.Options) {
-	b := p.Bounds(src.Bounds())
-	gift.Resize(b.Dx(), b.Dy(), p.resampling).Draw(dst, src, options)
+	gift.Resize(dst.Bounds().Dx(), dst.Bounds().Dy(), p.resampling).Draw(dst, src, options)
 }

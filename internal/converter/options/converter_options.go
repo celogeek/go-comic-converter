@@ -1,3 +1,6 @@
+/*
+Manage options with default value from config.
+*/
 package options
 
 import (
@@ -50,6 +53,7 @@ type Options struct {
 	profiles profiles.Profiles
 }
 
+// Initialize default options.
 func New() *Options {
 	return &Options{
 		Profile:                    "",
@@ -89,16 +93,18 @@ func (o *Options) String() string {
 		o.Author,
 		o.Title,
 		o.Workers,
-		o.ShowDefault(),
+		o.ShowConfig(),
 	)
 }
 
+// Config file: ~/.go-comic-converter.yaml
 func (o *Options) FileName() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".go-comic-converter.yaml")
 }
 
-func (o *Options) LoadDefault() error {
+// Load config files
+func (o *Options) LoadConfig() error {
 	f, err := os.Open(o.FileName())
 	if err != nil {
 		return nil
@@ -112,7 +118,8 @@ func (o *Options) LoadDefault() error {
 	return nil
 }
 
-func (o *Options) ShowDefault() string {
+// Get current settings for fields that can be saved
+func (o *Options) ShowConfig() string {
 	var profileDesc, viewDesc string
 	profile := o.GetProfile()
 	if profile != nil {
@@ -180,12 +187,14 @@ func (o *Options) ShowDefault() string {
 	)
 }
 
-func (o *Options) ResetDefault() error {
-	New().SaveDefault()
-	return o.LoadDefault()
+// reset all settings to default value
+func (o *Options) ResetConfig() error {
+	New().SaveConfig()
+	return o.LoadConfig()
 }
 
-func (o *Options) SaveDefault() error {
+// save all current settings as futur default value
+func (o *Options) SaveConfig() error {
 	f, err := os.Create(o.FileName())
 	if err != nil {
 		return err
@@ -194,10 +203,12 @@ func (o *Options) SaveDefault() error {
 	return yaml.NewEncoder(f).Encode(o)
 }
 
+// shortcut to get current profile
 func (o *Options) GetProfile() *profiles.Profile {
 	return o.profiles.Get(o.Profile)
 }
 
+// all available profiles
 func (o *Options) AvailableProfiles() string {
 	return o.profiles.String()
 }

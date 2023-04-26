@@ -1,3 +1,6 @@
+/*
+Tools to create epub from images.
+*/
 package epub
 
 import (
@@ -11,7 +14,7 @@ import (
 	"time"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/image_processing"
+	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessing"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
@@ -48,6 +51,7 @@ type epubPart struct {
 	Images []*epubimage.Image
 }
 
+// initialize epub
 func New(options *Options) *ePub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
@@ -65,7 +69,8 @@ func New(options *Options) *ePub {
 	}
 }
 
-func (e *ePub) render(templateString string, data any) string {
+// render templates
+func (e *ePub) render(templateString string, data map[string]any) string {
 	var result strings.Builder
 	tmpl := template.Must(e.templateProcessor.Parse(templateString))
 	if err := tmpl.Execute(&result, data); err != nil {
@@ -74,6 +79,7 @@ func (e *ePub) render(templateString string, data any) string {
 	return regexp.MustCompile("\n+").ReplaceAllString(result.String(), "\n")
 }
 
+// write image to the zip
 func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	err := wz.WriteFile(
 		fmt.Sprintf("OEBPS/%s", img.TextPath()),
@@ -92,6 +98,7 @@ func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	return err
 }
 
+// write blank page
 func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	return wz.WriteFile(
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
@@ -102,6 +109,7 @@ func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	)
 }
 
+// extract image and split it into part
 func (e *ePub) getParts() ([]*epubPart, error) {
 	images, err := epubimageprocessing.LoadImages(&epubimageprocessing.Options{
 		Input:        e.Input,
@@ -116,14 +124,12 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 		return nil, err
 	}
 
+	// sort result by id and part
 	sort.Slice(images, func(i, j int) bool {
-		if images[i].Id < images[j].Id {
-			return true
-		} else if images[i].Id == images[j].Id {
+		if images[i].Id == images[j].Id {
 			return images[i].Part < images[j].Part
-		} else {
-			return false
 		}
+		return images[i].Id < images[j].Id
 	})
 
 	parts := make([]*epubPart, 0)
@@ -140,8 +146,8 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 		return parts, nil
 	}
 
+	// compute size of the epub part and try to be as close as possible of the target
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
-
 	xhtmlSize := uint64(1024)
 	// descriptor files + title
 	baseSize := uint64(16*1024) + cover.Data.CompressedSize()
@@ -180,6 +186,9 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	return parts, nil
 }
 
+// create a tree from the directories.
+//
+// this is used to simulate the toc.
 func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 	t := epubtree.New()
 	for _, img := range images {
@@ -197,6 +206,7 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 	return c.WriteString("")
 }
 
+// create the zip
 func (e *ePub) Write() error {
 	type zipContent struct {
 		Name    string
@@ -285,7 +295,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteImage(epubimageprocessing.LoadCoverData(part.Cover, title, e.Image.Quality)); err != nil {
+		if err := wz.WriteImage(epubimageprocessing.LoadCoverTitleData(part.Cover, title, e.Image.Quality)); err != nil {
 			return err
 		}
 

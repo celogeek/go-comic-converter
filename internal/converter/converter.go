@@ -1,3 +1,10 @@
+/*
+Converter Helper to parse and prepare options for go-comic-converter.
+
+It use goflag with additional feature:
+  - Keep original order
+  - Support section
+*/
 package converter
 
 import (
@@ -17,17 +24,18 @@ type Converter struct {
 	Options *options.Options
 	Cmd     *flag.FlagSet
 
-	order           []Order
+	order           []converterOrder
 	isZeroValueErrs []error
 }
 
+// Create a new parser
 func New() *Converter {
 	options := options.New()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
 	conv := &Converter{
 		Options: options,
 		Cmd:     cmd,
-		order:   make([]Order, 0),
+		order:   make([]converterOrder, 0),
 	}
 
 	var cmdOutput strings.Builder
@@ -36,9 +44,9 @@ func New() *Converter {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
 		for _, o := range conv.order {
 			switch v := o.(type) {
-			case OrderSection:
+			case converterOrderSection:
 				fmt.Fprintf(os.Stderr, "\n%s:\n", o.Value())
-			case OrderName:
+			case converterOrderName:
 				fmt.Fprintln(os.Stderr, conv.Usage(v.isString, cmd.Lookup(v.Value())))
 			}
 		}
@@ -50,29 +58,35 @@ func New() *Converter {
 	return conv
 }
 
+// Load default options (config + default)
 func (c *Converter) LoadConfig() error {
-	return c.Options.LoadDefault()
+	return c.Options.LoadConfig()
 }
 
+// Create a new section of config
 func (c *Converter) AddSection(section string) {
-	c.order = append(c.order, OrderSection{value: section})
+	c.order = append(c.order, converterOrderSection{value: section})
 }
 
+// Add a string parameter
 func (c *Converter) AddStringParam(p *string, name string, value string, usage string) {
 	c.Cmd.StringVar(p, name, value, usage)
-	c.order = append(c.order, OrderName{value: name, isString: true})
+	c.order = append(c.order, converterOrderName{value: name, isString: true})
 }
 
+// Add an integer parameter
 func (c *Converter) AddIntParam(p *int, name string, value int, usage string) {
 	c.Cmd.IntVar(p, name, value, usage)
-	c.order = append(c.order, OrderName{value: name})
+	c.order = append(c.order, converterOrderName{value: name})
 }
 
+// Add a boolean parameter
 func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string) {
 	c.Cmd.BoolVar(p, name, value, usage)
-	c.order = append(c.order, OrderName{value: name})
+	c.order = append(c.order, converterOrderName{value: name})
 }
 
+// Initialize the parser with all section and parameter.
 func (c *Converter) InitParse() {
 	c.AddSection("Output")
 	c.AddStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
@@ -110,6 +124,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }
 
+// Customize version of FlagSet.PrintDefaults
 func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
@@ -144,6 +159,8 @@ func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	return b.String()
 }
 
+// Taken from flag package as it is private and needed for usage.
+//
 // isZeroValue determines whether the string represents the zero
 // value for a flag.
 func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error) {
@@ -171,6 +188,7 @@ func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error)
 	return value == z.Interface().(flag.Value).String(), nil
 }
 
+// Parse all parameters
 func (c *Converter) Parse() {
 	c.Cmd.Parse(os.Args[1:])
 	if c.Options.Help {
@@ -184,6 +202,7 @@ func (c *Converter) Parse() {
 	}
 }
 
+// Check parameters
 func (c *Converter) Validate() error {
 	// Check input
 	if c.Options.Input == "" {
@@ -262,6 +281,7 @@ func (c *Converter) Validate() error {
 		return errors.New("contrast should be between -100 and 100")
 	}
 
+	// SortPathMode
 	if c.Options.SortPathMode < 0 || c.Options.SortPathMode > 2 {
 		return errors.New("sort should be 0, 1 or 2")
 	}
@@ -269,6 +289,7 @@ func (c *Converter) Validate() error {
 	return nil
 }
 
+// Helper to show usage, err and exit 1
 func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
 	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)

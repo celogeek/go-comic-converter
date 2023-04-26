@@ -1,22 +1,27 @@
 package converter
 
-type Order interface {
+// Name or Section
+type converterOrder interface {
 	Value() string
 }
 
-type OrderSection struct {
+// Section
+type converterOrderSection struct {
 	value string
 }
 
-func (s OrderSection) Value() string {
+func (s converterOrderSection) Value() string {
 	return s.value
 }
 
-type OrderName struct {
+// Name
+//
+// isString is used to quote the default value.
+type converterOrderName struct {
 	value    string
 	isString bool
 }
 
-func (s OrderName) Value() string {
+func (s converterOrderName) Value() string {
 	return s.value
 }

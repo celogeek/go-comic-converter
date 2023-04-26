@@ -1,3 +1,6 @@
+/*
+prepare image to be store in a zip file.
+*/
 package epubimagedata
 
 import (
@@ -17,6 +20,7 @@ type ImageData struct {
 	Data   []byte
 }
 
+// compressed size of the image with the header
 func (img *ImageData) CompressedSize() uint64 {
 	return img.Header.CompressedSize64 + 30 + uint64(len(img.Header.Name))
 }
@@ -26,11 +30,13 @@ func exitWithError(err error) {
 	os.Exit(1)
 }
 
+// create a new data image with file name based on id and part
 func New(id int, part int, img image.Image, quality int) *ImageData {
 	name := fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", id, part)
 	return NewRaw(name, img, quality)
 }
 
+// create gzip encoded jpeg
 func NewRaw(name string, img image.Image, quality int) *ImageData {
 	var (
 		data, cdata bytes.Buffer

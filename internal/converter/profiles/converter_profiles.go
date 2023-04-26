@@ -1,3 +1,6 @@
+/*
+Manage supported profiles for go-comic-converter.
+*/
 package profiles
 
 import (
@@ -12,8 +15,10 @@ type Profile struct {
 	Height      int
 }
 
+// Recommended ratio of image for perfect rendering Portrait or Landscape.
 const PerfectRatio = 1.5
 
+// Compute best dimension based on device size
 func (p Profile) PerfectDim() (int, int) {
 	width, height := float64(p.Width), float64(p.Height)
 	perfectWidth, perfectHeight := height/PerfectRatio, width*PerfectRatio
@@ -27,6 +32,7 @@ func (p Profile) PerfectDim() (int, int) {
 
 type Profiles []Profile
 
+// Initialize list of all supported profiles.
 func New() Profiles {
 	return []Profile{
 		{"K1", "Kindle 1", 600, 670},
@@ -70,6 +76,7 @@ func (p Profiles) String() string {
 	return strings.Join(s, "\n")
 }
 
+// Lookup profile by code
 func (p Profiles) Get(name string) *Profile {
 	for _, profile := range p {
 		if profile.Code == name {

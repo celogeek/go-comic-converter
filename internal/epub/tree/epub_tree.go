@@ -1,3 +1,21 @@
+/*
+Organize a list of filename with their path into a tree of directories.
+
+Example:
+  - A/B/C/D.jpg
+  - A/B/C/E.jpg
+  - A/B/F/G.jpg
+
+This is transformed like:
+
+	A
+	 B
+	  C
+	   D.jpg
+	   E.jpg
+	 F
+	  G.jpg
+*/
 package epubtree
 
 import (
@@ -14,16 +32,19 @@ type node struct {
 	Children []*node
 }
 
+// initilize tree with a root node
 func New() *tree {
 	return &tree{map[string]*node{
 		".": {".", []*node{}},
 	}}
 }
 
+// root node
 func (n *tree) Root() *node {
 	return n.Nodes["."]
 }
 
+// add the filename to the tree
 func (n *tree) Add(filename string) {
 	cn := n.Root()
 	cp := ""
@@ -37,6 +58,7 @@ func (n *tree) Add(filename string) {
 	}
 }
 
+// string version of the tree
 func (n *node) WriteString(indent string) string {
 	r := strings.Builder{}
 	if indent != "" {

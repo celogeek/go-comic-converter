@@ -28,6 +28,7 @@ type tag struct {
 	value string
 }
 
+// create the content file
 func Content(o *ContentOptions) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
@@ -76,6 +77,7 @@ func Content(o *ContentOptions) string {
 	return r
 }
 
+// metadata part of the content
 func getMeta(o *ContentOptions) []tag {
 	metas := []tag{
 		{"meta", tagAttrs{"property": "dcterms:modified"}, o.UpdatedAt},
@@ -152,6 +154,7 @@ func getManifest(o *ContentOptions) []tag {
 	return items
 }
 
+// spine part of the content
 func getSpine(o *ContentOptions) []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	getSpread := func(doublePageNoBlank bool) string {
@@ -196,6 +199,7 @@ func getSpine(o *ContentOptions) []tag {
 	return spine
 }
 
+// guide part of the content
 func getGuide(o *ContentOptions) []tag {
 	guide := []tag{}
 	if o.Cover != nil {
