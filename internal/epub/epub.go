@@ -237,6 +237,7 @@ func (e *ePub) Write() error {
 		Description: "Writing Part",
 		CurrentJob:  2,
 		TotalJob:    2,
+		Quiet:       e.Quiet,
 	})
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
