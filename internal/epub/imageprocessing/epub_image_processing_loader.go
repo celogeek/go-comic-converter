@@ -18,7 +18,7 @@ import (
 
 	_ "golang.org/x/image/webp"
 
-	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
 	"github.com/nwaples/rardecode/v2"
 	pdfimage "github.com/raff/pdfreader/image"
@@ -32,27 +32,10 @@ type tasks struct {
 	Name  string
 }
 
-type Options struct {
-	Input        string
-	SortPathMode int
-	Quiet        bool
-	Dry          bool
-	Workers      int
-	Image        *epubimage.Options
-}
-
 var errNoImagesFound = errors.New("no images found")
 
-func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
-	nbWorkers = o.Workers * pct / 100
-	if nbWorkers < 1 {
-		nbWorkers = 1
-	}
-	return
-}
-
 // Load images from input
-func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
+func Load(o *epuboptions.Options) (totalImages int, output chan *tasks, err error) {
 	fi, err := os.Stat(o.Input)
 	if err != nil {
 		return
@@ -60,15 +43,15 @@ func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
 
 	// get all images though a channel of bytes
 	if fi.IsDir() {
-		return o.loadDir()
+		return loadDir(o)
 	} else {
 		switch ext := strings.ToLower(filepath.Ext(o.Input)); ext {
 		case ".cbz", ".zip":
-			return o.loadCbz()
+			return loadCbz(o)
 		case ".cbr", ".rar":
-			return o.loadCbr()
+			return loadCbr(o)
 		case ".pdf":
-			return o.loadPdf()
+			return loadPdf(o)
 		default:
 			err = fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar, .pdf", ext)
 			return
@@ -77,7 +60,7 @@ func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
 }
 
 // load a directory of images
-func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
+func loadDir(o *epuboptions.Options) (totalImages int, output chan *tasks, err error) {
 	images := make([]string, 0)
 
 	input := filepath.Clean(o.Input)
@@ -167,7 +150,7 @@ func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 }
 
 // load a zip file that include images
-func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
+func loadCbz(o *epuboptions.Options) (totalImages int, output chan *tasks, err error) {
 	r, err := zip.OpenReader(o.Input)
 	if err != nil {
 		return
@@ -253,7 +236,7 @@ func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 }
 
 // load a rar file that include images
-func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
+func loadCbr(o *epuboptions.Options) (totalImages int, output chan *tasks, err error) {
 	var isSolid bool
 	files, err := rardecode.List(o.Input)
 	if err != nil {
@@ -370,7 +353,7 @@ func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 }
 
 // extract image from a pdf
-func (o *Options) loadPdf() (totalImages int, output chan *tasks, err error) {
+func loadPdf(o *epuboptions.Options) (totalImages int, output chan *tasks, err error) {
 	pdf := pdfread.Load(o.Input)
 	if pdf == nil {
 		err = fmt.Errorf("can't read pdf")

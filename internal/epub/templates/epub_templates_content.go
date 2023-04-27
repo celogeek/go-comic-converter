@@ -5,6 +5,7 @@ import (
 
 	"github.com/beevik/etree"
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 )
 
 type ContentOptions struct {
@@ -13,7 +14,7 @@ type ContentOptions struct {
 	Author       string
 	Publisher    string
 	UpdatedAt    string
-	ImageOptions *epubimage.Options
+	ImageOptions *epuboptions.Image
 	Cover        *epubimage.Image
 	Images       []*epubimage.Image
 	Current      int
@@ -91,7 +92,7 @@ func getMeta(o *ContentOptions) []tag {
 		{"meta", tagAttrs{"property": "schema:accessibilityHazard"}, "noSoundHazard"},
 		{"meta", tagAttrs{"name": "book-type", "content": "comic"}, ""},
 		{"opf:meta", tagAttrs{"name": "fixed-layout", "content": "true"}, ""},
-		{"opf:meta", tagAttrs{"name": "original-resolution", "content": fmt.Sprintf("%dx%d", o.ImageOptions.ViewWidth, o.ImageOptions.ViewHeight)}, ""},
+		{"opf:meta", tagAttrs{"name": "original-resolution", "content": fmt.Sprintf("%dx%d", o.ImageOptions.View.Width, o.ImageOptions.View.Height)}, ""},
 		{"dc:title", tagAttrs{}, o.Title},
 		{"dc:identifier", tagAttrs{"id": "ean"}, fmt.Sprintf("urn:uuid:%s", o.UID)},
 		{"dc:language", tagAttrs{}, "en"},

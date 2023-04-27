@@ -12,6 +12,7 @@ import (
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
+	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
 	"github.com/disintegration/gift"
@@ -44,10 +45,10 @@ func isSupportedImage(path string) bool {
 }
 
 // extract and convert images
-func LoadImages(o *Options) (LoadedImages, error) {
+func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 	images := make(LoadedImages, 0)
 
-	imageCount, imageInput, err := o.Load()
+	imageCount, imageInput, err := Load(o)
 	if err != nil {
 		return nil, err
 	}
@@ -147,17 +148,17 @@ func CoverTitleData(img image.Image, title string, quality int) *epubzip.ZipImag
 
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func TransformImage(src image.Image, srcId int, o *epubimage.Options) []image.Image {
+func TransformImage(src image.Image, srcId int, o *epuboptions.Image) []image.Image {
 	var filters, splitFilter []gift.Filter
 	var images []image.Image
 
-	if o.Crop {
+	if o.Crop.Enabled {
 		f := epubimagefilters.AutoCrop(
 			src,
-			o.CropRatioLeft,
-			o.CropRatioUp,
-			o.CropRatioRight,
-			o.CropRatioBottom,
+			o.Crop.Left,
+			o.Crop.Up,
+			o.Crop.Right,
+			o.Crop.Bottom,
 		)
 		filters = append(filters, f)
 		splitFilter = append(splitFilter, f)
@@ -180,7 +181,7 @@ func TransformImage(src image.Image, srcId int, o *epubimage.Options) []image.Im
 	}
 
 	filters = append(filters,
-		epubimagefilters.Resize(o.ViewWidth, o.ViewHeight, gift.LanczosResampling),
+		epubimagefilters.Resize(o.View.Width, o.View.Height, gift.LanczosResampling),
 		epubimagefilters.Pixel(),
 	)
 
@@ -212,7 +213,7 @@ func TransformImage(src image.Image, srcId int, o *epubimage.Options) []image.Im
 		g := gift.New(splitFilter...)
 		g.Add(
 			epubimagefilters.CropSplitDoublePage(b),
-			epubimagefilters.Resize(o.ViewWidth, o.ViewHeight, gift.LanczosResampling),
+			epubimagefilters.Resize(o.View.Width, o.View.Height, gift.LanczosResampling),
 		)
 		dst := image.NewGray(g.Bounds(src.Bounds()))
 		g.Draw(dst, src)

@@ -15,6 +15,7 @@ import (
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessing"
+	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
@@ -22,23 +23,8 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type Options struct {
-	Input                      string
-	Output                     string
-	Title                      string
-	Author                     string
-	LimitMb                    int
-	StripFirstDirectoryFromToc bool
-	Dry                        bool
-	DryVerbose                 bool
-	SortPathMode               int
-	Quiet                      bool
-	Workers                    int
-	Image                      *epubimage.Options
-}
-
 type ePub struct {
-	*Options
+	*epuboptions.Options
 	UID       string
 	Publisher string
 	UpdatedAt string
@@ -52,7 +38,7 @@ type epubPart struct {
 }
 
 // initialize epub
-func New(options *Options) *ePub {
+func New(options *epuboptions.Options) *ePub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
@@ -85,9 +71,9 @@ func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessing.LoadedIm
 		fmt.Sprintf("OEBPS/%s", img.Image.TextPath()),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Image.Id, img.Image.Part),
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.ViewWidth, e.Image.ViewHeight),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 			"ImagePath":  img.Image.ImgPath(),
-			"ImageStyle": img.Image.ImgStyle(e.Image.ViewWidth, e.Image.ViewHeight, e.Image.Manga),
+			"ImageStyle": img.Image.ImgStyle(e.Image.View.Width, e.Image.View.Height, e.Image.Manga),
 		})),
 	)
 
@@ -104,21 +90,14 @@ func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
-			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.ViewWidth, e.Image.ViewHeight),
+			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 		})),
 	)
 }
 
 // extract image and split it into part
 func (e *ePub) getParts() ([]*epubPart, error) {
-	loadedImages, err := epubimageprocessing.LoadImages(&epubimageprocessing.Options{
-		Input:        e.Input,
-		SortPathMode: e.SortPathMode,
-		Quiet:        e.Quiet,
-		Dry:          e.Dry,
-		Workers:      e.Workers,
-		Image:        e.Image,
-	})
+	loadedImages, err := epubimageprocessing.LoadImages(e.Options)
 
 	if err != nil {
 		return nil, err
@@ -277,14 +256,14 @@ func (e *ePub) Write() error {
 			})},
 			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, e.StripFirstDirectoryFromToc, part.LoadedImages.Images())},
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
-				"PageWidth":  e.Image.ViewWidth,
-				"PageHeight": e.Image.ViewHeight,
+				"PageWidth":  e.Image.View.Width,
+				"PageHeight": e.Image.View.Height,
 			})},
 			{"OEBPS/Text/title.xhtml", e.render(epubtemplates.Text, map[string]any{
 				"Title":      title,
-				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.ViewWidth, e.Image.ViewHeight),
+				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 				"ImagePath":  "Images/title.jpg",
-				"ImageStyle": part.Cover.Image.ImgStyle(e.Image.ViewWidth, e.Image.ViewHeight, e.Image.Manga),
+				"ImageStyle": part.Cover.Image.ImgStyle(e.Image.View.Width, e.Image.View.Height, e.Image.Manga),
 			})},
 		}
 
