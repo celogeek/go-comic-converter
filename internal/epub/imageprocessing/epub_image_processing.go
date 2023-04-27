@@ -4,9 +4,7 @@ Extract and transform image into a compressed jpeg.
 package epubimageprocessing
 
 import (
-	"fmt"
 	"image"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -33,31 +31,7 @@ func isSupportedImage(path string) bool {
 func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	images := make([]*epubimage.Image, 0)
 
-	fi, err := os.Stat(o.Input)
-	if err != nil {
-		return nil, err
-	}
-
-	var (
-		imageCount int
-		imageInput chan *tasks
-	)
-
-	// get all images though a channel of bytes
-	if fi.IsDir() {
-		imageCount, imageInput, err = o.loadDir()
-	} else {
-		switch ext := strings.ToLower(filepath.Ext(o.Input)); ext {
-		case ".cbz", ".zip":
-			imageCount, imageInput, err = o.loadCbz()
-		case ".cbr", ".rar":
-			imageCount, imageInput, err = o.loadCbr()
-		case ".pdf":
-			imageCount, imageInput, err = o.loadPdf()
-		default:
-			err = fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar, .pdf", ext)
-		}
-	}
+	imageCount, imageInput, err := o.Load()
 	if err != nil {
 		return nil, err
 	}

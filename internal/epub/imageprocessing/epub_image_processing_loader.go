@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	_ "golang.org/x/image/webp"
@@ -41,6 +42,30 @@ type Options struct {
 }
 
 var errNoImagesFound = errors.New("no images found")
+
+func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
+	fi, err := os.Stat(o.Input)
+	if err != nil {
+		return
+	}
+
+	// get all images though a channel of bytes
+	if fi.IsDir() {
+		return o.loadDir()
+	} else {
+		switch ext := strings.ToLower(filepath.Ext(o.Input)); ext {
+		case ".cbz", ".zip":
+			return o.loadCbz()
+		case ".cbr", ".rar":
+			return o.loadCbr()
+		case ".pdf":
+			return o.loadPdf()
+		default:
+			err = fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar, .pdf", ext)
+			return
+		}
+	}
+}
 
 // load a directory of images
 func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
