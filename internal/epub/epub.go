@@ -292,8 +292,9 @@ func (e *ePub) Write() error {
 				return err
 			}
 
-			// Double Page or Last Image
-			if img.Image.DoublePage || (i+1 == len(part.LoadedImages)) {
+			// Double Page or Last Image that is not a double page
+			if img.Image.DoublePage ||
+				(img.Image.Part == 0 && i+1 == len(part.LoadedImages)) {
 				if err := e.writeBlank(wz, img.Image); err != nil {
 					return err
 				}

@@ -150,7 +150,10 @@ func getManifest(o *ContentOptions) []tag {
 		}
 		items = append(items, itag(img), htag(img))
 	}
-	items = append(items, stag(o.Images[len(o.Images)-1]))
+	lastImage := o.Images[len(o.Images)-1]
+	if lastImage.Part == 0 {
+		items = append(items, stag(lastImage))
+	}
 
 	return items
 }
