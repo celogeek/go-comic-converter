@@ -14,7 +14,7 @@ import (
 	"time"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epubimageprocessing "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessing"
+	epubimageprocessor "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessor"
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
@@ -30,11 +30,12 @@ type ePub struct {
 	UpdatedAt string
 
 	templateProcessor *template.Template
+	imageProcessor    *epubimageprocessor.EpubImageProcessor
 }
 
 type epubPart struct {
-	Cover        *epubimageprocessing.LoadedImage
-	LoadedImages epubimageprocessing.LoadedImages
+	Cover        *epubimageprocessor.LoadedImage
+	LoadedImages epubimageprocessor.LoadedImages
 }
 
 // initialize epub
@@ -52,6 +53,7 @@ func New(options *epuboptions.Options) *ePub {
 		Publisher:         "GO Comic Converter",
 		UpdatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		templateProcessor: tmpl,
+		imageProcessor:    epubimageprocessor.New(options),
 	}
 }
 
@@ -66,7 +68,7 @@ func (e *ePub) render(templateString string, data map[string]any) string {
 }
 
 // write image to the zip
-func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessing.LoadedImage) error {
+func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessor.LoadedImage) error {
 	err := wz.WriteContent(
 		fmt.Sprintf("OEBPS/%s", img.Image.TextPath()),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
@@ -97,7 +99,7 @@ func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 
 // extract image and split it into part
 func (e *ePub) getParts() ([]*epubPart, error) {
-	loadedImages, err := epubimageprocessing.LoadImages(e.Options)
+	loadedImages, err := e.imageProcessor.Load()
 
 	if err != nil {
 		return nil, err
@@ -135,7 +137,7 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 	}
 
 	currentSize := baseSize
-	currentImages := make([]*epubimageprocessing.LoadedImage, 0)
+	currentImages := make([]*epubimageprocessor.LoadedImage, 0)
 	part := 1
 
 	for _, img := range loadedImages {
@@ -150,7 +152,7 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 			if !e.Image.HasCover {
 				currentSize += cover.ZipImage.CompressedSize()
 			}
-			currentImages = make([]*epubimageprocessing.LoadedImage, 0)
+			currentImages = make([]*epubimageprocessor.LoadedImage, 0)
 		}
 		currentSize += imgSize
 		currentImages = append(currentImages, img)
@@ -275,7 +277,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteRaw(epubimageprocessing.CoverTitleData(part.Cover.Image.Raw, title, e.Image.Quality)); err != nil {
+		if err := wz.WriteRaw(e.imageProcessor.CoverTitleData(part.Cover.Image.Raw, title)); err != nil {
 			return err
 		}
 

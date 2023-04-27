@@ -1,13 +1,11 @@
 /*
 Extract and transform image into a compressed jpeg.
 */
-package epubimageprocessing
+package epubimageprocessor
 
 import (
 	"fmt"
 	"image"
-	"path/filepath"
-	"strings"
 	"sync"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
@@ -33,28 +31,25 @@ func (l LoadedImages) Images() []*epubimage.Image {
 	return res
 }
 
-// only accept jpg, png and webp as source file
-func isSupportedImage(path string) bool {
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png", ".webp":
-		{
-			return true
-		}
-	}
-	return false
+type EpubImageProcessor struct {
+	*epuboptions.Options
+}
+
+func New(o *epuboptions.Options) *EpubImageProcessor {
+	return &EpubImageProcessor{o}
 }
 
 // extract and convert images
-func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
+func (e *EpubImageProcessor) Load() (LoadedImages, error) {
 	images := make(LoadedImages, 0)
 
-	imageCount, imageInput, err := Load(o)
+	imageCount, imageInput, err := e.load()
 	if err != nil {
 		return nil, err
 	}
 
 	// dry run, skip convertion
-	if o.Dry {
+	if e.Dry {
 		for img := range imageInput {
 			images = append(images, &LoadedImage{
 				Image: &epubimage.Image{
@@ -72,7 +67,7 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       o.Quiet,
+		Quiet:       e.Quiet,
 		Max:         imageCount,
 		Description: "Processing",
 		CurrentJob:  1,
@@ -80,7 +75,7 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 	})
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < o.WorkersRatio(50); i++ {
+	for i := 0; i < e.WorkersRatio(50); i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -88,7 +83,7 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 			for input := range imageInput {
 				src := input.Image
 
-				for part, dst := range TransformImage(src, input.Id, o.Image) {
+				for part, dst := range e.transformImage(src, input.Id) {
 					var raw image.Image
 					if input.Id == 0 && part == 0 {
 						raw = dst
@@ -107,7 +102,7 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 					}
 					imageOutput <- &LoadedImage{
 						Image:    img,
-						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/%s", img.ImgPath()), dst, o.Image.Quality),
+						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/%s", img.ImgPath()), dst, e.Image.Quality),
 					}
 				}
 			}
@@ -123,7 +118,7 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 		if output.Image.Part == 0 {
 			bar.Add(1)
 		}
-		if o.Image.NoBlankPage && output.Image.Width == 1 && output.Image.Height == 1 {
+		if e.Image.NoBlankPage && output.Image.Width == 1 && output.Image.Height == 1 {
 			continue
 		}
 		images = append(images, output)
@@ -137,52 +132,42 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 	return images, nil
 }
 
-// create a title page with the cover
-func CoverTitleData(img image.Image, title string, quality int) *epubzip.ZipImage {
-	// Create a blur version of the cover
-	g := gift.New(epubimagefilters.CoverTitle(title))
-	dst := image.NewGray(g.Bounds(img.Bounds()))
-	g.Draw(dst, img)
-
-	return epubzip.CompressImage("OEBPS/Images/title.jpg", dst, quality)
-}
-
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func TransformImage(src image.Image, srcId int, o *epuboptions.Image) []image.Image {
+func (e *EpubImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
 	var filters, splitFilter []gift.Filter
 	var images []image.Image
 
-	if o.Crop.Enabled {
+	if e.Image.Crop.Enabled {
 		f := epubimagefilters.AutoCrop(
 			src,
-			o.Crop.Left,
-			o.Crop.Up,
-			o.Crop.Right,
-			o.Crop.Bottom,
+			e.Image.Crop.Left,
+			e.Image.Crop.Up,
+			e.Image.Crop.Right,
+			e.Image.Crop.Bottom,
 		)
 		filters = append(filters, f)
 		splitFilter = append(splitFilter, f)
 	}
 
-	if o.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
+	if e.Image.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
 		filters = append(filters, gift.Rotate90())
 	}
 
-	if o.Contrast != 0 {
-		f := gift.Contrast(float32(o.Contrast))
+	if e.Image.Contrast != 0 {
+		f := gift.Contrast(float32(e.Image.Contrast))
 		filters = append(filters, f)
 		splitFilter = append(splitFilter, f)
 	}
 
-	if o.Brightness != 0 {
-		f := gift.Brightness(float32(o.Brightness))
+	if e.Image.Brightness != 0 {
+		f := gift.Brightness(float32(e.Image.Brightness))
 		filters = append(filters, f)
 		splitFilter = append(splitFilter, f)
 	}
 
 	filters = append(filters,
-		epubimagefilters.Resize(o.View.Width, o.View.Height, gift.LanczosResampling),
+		epubimagefilters.Resize(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
 		epubimagefilters.Pixel(),
 	)
 
@@ -195,7 +180,7 @@ func TransformImage(src image.Image, srcId int, o *epuboptions.Image) []image.Im
 	}
 
 	// auto split off
-	if !o.AutoSplitDoublePage {
+	if !e.Image.AutoSplitDoublePage {
 		return images
 	}
 
@@ -205,16 +190,16 @@ func TransformImage(src image.Image, srcId int, o *epuboptions.Image) []image.Im
 	}
 
 	// cover
-	if o.HasCover && srcId == 0 {
+	if e.Image.HasCover && srcId == 0 {
 		return images
 	}
 
 	// convert double page
-	for _, b := range []bool{o.Manga, !o.Manga} {
+	for _, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 		g := gift.New(splitFilter...)
 		g.Add(
 			epubimagefilters.CropSplitDoublePage(b),
-			epubimagefilters.Resize(o.View.Width, o.View.Height, gift.LanczosResampling),
+			epubimagefilters.Resize(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
 		)
 		dst := image.NewGray(g.Bounds(src.Bounds()))
 		g.Draw(dst, src)
@@ -222,4 +207,14 @@ func TransformImage(src image.Image, srcId int, o *epuboptions.Image) []image.Im
 	}
 
 	return images
+}
+
+// create a title page with the cover
+func (e *EpubImageProcessor) CoverTitleData(img image.Image, title string) *epubzip.ZipImage {
+	// Create a blur version of the cover
+	g := gift.New(epubimagefilters.CoverTitle(title))
+	dst := image.NewGray(g.Bounds(img.Bounds()))
+	g.Draw(dst, img)
+
+	return epubzip.CompressImage("OEBPS/Images/title.jpg", dst, e.Image.Quality)
 }
