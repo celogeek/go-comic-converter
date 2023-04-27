@@ -5,19 +5,31 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
+
+	_ "golang.org/x/image/webp"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
-	"github.com/nwaples/rardecode"
+	"github.com/nwaples/rardecode/v2"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
-	"golang.org/x/image/tiff"
 )
+
+type tasks struct {
+	Id    int
+	Image image.Image
+	Path  string
+	Name  string
+}
 
 type Options struct {
 	Input        string
@@ -29,28 +41,6 @@ type Options struct {
 }
 
 var errNoImagesFound = errors.New("no images found")
-
-// ensure copy image into a buffer
-func (o *Options) mustExtractImage(imageOpener func() (io.ReadCloser, error)) *bytes.Buffer {
-	var b bytes.Buffer
-	if o.Dry {
-		return &b
-	}
-
-	f, err := imageOpener()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	_, err = io.Copy(&b, f)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	return &b
-}
 
 // load a directory of images
 func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
@@ -81,23 +71,62 @@ func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 
 	sort.Sort(sortpath.By(images, o.SortPathMode))
 
-	output = make(chan *tasks, o.Workers*2)
+	// Queue all file with id
+	type job struct {
+		Id   int
+		Path string
+	}
+	jobs := make(chan *job)
 	go func() {
-		defer close(output)
-		for i, img := range images {
-			p, fn := filepath.Split(img)
-			if p == input {
-				p = ""
-			} else {
-				p = p[len(input)+1:]
-			}
-			output <- &tasks{
-				Id:     i,
-				Reader: o.mustExtractImage(func() (io.ReadCloser, error) { return os.Open(img) }),
-				Path:   p,
-				Name:   fn,
-			}
+		defer close(jobs)
+		for i, path := range images {
+			jobs <- &job{i, path}
 		}
+	}()
+
+	// read in parallel and get an image
+	output = make(chan *tasks, o.Workers)
+	wg := &sync.WaitGroup{}
+	wg.Add(o.Workers)
+	for j := 0; j < o.Workers; j++ {
+		go func() {
+			defer wg.Done()
+			for job := range jobs {
+				var img image.Image
+				if !o.Dry {
+					f, err := os.Open(job.Path)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Path, err)
+						os.Exit(1)
+					}
+					img, _, err = image.Decode(f)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Path, err)
+						os.Exit(1)
+					}
+					f.Close()
+				}
+
+				p, fn := filepath.Split(job.Path)
+				if p == input {
+					p = ""
+				} else {
+					p = p[len(input)+1:]
+				}
+				output <- &tasks{
+					Id:    job.Id,
+					Image: img,
+					Path:  p,
+					Name:  fn,
+				}
+			}
+		}()
+	}
+
+	// wait all done and close
+	go func() {
+		wg.Wait()
+		close(output)
 	}()
 
 	return
@@ -136,50 +165,76 @@ func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 		indexedNames[name] = i
 	}
 
-	output = make(chan *tasks, o.Workers*2)
+	type job struct {
+		Id int
+		F  *zip.File
+	}
+	jobs := make(chan *job)
 	go func() {
-		defer close(output)
-		defer r.Close()
+		defer close(jobs)
 		for _, img := range images {
-			p, fn := filepath.Split(filepath.Clean(img.Name))
-			output <- &tasks{
-				Id:     indexedNames[img.Name],
-				Reader: o.mustExtractImage(img.Open),
-				Path:   p,
-				Name:   fn,
-			}
+			jobs <- &job{indexedNames[img.Name], img}
 		}
+	}()
+
+	output = make(chan *tasks, o.Workers)
+	wg := &sync.WaitGroup{}
+	wg.Add(o.Workers)
+	for j := 0; j < o.Workers; j++ {
+		go func() {
+			defer wg.Done()
+			for job := range jobs {
+				var img image.Image
+				if !o.Dry {
+					f, err := job.F.Open()
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.F.Name, err)
+						os.Exit(1)
+					}
+					img, _, err = image.Decode(f)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.F.Name, err)
+						os.Exit(1)
+					}
+					f.Close()
+				}
+
+				p, fn := filepath.Split(filepath.Clean(job.F.Name))
+				output <- &tasks{
+					Id:    job.Id,
+					Image: img,
+					Path:  p,
+					Name:  fn,
+				}
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(output)
+		r.Close()
 	}()
 	return
 }
 
 // load a rar file that include images
 func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
-	// listing and indexing
-	rl, err := rardecode.OpenReader(o.Input, "")
+	var isSolid bool
+	files, err := rardecode.List(o.Input)
 	if err != nil {
 		return
 	}
 
 	names := make([]string, 0)
-	for {
-		f, ferr := rl.Next()
-
-		if ferr != nil && ferr != io.EOF {
-			rl.Close()
-			err = ferr
-			return
-		}
-
-		if f == nil {
-			break
-		}
-
+	for _, f := range files {
 		if !f.IsDir && isSupportedImage(f.Name) {
+			if f.Solid {
+				isSolid = true
+			}
 			names = append(names, f.Name)
 		}
 	}
-	rl.Close()
 
 	totalImages = len(names)
 	if totalImages == 0 {
@@ -194,46 +249,89 @@ func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 		indexedNames[name] = i
 	}
 
-	// send file to the queue
-	output = make(chan *tasks, o.Workers*2)
+	type job struct {
+		Id   int
+		Name string
+		Open func() (io.ReadCloser, error)
+	}
+
+	jobs := make(chan *job)
 	go func() {
-		defer close(output)
-		r, err := rardecode.OpenReader(o.Input, "")
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-
-		}
-		defer r.Close()
-
-		for {
-			f, err := r.Next()
-			if err != nil && err != io.EOF {
-				fmt.Fprintln(os.Stderr, err)
+		defer close(jobs)
+		if isSolid && !o.Dry {
+			r, rerr := rardecode.OpenReader(o.Input)
+			if rerr != nil {
+				fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", o.Input, rerr)
 				os.Exit(1)
-
 			}
-			if f == nil {
-				break
-			}
-			if idx, ok := indexedNames[f.Name]; ok {
-				var b bytes.Buffer
-				if !o.Dry {
-					io.Copy(&b, r)
+			defer r.Close()
+			for {
+				f, rerr := r.Next()
+				if rerr != nil {
+					if rerr == io.EOF {
+						break
+					}
+					fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", f.Name, rerr)
+					os.Exit(1)
 				}
-
-				p, fn := filepath.Split(filepath.Clean(f.Name))
-
-				output <- &tasks{
-					Id:     idx,
-					Reader: &b,
-					Path:   p,
-					Name:   fn,
+				if i, ok := indexedNames[f.Name]; ok {
+					var b bytes.Buffer
+					_, rerr = io.Copy(&b, r)
+					if rerr != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", f.Name, rerr)
+						os.Exit(1)
+					}
+					jobs <- &job{i, f.Name, func() (io.ReadCloser, error) {
+						return io.NopCloser(bytes.NewReader(b.Bytes())), nil
+					}}
+				}
+			}
+		} else {
+			for _, img := range files {
+				if i, ok := indexedNames[img.Name]; ok {
+					jobs <- &job{i, img.Name, img.Open}
 				}
 			}
 		}
 	}()
 
+	// send file to the queue
+	output = make(chan *tasks, o.Workers)
+	wg := &sync.WaitGroup{}
+	wg.Add(o.Workers)
+	for j := 0; j < o.Workers; j++ {
+		go func() {
+			defer wg.Done()
+			for job := range jobs {
+				var img image.Image
+				if !o.Dry {
+					f, err := job.Open()
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Name, err)
+						os.Exit(1)
+					}
+					img, _, err = image.Decode(f)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Name, err)
+						os.Exit(1)
+					}
+					f.Close()
+				}
+
+				p, fn := filepath.Split(filepath.Clean(job.Name))
+				output <- &tasks{
+					Id:    job.Id,
+					Image: img,
+					Path:  p,
+					Name:  fn,
+				}
+			}
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(output)
+	}()
 	return
 }
 
@@ -252,16 +350,9 @@ func (o *Options) loadPdf() (totalImages int, output chan *tasks, err error) {
 		defer close(output)
 		defer pdf.Close()
 		for i := 0; i < totalImages; i++ {
-			var b bytes.Buffer
-
+			var img image.Image
 			if !o.Dry {
-				img, err := pdfimage.Extract(pdf, i+1)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
-					os.Exit(1)
-				}
-
-				err = tiff.Encode(&b, img, nil)
+				img, err = pdfimage.Extract(pdf, i+1)
 				if err != nil {
 					fmt.Fprintln(os.Stderr, err)
 					os.Exit(1)
@@ -269,10 +360,10 @@ func (o *Options) loadPdf() (totalImages int, output chan *tasks, err error) {
 			}
 
 			output <- &tasks{
-				Id:     i,
-				Reader: &b,
-				Path:   "",
-				Name:   fmt.Sprintf(pageFmt, i+1),
+				Id:    i,
+				Image: img,
+				Path:  "",
+				Name:  fmt.Sprintf(pageFmt, i+1),
 			}
 		}
 	}()

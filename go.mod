@@ -7,7 +7,7 @@ require (
 	github.com/disintegration/gift v1.2.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/nwaples/rardecode v1.1.3
+	github.com/nwaples/rardecode/v2 v2.0.0-beta.2
 	github.com/raff/pdfreader v0.0.0-20220308062436-033e8ac577f0
 	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e

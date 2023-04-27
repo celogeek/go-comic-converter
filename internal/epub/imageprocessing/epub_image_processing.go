@@ -6,9 +6,6 @@ package epubimageprocessing
 import (
 	"fmt"
 	"image"
-	_ "image/jpeg"
-	_ "image/png"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,15 +16,7 @@ import (
 	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	"github.com/disintegration/gift"
-	_ "golang.org/x/image/webp"
 )
-
-type tasks struct {
-	Id     int
-	Reader io.Reader
-	Path   string
-	Name   string
-}
 
 // only accept jpg, png and webp as source file
 func isSupportedImage(path string) bool {
@@ -104,13 +93,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 			defer wg.Done()
 
 			for img := range imageInput {
-				// Decode image
-				src, _, err := image.Decode(img.Reader)
-				if err != nil {
-					bar.Clear()
-					fmt.Fprintf(os.Stderr, "error processing image %s%s: %s\n", img.Path, img.Name, err)
-					os.Exit(1)
-				}
+				src := img.Image
 
 				g := epubimagefilters.NewGift(src, o.Image)
 				// Convert image
