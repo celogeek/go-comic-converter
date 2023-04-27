@@ -51,6 +51,7 @@ func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
 	return
 }
 
+// Load images from input
 func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
 	fi, err := os.Stat(o.Input)
 	if err != nil {

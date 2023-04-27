@@ -116,11 +116,11 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 }
 
 // create a title page with the cover
-func LoadCoverTitleData(img *epubimage.Image, title string, quality int) *epubimagedata.ImageData {
+func CoverTitleData(img image.Image, title string, quality int) *epubimagedata.ImageData {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(title))
-	dst := image.NewGray(g.Bounds(img.Raw.Bounds()))
-	g.Draw(dst, img.Raw)
+	dst := image.NewGray(g.Bounds(img.Bounds()))
+	g.Draw(dst, img)
 
 	return epubimagedata.NewRaw("OEBPS/Images/title.jpg", dst, quality)
 }

@@ -296,7 +296,7 @@ func (e *ePub) Write() error {
 				return err
 			}
 		}
-		if err := wz.WriteImage(epubimageprocessing.LoadCoverTitleData(part.Cover, title, e.Image.Quality)); err != nil {
+		if err := wz.WriteImage(epubimageprocessing.CoverTitleData(part.Cover.Raw, title, e.Image.Quality)); err != nil {
 			return err
 		}
 

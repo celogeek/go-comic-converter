@@ -57,16 +57,16 @@ func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options
 		dst,
 		borderArea,
 		image.Black,
-		image.Point{},
-		draw.Over,
+		borderArea.Min,
+		draw.Src,
 	)
 
 	draw.Draw(
 		dst,
 		textArea,
 		image.White,
-		image.Point{},
-		draw.Over,
+		textArea.Min,
+		draw.Src,
 	)
 
 	// Draw text
