@@ -6,15 +6,12 @@ package epubimage
 import (
 	"fmt"
 	"image"
-
-	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 )
 
 type Image struct {
 	Id         int
 	Part       int
 	Raw        image.Image
-	Data       *epubimagedata.ImageData
 	Width      int
 	Height     int
 	IsCover    bool

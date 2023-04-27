@@ -1,7 +1,4 @@
-/*
-prepare image to be store in a zip file.
-*/
-package epubimagedata
+package epubzip
 
 import (
 	"archive/zip"
@@ -15,13 +12,13 @@ import (
 	"time"
 )
 
-type ImageData struct {
+type ZipImage struct {
 	Header *zip.FileHeader
 	Data   []byte
 }
 
 // compressed size of the image with the header
-func (img *ImageData) CompressedSize() uint64 {
+func (img *ZipImage) CompressedSize() uint64 {
 	return img.Header.CompressedSize64 + 30 + uint64(len(img.Header.Name))
 }
 
@@ -30,14 +27,8 @@ func exitWithError(err error) {
 	os.Exit(1)
 }
 
-// create a new data image with file name based on id and part
-func New(id int, part int, img image.Image, quality int) *ImageData {
-	name := fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", id, part)
-	return NewRaw(name, img, quality)
-}
-
 // create gzip encoded jpeg
-func NewRaw(name string, img image.Image, quality int) *ImageData {
+func CompressImage(filename string, img image.Image, quality int) *ZipImage {
 	var (
 		data, cdata bytes.Buffer
 		err         error
@@ -64,9 +55,9 @@ func NewRaw(name string, img image.Image, quality int) *ImageData {
 	}
 
 	t := time.Now()
-	return &ImageData{
+	return &ZipImage{
 		&zip.FileHeader{
-			Name:               name,
+			Name:               filename,
 			CompressedSize64:   uint64(cdata.Len()),
 			UncompressedSize64: uint64(data.Len()),
 			CRC32:              crc32.Checksum(data.Bytes(), crc32.IEEETable),

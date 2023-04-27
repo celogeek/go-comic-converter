@@ -4,17 +4,33 @@ Extract and transform image into a compressed jpeg.
 package epubimageprocessing
 
 import (
+	"fmt"
 	"image"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
+	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
 	"github.com/disintegration/gift"
 )
+
+type LoadedImage struct {
+	Image    *epubimage.Image
+	ZipImage *epubzip.ZipImage
+}
+
+type LoadedImages []*LoadedImage
+
+func (l LoadedImages) Images() []*epubimage.Image {
+	res := make([]*epubimage.Image, len(l))
+	for i, v := range l {
+		res[i] = v.Image
+	}
+	return res
+}
 
 // only accept jpg, png and webp as source file
 func isSupportedImage(path string) bool {
@@ -28,8 +44,8 @@ func isSupportedImage(path string) bool {
 }
 
 // extract and convert images
-func LoadImages(o *Options) ([]*epubimage.Image, error) {
-	images := make([]*epubimage.Image, 0)
+func LoadImages(o *Options) (LoadedImages, error) {
+	images := make(LoadedImages, 0)
 
 	imageCount, imageInput, err := o.Load()
 	if err != nil {
@@ -39,17 +55,19 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	// dry run, skip convertion
 	if o.Dry {
 		for img := range imageInput {
-			images = append(images, &epubimage.Image{
-				Id:   img.Id,
-				Path: img.Path,
-				Name: img.Name,
+			images = append(images, &LoadedImage{
+				Image: &epubimage.Image{
+					Id:   img.Id,
+					Path: img.Path,
+					Name: img.Name,
+				},
 			})
 		}
 
 		return images, nil
 	}
 
-	imageOutput := make(chan *epubimage.Image)
+	imageOutput := make(chan *LoadedImage)
 
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
@@ -75,17 +93,19 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 						raw = dst
 					}
 
-					imageOutput <- &epubimage.Image{
-						Id:         img.Id,
-						Part:       part,
-						Raw:        raw,
-						Data:       epubimagedata.New(img.Id, part, dst, o.Image.Quality),
-						Width:      dst.Bounds().Dx(),
-						Height:     dst.Bounds().Dy(),
-						IsCover:    img.Id == 0 && part == 0,
-						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
-						Path:       img.Path,
-						Name:       img.Name,
+					imageOutput <- &LoadedImage{
+						Image: &epubimage.Image{
+							Id:         img.Id,
+							Part:       part,
+							Raw:        raw,
+							Width:      dst.Bounds().Dx(),
+							Height:     dst.Bounds().Dy(),
+							IsCover:    img.Id == 0 && part == 0,
+							DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
+							Path:       img.Path,
+							Name:       img.Name,
+						},
+						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", img.Id, part), dst, o.Image.Quality),
 					}
 				}
 			}
@@ -97,14 +117,14 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 		close(imageOutput)
 	}()
 
-	for img := range imageOutput {
-		if img.Part == 0 {
+	for output := range imageOutput {
+		if output.Image.Part == 0 {
 			bar.Add(1)
 		}
-		if o.Image.NoBlankPage && img.Width == 1 && img.Height == 1 {
+		if o.Image.NoBlankPage && output.Image.Width == 1 && output.Image.Height == 1 {
 			continue
 		}
-		images = append(images, img)
+		images = append(images, output)
 	}
 	bar.Close()
 
@@ -116,13 +136,13 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 }
 
 // create a title page with the cover
-func CoverTitleData(img image.Image, title string, quality int) *epubimagedata.ImageData {
+func CoverTitleData(img image.Image, title string, quality int) *epubzip.ZipImage {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Bounds()))
 	g.Draw(dst, img)
 
-	return epubimagedata.NewRaw("OEBPS/Images/title.jpg", dst, quality)
+	return epubzip.CompressImage("OEBPS/Images/title.jpg", dst, quality)
 }
 
 // transform image into 1 or 3 images

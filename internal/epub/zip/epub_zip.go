@@ -9,8 +9,6 @@ import (
 	"archive/zip"
 	"os"
 	"time"
-
-	epubimagedata "github.com/celogeek/go-comic-converter/v2/internal/epub/imagedata"
 )
 
 type EpubZip struct {
@@ -61,17 +59,17 @@ func (e *EpubZip) WriteMagic() error {
 }
 
 // Write image. They are already compressed, so we write them down directly.
-func (e *EpubZip) WriteImage(image *epubimagedata.ImageData) error {
-	m, err := e.wz.CreateRaw(image.Header)
+func (e *EpubZip) WriteRaw(raw *ZipImage) error {
+	m, err := e.wz.CreateRaw(raw.Header)
 	if err != nil {
 		return err
 	}
-	_, err = m.Write(image.Data)
+	_, err = m.Write(raw.Data)
 	return err
 }
 
 // Write file. Compressed it using deflate.
-func (e *EpubZip) WriteFile(file string, content []byte) error {
+func (e *EpubZip) WriteContent(file string, content []byte) error {
 	m, err := e.wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),
