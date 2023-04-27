@@ -87,7 +87,7 @@ func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessing.LoadedIm
 // write blank page
 func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
 	return wz.WriteContent(
-		fmt.Sprintf("OEBPS/Text/%d_sp.xhtml", img.Id),
+		fmt.Sprintf("OEBPS/%s", img.SpacePath()),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
 			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),

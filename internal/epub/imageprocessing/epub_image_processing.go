@@ -85,28 +85,29 @@ func LoadImages(o *epuboptions.Options) (LoadedImages, error) {
 		go func() {
 			defer wg.Done()
 
-			for img := range imageInput {
-				src := img.Image
+			for input := range imageInput {
+				src := input.Image
 
-				for part, dst := range TransformImage(src, img.Id, o.Image) {
+				for part, dst := range TransformImage(src, input.Id, o.Image) {
 					var raw image.Image
-					if img.Id == 0 && part == 0 {
+					if input.Id == 0 && part == 0 {
 						raw = dst
 					}
 
+					img := &epubimage.Image{
+						Id:         input.Id,
+						Part:       part,
+						Raw:        raw,
+						Width:      dst.Bounds().Dx(),
+						Height:     dst.Bounds().Dy(),
+						IsCover:    input.Id == 0 && part == 0,
+						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
+						Path:       input.Path,
+						Name:       input.Name,
+					}
 					imageOutput <- &LoadedImage{
-						Image: &epubimage.Image{
-							Id:         img.Id,
-							Part:       part,
-							Raw:        raw,
-							Width:      dst.Bounds().Dx(),
-							Height:     dst.Bounds().Dy(),
-							IsCover:    img.Id == 0 && part == 0,
-							DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
-							Path:       img.Path,
-							Name:       img.Name,
-						},
-						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/Images/%d_p%d.jpg", img.Id, part), dst, o.Image.Quality),
+						Image:    img,
+						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/%s", img.ImgPath()), dst, o.Image.Quality),
 					}
 				}
 			}
