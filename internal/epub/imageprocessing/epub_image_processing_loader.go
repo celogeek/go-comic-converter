@@ -43,6 +43,14 @@ type Options struct {
 
 var errNoImagesFound = errors.New("no images found")
 
+func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
+	nbWorkers = o.Workers * pct / 100
+	if nbWorkers < 1 {
+		nbWorkers = 1
+	}
+	return
+}
+
 func (o *Options) Load() (totalImages int, output chan *tasks, err error) {
 	fi, err := os.Stat(o.Input)
 	if err != nil {
@@ -112,8 +120,8 @@ func (o *Options) loadDir() (totalImages int, output chan *tasks, err error) {
 	// read in parallel and get an image
 	output = make(chan *tasks, o.Workers)
 	wg := &sync.WaitGroup{}
-	wg.Add(o.Workers)
-	for j := 0; j < o.Workers; j++ {
+	for j := 0; j < o.WorkersRatio(50); j++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {
@@ -204,8 +212,8 @@ func (o *Options) loadCbz() (totalImages int, output chan *tasks, err error) {
 
 	output = make(chan *tasks, o.Workers)
 	wg := &sync.WaitGroup{}
-	wg.Add(o.Workers)
-	for j := 0; j < o.Workers; j++ {
+	for j := 0; j < o.WorkersRatio(50); j++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {
@@ -323,8 +331,8 @@ func (o *Options) loadCbr() (totalImages int, output chan *tasks, err error) {
 	// send file to the queue
 	output = make(chan *tasks, o.Workers)
 	wg := &sync.WaitGroup{}
-	wg.Add(o.Workers)
-	for j := 0; j < o.Workers; j++ {
+	for j := 0; j < o.WorkersRatio(50); j++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {

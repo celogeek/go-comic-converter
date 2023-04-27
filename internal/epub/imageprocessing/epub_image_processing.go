@@ -61,7 +61,7 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 	})
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < o.Workers; i++ {
+	for i := 0; i < o.WorkersRatio(50); i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -69,52 +69,23 @@ func LoadImages(o *Options) ([]*epubimage.Image, error) {
 			for img := range imageInput {
 				src := img.Image
 
-				g := epubimagefilters.NewGift(src, o.Image)
-				// Convert image
-				dst := image.NewGray(g.Bounds(src.Bounds()))
-				g.Draw(dst, src)
+				for part, dst := range TransformImage(src, img.Id, o.Image) {
+					var raw image.Image
+					if img.Id == 0 && part == 0 {
+						raw = dst
+					}
 
-				var raw image.Image
-				if img.Id == 0 {
-					raw = dst
-				}
-
-				imageOutput <- &epubimage.Image{
-					Id:         img.Id,
-					Part:       0,
-					Raw:        raw,
-					Data:       epubimagedata.New(img.Id, 0, dst, o.Image.Quality),
-					Width:      dst.Bounds().Dx(),
-					Height:     dst.Bounds().Dy(),
-					IsCover:    img.Id == 0,
-					DoublePage: src.Bounds().Dx() > src.Bounds().Dy(),
-					Path:       img.Path,
-					Name:       img.Name,
-				}
-
-				// Auto split double page
-				// Except for cover
-				// Only if the src image have width > height and is bigger than the view
-				if (!o.Image.HasCover || img.Id > 0) &&
-					o.Image.AutoSplitDoublePage &&
-					src.Bounds().Dx() > src.Bounds().Dy() {
-					gifts := epubimagefilters.NewGiftSplitDoublePage(o.Image)
-					for i, g := range gifts {
-						part := i + 1
-						dst := image.NewGray(g.Bounds(src.Bounds()))
-						g.Draw(dst, src)
-
-						imageOutput <- &epubimage.Image{
-							Id:         img.Id,
-							Part:       part,
-							Data:       epubimagedata.New(img.Id, part, dst, o.Image.Quality),
-							Width:      dst.Bounds().Dx(),
-							Height:     dst.Bounds().Dy(),
-							IsCover:    false,
-							DoublePage: false,
-							Path:       img.Path,
-							Name:       img.Name,
-						}
+					imageOutput <- &epubimage.Image{
+						Id:         img.Id,
+						Part:       part,
+						Raw:        raw,
+						Data:       epubimagedata.New(img.Id, part, dst, o.Image.Quality),
+						Width:      dst.Bounds().Dx(),
+						Height:     dst.Bounds().Dy(),
+						IsCover:    img.Id == 0 && part == 0,
+						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
+						Path:       img.Path,
+						Name:       img.Name,
 					}
 				}
 			}
@@ -152,4 +123,81 @@ func LoadCoverTitleData(img *epubimage.Image, title string, quality int) *epubim
 	g.Draw(dst, img.Raw)
 
 	return epubimagedata.NewRaw("OEBPS/Images/title.jpg", dst, quality)
+}
+
+// transform image into 1 or 3 images
+// only doublepage with autosplit has 3 versions
+func TransformImage(src image.Image, srcId int, o *epubimage.Options) []image.Image {
+	var filters, splitFilter []gift.Filter
+	var images []image.Image
+
+	if o.Crop {
+		f := epubimagefilters.AutoCrop(
+			src,
+			o.CropRatioLeft,
+			o.CropRatioUp,
+			o.CropRatioRight,
+			o.CropRatioBottom,
+		)
+		filters = append(filters, f)
+		splitFilter = append(splitFilter, f)
+	}
+
+	if o.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
+		filters = append(filters, gift.Rotate90())
+	}
+
+	if o.Contrast != 0 {
+		f := gift.Contrast(float32(o.Contrast))
+		filters = append(filters, f)
+		splitFilter = append(splitFilter, f)
+	}
+
+	if o.Brightness != 0 {
+		f := gift.Brightness(float32(o.Brightness))
+		filters = append(filters, f)
+		splitFilter = append(splitFilter, f)
+	}
+
+	filters = append(filters,
+		epubimagefilters.Resize(o.ViewWidth, o.ViewHeight, gift.LanczosResampling),
+		epubimagefilters.Pixel(),
+	)
+
+	// convert
+	{
+		g := gift.New(filters...)
+		dst := image.NewGray(g.Bounds(src.Bounds()))
+		g.Draw(dst, src)
+		images = append(images, dst)
+	}
+
+	// auto split off
+	if !o.AutoSplitDoublePage {
+		return images
+	}
+
+	// portrait, no need to split
+	if src.Bounds().Dx() <= src.Bounds().Dy() {
+		return images
+	}
+
+	// cover
+	if o.HasCover && srcId == 0 {
+		return images
+	}
+
+	// convert double page
+	for _, b := range []bool{o.Manga, !o.Manga} {
+		g := gift.New(splitFilter...)
+		g.Add(
+			epubimagefilters.CropSplitDoublePage(b),
+			epubimagefilters.Resize(o.ViewWidth, o.ViewHeight, gift.LanczosResampling),
+		)
+		dst := image.NewGray(g.Bounds(src.Bounds()))
+		g.Draw(dst, src)
+		images = append(images, dst)
+	}
+
+	return images
 }
