@@ -20,29 +20,34 @@ type Image struct {
 	Name       string
 }
 
-// key name of the image
-func (i *Image) Key(prefix string) string {
-	return fmt.Sprintf("%s_%d_p%d", prefix, i.Id, i.Part)
-}
-
 // key name of the blank plage after the image
-func (i *Image) SpaceKey(prefix string) string {
-	return fmt.Sprintf("%s_%d_sp", prefix, i.Id)
+func (i *Image) SpaceKey() string {
+	return fmt.Sprintf("space_%d", i.Id)
 }
 
 // path of the blank page
 func (i *Image) SpacePath() string {
-	return fmt.Sprintf("Text/%d_sp.xhtml", i.Id)
+	return fmt.Sprintf("Text/%s.xhtml", i.SpaceKey())
 }
 
-// text path linked to the image
-func (i *Image) TextPath() string {
-	return fmt.Sprintf("Text/%d_p%d.xhtml", i.Id, i.Part)
+// key for page
+func (i *Image) PageKey() string {
+	return fmt.Sprintf("page_%d_p%d", i.Id, i.Part)
+}
+
+// page path linked to the image
+func (i *Image) PagePath() string {
+	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
+}
+
+// key for image
+func (i *Image) ImgKey() string {
+	return fmt.Sprintf("img_%d_p%d", i.Id, i.Part)
 }
 
 // image path
 func (i *Image) ImgPath() string {
-	return fmt.Sprintf("Images/%d_p%d.jpg", i.Id, i.Part)
+	return fmt.Sprintf("Images/%s.jpg", i.ImgKey())
 }
 
 // style to apply to the image.

@@ -37,7 +37,7 @@ func Toc(title string, stripFirstDirectoryFromToc bool, images []*epubimage.Imag
 			}
 			t := paths[parentPath].CreateElement("li")
 			link := t.CreateElement("a")
-			link.CreateAttr("href", img.TextPath())
+			link.CreateAttr("href", img.PagePath())
 			link.CreateText(path)
 			paths[currentPath] = t.CreateElement("ol")
 		}

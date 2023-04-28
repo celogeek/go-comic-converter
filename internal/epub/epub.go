@@ -70,7 +70,7 @@ func (e *ePub) render(templateString string, data map[string]any) string {
 // write image to the zip
 func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessor.LoadedImage) error {
 	err := wz.WriteContent(
-		fmt.Sprintf("OEBPS/%s", img.Image.TextPath()),
+		fmt.Sprintf("OEBPS/%s", img.Image.PagePath()),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Image.Id, img.Image.Part),
 			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
@@ -289,14 +289,14 @@ func (e *ePub) Write() error {
 			}
 		}
 
-		for i, img := range part.LoadedImages {
+		lastImage := part.LoadedImages[len(part.LoadedImages)-1]
+		for _, img := range part.LoadedImages {
 			if err := e.writeImage(wz, img); err != nil {
 				return err
 			}
 
 			// Double Page or Last Image that is not a double page
-			if img.Image.DoublePage ||
-				(img.Image.Part == 0 && i+1 == len(part.LoadedImages)) {
+			if img.Image.DoublePage || (img.Image.Part == 0 && img == lastImage) {
 				if err := e.writeBlank(wz, img.Image); err != nil {
 					return err
 				}

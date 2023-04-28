@@ -109,7 +109,7 @@ func getMeta(o *ContentOptions) []tag {
 	}
 
 	if o.Cover != nil {
-		metas = append(metas, tag{"meta", tagAttrs{"name": "cover", "content": o.Cover.Key("img")}, ""})
+		metas = append(metas, tag{"meta", tagAttrs{"name": "cover", "content": o.Cover.ImgKey()}, ""})
 	}
 
 	if o.Total > 1 {
@@ -124,15 +124,21 @@ func getMeta(o *ContentOptions) []tag {
 }
 
 func getManifest(o *ContentOptions) []tag {
-	itag := func(img *epubimage.Image) tag {
-		return tag{"item", tagAttrs{"id": img.Key("img"), "href": img.ImgPath(), "media-type": "image/jpeg"}, ""}
+	var imageTags, pageTags, spaceTags []tag
+	addTag := func(img *epubimage.Image, withSpace bool) {
+		imageTags = append(imageTags,
+			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": "image/jpeg"}, ""},
+		)
+		pageTags = append(pageTags,
+			tag{"item", tagAttrs{"id": img.PageKey(), "href": img.PagePath(), "media-type": "application/xhtml+xml"}, ""},
+		)
+		if withSpace {
+			spaceTags = append(spaceTags,
+				tag{"item", tagAttrs{"id": img.SpaceKey(), "href": img.SpacePath(), "media-type": "application/xhtml+xml"}, ""},
+			)
+		}
 	}
-	htag := func(img *epubimage.Image) tag {
-		return tag{"item", tagAttrs{"id": img.Key("page"), "href": img.TextPath(), "media-type": "application/xhtml+xml"}, ""}
-	}
-	stag := func(img *epubimage.Image) tag {
-		return tag{"item", tagAttrs{"id": img.SpaceKey("page"), "href": img.SpacePath(), "media-type": "application/xhtml+xml"}, ""}
-	}
+
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
@@ -141,19 +147,17 @@ func getManifest(o *ContentOptions) []tag {
 	}
 
 	if o.ImageOptions.HasCover || o.Current > 1 {
-		items = append(items, itag(o.Cover), htag(o.Cover))
+		addTag(o.Cover, false)
 	}
 
-	for _, img := range o.Images {
-		if img.Part == 1 {
-			items = append(items, stag(img))
-		}
-		items = append(items, itag(img), htag(img))
-	}
 	lastImage := o.Images[len(o.Images)-1]
-	if lastImage.Part == 0 {
-		items = append(items, stag(lastImage))
+	for _, img := range o.Images {
+		addTag(img, img.DoublePage || (img.Part == 0 && img == lastImage))
 	}
+
+	items = append(items, imageTags...)
+	items = append(items, pageTags...)
+	items = append(items, spaceTags...)
 
 	return items
 }
@@ -179,23 +183,23 @@ func getSpine(o *ContentOptions) []tag {
 		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(true)}, ""},
 	}
 	for _, img := range o.Images {
-		spine = append(spine, tag{
-			"itemref",
-			tagAttrs{"idref": img.Key("page"), "properties": getSpread(img.DoublePage && o.ImageOptions.NoBlankPage)},
-			"",
-		})
-		if img.DoublePage && isOnTheRight && !o.ImageOptions.NoBlankPage {
+		if img.DoublePage && isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
-				tagAttrs{"idref": img.SpaceKey("page"), "properties": getSpread(false)},
+				tagAttrs{"idref": img.SpaceKey(), "properties": getSpread(false) + " layout-blank"},
 				"",
 			})
 		}
+		spine = append(spine, tag{
+			"itemref",
+			tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)},
+			"",
+		})
 	}
 	if o.ImageOptions.Manga == isOnTheRight {
 		spine = append(spine, tag{
 			"itemref",
-			tagAttrs{"idref": o.Images[len(o.Images)-1].SpaceKey("page"), "properties": getSpread(false)},
+			tagAttrs{"idref": o.Images[len(o.Images)-1].SpaceKey(), "properties": getSpread(false)},
 			"",
 		})
 	}
@@ -207,8 +211,8 @@ func getSpine(o *ContentOptions) []tag {
 func getGuide(o *ContentOptions) []tag {
 	guide := []tag{}
 	if o.Cover != nil {
-		guide = append(guide, tag{"reference", tagAttrs{"type": "cover", "title": "cover", "href": o.Cover.TextPath()}, ""})
+		guide = append(guide, tag{"reference", tagAttrs{"type": "cover", "title": "cover", "href": o.Cover.PagePath()}, ""})
 	}
-	guide = append(guide, tag{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].TextPath()}, ""})
+	guide = append(guide, tag{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].PagePath()}, ""})
 	return guide
 }
