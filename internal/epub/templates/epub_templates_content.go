@@ -185,7 +185,7 @@ func getSpine(o *ContentOptions) []tag {
 		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
 	}
 	for _, img := range o.Images {
-		if img.DoublePage && isOnTheRight {
+		if img.DoublePage && o.ImageOptions.Manga == isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
 				tagAttrs{"idref": img.SpaceKey(), "properties": getSpread(false) + " layout-blank"},
