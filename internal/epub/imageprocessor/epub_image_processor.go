@@ -96,6 +96,7 @@ func (e *EpubImageProcessor) Load() (LoadedImages, error) {
 						Width:      dst.Bounds().Dx(),
 						Height:     dst.Bounds().Dy(),
 						IsCover:    input.Id == 0 && part == 0,
+						IsBlank:    dst.Bounds().Dx() == 1 && dst.Bounds().Dy() == 1,
 						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
 						Path:       input.Path,
 						Name:       input.Name,
@@ -118,7 +119,7 @@ func (e *EpubImageProcessor) Load() (LoadedImages, error) {
 		if output.Image.Part == 0 {
 			bar.Add(1)
 		}
-		if e.Image.NoBlankPage && output.Image.Width == 1 && output.Image.Height == 1 {
+		if e.Image.NoBlankImage && output.Image.IsBlank {
 			continue
 		}
 		images = append(images, output)
@@ -138,7 +139,8 @@ func (e *EpubImageProcessor) transformImage(src image.Image, srcId int) []image.
 	var filters, splitFilter []gift.Filter
 	var images []image.Image
 
-	if e.Image.Crop.Enabled {
+	// Lookup for margin if crop is enable or if we want to remove blank image
+	if e.Image.Crop.Enabled || e.Image.NoBlankImage {
 		f := epubimagefilters.AutoCrop(
 			src,
 			e.Image.Crop.Left,
@@ -146,8 +148,16 @@ func (e *EpubImageProcessor) transformImage(src image.Image, srcId int) []image.
 			e.Image.Crop.Right,
 			e.Image.Crop.Bottom,
 		)
-		filters = append(filters, f)
-		splitFilter = append(splitFilter, f)
+
+		// detect if blank image
+		size := f.Bounds(src.Bounds())
+		isBlank := size.Dx() == 0 && size.Dy() == 0
+
+		// crop is enable or if blank image with noblankimage options
+		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
+			filters = append(filters, f)
+			splitFilter = append(splitFilter, f)
+		}
 	}
 
 	if e.Image.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {

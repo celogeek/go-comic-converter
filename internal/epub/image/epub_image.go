@@ -15,6 +15,7 @@ type Image struct {
 	Width      int
 	Height     int
 	IsCover    bool
+	IsBlank    bool
 	DoublePage bool
 	Path       string
 	Name       string

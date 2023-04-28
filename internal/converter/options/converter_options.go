@@ -33,7 +33,7 @@ type Options struct {
 	Auto                       bool   `yaml:"-"`
 	AutoRotate                 bool   `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
-	NoBlankPage                bool   `yaml:"no_blank_page"`
+	NoBlankImage               bool   `yaml:"no_blank_image"`
 	Manga                      bool   `yaml:"manga"`
 	HasCover                   bool   `yaml:"has_cover"`
 	LimitMb                    int    `yaml:"limit_mb"`
@@ -71,7 +71,7 @@ func New() *Options {
 		Contrast:                   0,
 		AutoRotate:                 false,
 		AutoSplitDoublePage:        false,
-		NoBlankPage:                false,
+		NoBlankImage:               true,
 		Manga:                      false,
 		HasCover:                   true,
 		LimitMb:                    0,
@@ -172,7 +172,7 @@ func (o *Options) ShowConfig() string {
     Contrast                  : %d
     AutoRotate                : %v
     AutoSplitDoublePage       : %v
-    NoBlankPage               : %v
+    NoBlankImage              : %v
     Manga                     : %v
     HasCover                  : %v
     LimitMb                   : %s
@@ -188,7 +188,7 @@ func (o *Options) ShowConfig() string {
 		o.Contrast,
 		o.AutoRotate,
 		o.AutoSplitDoublePage,
-		o.NoBlankPage,
+		o.NoBlankImage,
 		o.Manga,
 		o.HasCover,
 		limitmb,

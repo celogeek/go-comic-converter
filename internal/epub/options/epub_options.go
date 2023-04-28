@@ -19,7 +19,7 @@ type Image struct {
 	Contrast            int
 	AutoRotate          bool
 	AutoSplitDoublePage bool
-	NoBlankPage         bool
+	NoBlankImage        bool
 	Manga               bool
 	HasCover            bool
 	View                *View

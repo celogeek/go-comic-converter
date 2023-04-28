@@ -126,7 +126,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			Contrast:            cmd.Options.Contrast,
 			AutoRotate:          cmd.Options.AutoRotate,
 			AutoSplitDoublePage: cmd.Options.AutoSplitDoublePage,
-			NoBlankPage:         cmd.Options.NoBlankPage,
+			NoBlankImage:        cmd.Options.NoBlankImage,
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
 			View: &epuboptions.View{
