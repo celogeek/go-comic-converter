@@ -166,9 +166,9 @@ func getManifest(o *ContentOptions) []tag {
 // spine part of the content
 func getSpine(o *ContentOptions) []tag {
 	isOnTheRight := !o.ImageOptions.Manga
-	getSpread := func(doublePageNoBlank bool) string {
+	getSpread := func(isDoublePage bool) string {
 		isOnTheRight = !isOnTheRight
-		if doublePageNoBlank {
+		if isDoublePage {
 			// Center the double page then start back to comic mode (mange/normal)
 			isOnTheRight = !o.ImageOptions.Manga
 			return "rendition:page-spread-center"
@@ -179,16 +179,19 @@ func getSpine(o *ContentOptions) []tag {
 			return "rendition:page-spread-left"
 		}
 	}
+	getSpreadBlank := func() string {
+		return fmt.Sprintf("%s layout-blank", getSpread(false))
+	}
 
 	spine := []tag{
-		{"itemref", tagAttrs{"idref": "space_title", "properties": getSpread(false) + " layout-blank"}, ""},
+		{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
 		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
 	}
 	for _, img := range o.Images {
 		if img.DoublePage && o.ImageOptions.Manga == isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
-				tagAttrs{"idref": img.SpaceKey(), "properties": getSpread(false) + " layout-blank"},
+				tagAttrs{"idref": img.SpaceKey(), "properties": getSpreadBlank()},
 				"",
 			})
 		}
