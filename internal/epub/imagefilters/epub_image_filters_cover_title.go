@@ -27,9 +27,7 @@ func (p *coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 
 // blur the src image, and create a box with the title in the middle
 func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options) {
-	// Create a blur version of the cover
-	g := gift.New(gift.GaussianBlur(4))
-	g.Draw(dst, src)
+	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
 
 	srcWidth, srcHeight := src.Bounds().Dx(), src.Bounds().Dy()
 
