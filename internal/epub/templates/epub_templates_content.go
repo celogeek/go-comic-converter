@@ -142,6 +142,7 @@ func getManifest(o *ContentOptions) []tag {
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
+		{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "img_title", "href": "Images/title.jpg", "media-type": "image/jpeg"}, ""},
 	}
@@ -180,7 +181,8 @@ func getSpine(o *ContentOptions) []tag {
 	}
 
 	spine := []tag{
-		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(true)}, ""},
+		{"itemref", tagAttrs{"idref": "space_title", "properties": getSpread(false) + " layout-blank"}, ""},
+		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
 	}
 	for _, img := range o.Images {
 		if img.DoublePage && isOnTheRight {

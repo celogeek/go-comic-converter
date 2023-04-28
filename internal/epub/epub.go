@@ -261,6 +261,10 @@ func (e *ePub) Write() error {
 				"PageWidth":  e.Image.View.Width,
 				"PageHeight": e.Image.View.Height,
 			})},
+			{"OEBPS/Text/space_title.xhtml", e.render(epubtemplates.Blank, map[string]any{
+				"Title":    "Blank Page Title",
+				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			})},
 			{"OEBPS/Text/title.xhtml", e.render(epubtemplates.Text, map[string]any{
 				"Title":      title,
 				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
