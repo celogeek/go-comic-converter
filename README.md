@@ -1,10 +1,31 @@
 # go-comic-converter
 
-Convert CBZ/CBR/Dir into Epub for e-reader devices (Kindle Devices, ...)
+Convert CBZ/CBR/Dir into EPUB for e-reader devices (Kindle Devices, ...)
 
-My goal is to make a simple, crossplatform, and fast tool to convert comics into epub.
+My goal is to make a simple, crossplatform, and fast tool to convert comics into EPUB.
 
-Epub is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
+EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
+
+# Features
+- Support input from zip, cbz, rar, cbr, pdf, directory
+- Support all Kindle devices and kobo
+- Support Landscape and Portrait mode
+- Customize output image quality
+- Intelligent cropping (support removing even page numbers)
+- Customize brightness and contrast
+- Auto rotate (if reader mainly read on portrait)
+- Auto split double page (for easy read on portrait)
+- Remove blank image (empty image is removed)
+- Manga or Normal mode
+- Support cover page or not (first page will be taken in that case)
+- Split EPUB size for easy upload
+- 3 sorting methods (depending on your source, you can ensure the page go in the right order)
+- Save and reuse your own perfect settings
+- Multi tasks for fast conversion
+
+When you read the comic on a Kindle, you can customize how you read it with the `Aa` button:
+- Landscape / Portrait
+- Activate panel view for small device
 
 # Installation
 
@@ -37,19 +58,19 @@ You can check if a new version is available with:
 $ go-comic-converter -version
 go-comic-converter
   Path             : github.com/celogeek/go-comic-converter/v2
-  Sum              : h1:k1lhD90H0Cpno4VDFAR8OZYrnfV3SqUdVbYL+El9ZA4=
-  Version          : v2.0.6
-  Available Version: v2.0.6
+  Sum              : h1:9xYksu1PlJ6QkAL/5U2ZbufEb1tavpdRcpTPPcAjiNs=
+  Version          : v2.3.3
+  Available Version: v2.3.3
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.0.6
+$ go install github.com/celogeek/go-comic-converter/v2@v2.3.3
 ```
 
 # Supported image files
 
 The supported image files are jpeg and png from the sources.
 
-The extensions can be: `jpg`, `jpeg`, `png`.
+The extensions can be: `jpg`, `jpeg`, `png`, `webp`.
 
 The case for extensions doesn't matter.
 
@@ -97,7 +118,7 @@ The ePub include as a first page:
   - Title
   - Part NUM / TOTAL
 
-If the total is above 1, then the title of the epub include:
+If the total is above 1, then the title of the EPUB include:
   - Title [part/total]
 
 ## Dry run
@@ -119,11 +140,12 @@ Options:
     View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
     Brightness                : 0
     Contrast                  : 0
     AutoRotate                : true
     AutoSplitDoublePage       : true
-    NoBlankPage               : false
+    NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
     LimitMb                   : 200 Mb
@@ -158,11 +180,12 @@ Options:
     View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
     Brightness                : 0
     Contrast                  : 0
     AutoRotate                : true
     AutoSplitDoublePage       : true
-    NoBlankPage               : false
+    NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
     LimitMb                   : 200 Mb
@@ -203,13 +226,16 @@ Go Comic Converter
 
 Options:
     Profile                   :
+    ViewRatio                 : 1:1.5
+    View                      :
     Quality                   : 85
     Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
     Brightness                : 0
     Contrast                  : 0
     AutoRotate                : false
     AutoSplitDoublePage       : false
-    NoBlankPage               : false
+    NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
     LimitMb                   : nolimit
@@ -229,18 +255,19 @@ Options:
     View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
     Brightness                : 0
     Contrast                  : 0
     AutoRotate                : true
     AutoSplitDoublePage       : true
-    NoBlankPage               : false
+    NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
 
-Saving to /Users/vincent/.go-comic-converter.yaml
+Saving to ~/.go-comic-converter.yaml
 ```
 
 If you want to change a setting, you can change only one of them
@@ -255,18 +282,19 @@ Options:
     View                      : 1653x2480
     Quality                   : 85
     Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
     Brightness                : 0
     Contrast                  : 0
     AutoRotate                : true
     AutoSplitDoublePage       : true
-    NoBlankPage               : false
+    NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
 
-Saving to /Users/vincent/.go-comic-converter.yaml
+Saving to ~/.go-comic-converter.yaml
 ```
 
 ### Reset default
@@ -277,21 +305,64 @@ $ go-comic-converter -reset
 Go Comic Converter
 
 Options:
-    Profile            :
-    Quality            : 85
-    Crop               : true
-    Brightness         : 0
-    Contrast           : 0
-    AutoRotate         : false
-    AutoSplitDoublePage: false
-    NoBlankPage        : false
-    Manga              : false
-    HasCover           : true
-    LimitMb            : nolimit
+    Profile                   :
+    ViewRatio                 : 1:1.5
+    View                      :
+    Quality                   : 85
+    Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : false
+    AutoSplitDoublePage       : false
+    NoBlankImage              : true
+    Manga                     : false
+    HasCover                  : true
+    LimitMb                   : nolimit
+    StripFirstDirectoryFromToc: false
+    SortPathMode              : path=alphanum, file=alpha
 
 Reset default to ~/.go-comic-converter.yaml
 ```
 
+# My own settings
+
+After playing around with the options, I have my perfect settings for a Kindle Scribe.
+
+```
+$ go-comic-converter -reset
+$ go-comic-converter -profile KS -quality 90 -autosplitdoublepage -manga -limitmb 200 -strip -save
+
+Go Comic Converter
+
+Options:
+    Profile                   : KS - Kindle Scribe - 1860x2480
+    ViewRatio                 : 1:1.5
+    View                      : 1653x2480
+    Quality                   : 90
+    Crop                      : true
+    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
+    Brightness                : 0
+    Contrast                  : 0
+    AutoRotate                : false
+    AutoSplitDoublePage       : true
+    NoBlankImage              : true
+    Manga                     : true
+    HasCover                  : true
+    LimitMb                   : 200 Mb
+    StripFirstDirectoryFromToc: true
+    SortPathMode              : path=alphanum, file=alpha
+
+Saving to ~/.go-comic-converter.yaml
+```
+
+Explanation:
+- `-profile KS`: Kindle Scribe
+- `-quality 90`: JPEG output quality of images
+- `-autosplitdoublepage`: split double page into 2 images after displaying in full quality. Perfect render in landscape, great in portrait
+- `-manga`: manga mode, read right to left
+- `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
+- `-strip`: remove first level if alone on TOC, as offen comics include a main directory with the title
 # Help
 
 ```
@@ -303,11 +374,11 @@ Output:
   -input string
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
   -output string
-    	Output of the epub (directory or epub): (default [INPUT].epub)
+    	Output of the EPUB (directory or EPUB): (default [INPUT].epub)
   -author string (default "GO Comic Converter")
-    	Author of the epub
+    	Author of the EPUB
   -title string
-    	Title of the epub
+    	Title of the EPUB
 
 Config:
   -profile string
@@ -340,6 +411,14 @@ Config:
     	Quality of the image
   -crop (default true)
     	Crop images
+  -crop-ratio-left int (default 1)
+    	Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.
+  -crop-ratio-up int (default 1)
+    	Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.
+  -crop-ratio-right int (default 1)
+    	Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.
+  -crop-ratio-bottom int (default 3)
+    	Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.
   -brightness int
     	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
   -contrast int
@@ -350,8 +429,8 @@ Config:
     	Activate all automatic options
   -autosplitdoublepage
     	Auto Split double page when width > height
-  -noblankpage
-    	Remove blank pages
+  -noblankimage (default true)
+    	Remove blank image
   -manga
     	Manga mode (right to left)
   -hascover (default true)
