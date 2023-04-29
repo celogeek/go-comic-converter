@@ -1,5 +1,5 @@
 /*
-Tools to create epub from images.
+Tools to create EPUB from images.
 */
 package epub
 
@@ -30,7 +30,7 @@ type ePub struct {
 	UpdatedAt string
 
 	templateProcessor *template.Template
-	imageProcessor    *epubimageprocessor.EpubImageProcessor
+	imageProcessor    *epubimageprocessor.EPUBImageProcessor
 }
 
 type epubPart struct {
@@ -38,7 +38,7 @@ type epubPart struct {
 	LoadedImages epubimageprocessor.LoadedImages
 }
 
-// initialize epub
+// initialize EPUB
 func New(options *epuboptions.Options) *ePub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
@@ -68,7 +68,7 @@ func (e *ePub) render(templateString string, data map[string]any) string {
 }
 
 // write image to the zip
-func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessor.LoadedImage) error {
+func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimageprocessor.LoadedImage) error {
 	err := wz.WriteContent(
 		fmt.Sprintf("OEBPS/%s", img.Image.PagePath()),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
@@ -87,7 +87,7 @@ func (e *ePub) writeImage(wz *epubzip.EpubZip, img *epubimageprocessor.LoadedIma
 }
 
 // write blank page
-func (e *ePub) writeBlank(wz *epubzip.EpubZip, img *epubimage.Image) error {
+func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
 	return wz.WriteContent(
 		fmt.Sprintf("OEBPS/%s", img.SpacePath()),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
@@ -127,7 +127,7 @@ func (e *ePub) getParts() ([]*epubPart, error) {
 		return parts, nil
 	}
 
-	// compute size of the epub part and try to be as close as possible of the target
+	// compute size of the EPUB part and try to be as close as possible of the target
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 	xhtmlSize := uint64(1024)
 	// descriptor files + title

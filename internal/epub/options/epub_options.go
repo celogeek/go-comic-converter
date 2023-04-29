@@ -1,5 +1,5 @@
 /*
-Options for epub creation.
+Options for EPUB creation.
 */
 package epuboptions
 

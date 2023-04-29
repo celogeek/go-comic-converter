@@ -34,7 +34,7 @@ type tasks struct {
 var errNoImagesFound = errors.New("no images found")
 
 // only accept jpg, png and webp as source file
-func (e *EpubImageProcessor) isSupportedImage(path string) bool {
+func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".jpg", ".jpeg", ".png", ".webp":
 		{
@@ -45,7 +45,7 @@ func (e *EpubImageProcessor) isSupportedImage(path string) bool {
 }
 
 // Load images from input
-func (e *EpubImageProcessor) load() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) load() (totalImages int, output chan *tasks, err error) {
 	fi, err := os.Stat(e.Input)
 	if err != nil {
 		return
@@ -70,7 +70,7 @@ func (e *EpubImageProcessor) load() (totalImages int, output chan *tasks, err er
 }
 
 // load a directory of images
-func (e *EpubImageProcessor) loadDir() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err error) {
 	images := make([]string, 0)
 
 	input := filepath.Clean(e.Input)
@@ -160,7 +160,7 @@ func (e *EpubImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 }
 
 // load a zip file that include images
-func (e *EpubImageProcessor) loadCbz() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err error) {
 	r, err := zip.OpenReader(e.Input)
 	if err != nil {
 		return
@@ -246,7 +246,7 @@ func (e *EpubImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 }
 
 // load a rar file that include images
-func (e *EpubImageProcessor) loadCbr() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err error) {
 	var isSolid bool
 	files, err := rardecode.List(e.Input)
 	if err != nil {
@@ -363,7 +363,7 @@ func (e *EpubImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 }
 
 // extract image from a pdf
-func (e *EpubImageProcessor) loadPdf() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err error) {
 	pdf := pdfread.Load(e.Input)
 	if pdf == nil {
 		err = fmt.Errorf("can't read pdf")

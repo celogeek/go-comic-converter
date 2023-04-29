@@ -1,9 +1,9 @@
 /*
-Convert CBZ/CBR/Dir into Epub for e-reader devices (Kindle Devices, ...)
+Convert CBZ/CBR/Dir into EPUB for e-reader devices (Kindle Devices, ...)
 
-My goal is to make a simple, crossplatform, and fast tool to convert comics into epub.
+My goal is to make a simple, crossplatform, and fast tool to convert comics into EPUB.
 
-Epub is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
+EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
 */
 package main
 

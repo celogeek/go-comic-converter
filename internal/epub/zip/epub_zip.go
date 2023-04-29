@@ -1,7 +1,7 @@
 /*
-Helper to write epub files.
+Helper to write EPUB files.
 
-We create a zip with the magic epub mimetype.
+We create a zip with the magic EPUB mimetype.
 */
 package epubzip
 
@@ -11,23 +11,23 @@ import (
 	"time"
 )
 
-type EpubZip struct {
+type EPUBZip struct {
 	w  *os.File
 	wz *zip.Writer
 }
 
-// create a new epub
-func New(path string) (*EpubZip, error) {
+// create a new EPUB
+func New(path string) (*EPUBZip, error) {
 	w, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
 	wz := zip.NewWriter(w)
-	return &EpubZip{w, wz}, nil
+	return &EPUBZip{w, wz}, nil
 }
 
 // close compress pipe and file.
-func (e *EpubZip) Close() error {
+func (e *EPUBZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (e *EpubZip) Close() error {
 
 // Write mimetype, in a very specific way.
 // This will be valid with epubcheck tools.
-func (e *EpubZip) WriteMagic() error {
+func (e *EPUBZip) WriteMagic() error {
 	t := time.Now()
 	fh := &zip.FileHeader{
 		Name:               "mimetype",
@@ -59,7 +59,7 @@ func (e *EpubZip) WriteMagic() error {
 }
 
 // Write image. They are already compressed, so we write them down directly.
-func (e *EpubZip) WriteRaw(raw *ZipImage) error {
+func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
 	m, err := e.wz.CreateRaw(raw.Header)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (e *EpubZip) WriteRaw(raw *ZipImage) error {
 }
 
 // Write file. Compressed it using deflate.
-func (e *EpubZip) WriteContent(file string, content []byte) error {
+func (e *EPUBZip) WriteContent(file string, content []byte) error {
 	m, err := e.wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),

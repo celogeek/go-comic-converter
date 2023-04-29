@@ -90,9 +90,9 @@ func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string)
 func (c *Converter) InitParse() {
 	c.AddSection("Output")
 	c.AddStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
-	c.AddStringParam(&c.Options.Output, "output", "", "Output of the epub (directory or epub): (default [INPUT].epub)")
-	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the epub")
-	c.AddStringParam(&c.Options.Title, "title", "", "Title of the epub")
+	c.AddStringParam(&c.Options.Output, "output", "", "Output of the EPUB (directory or EPUB): (default [INPUT].epub)")
+	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the EPUB")
+	c.AddStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
 
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
@@ -110,7 +110,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
 	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
 	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
-	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the ePub: Default nolimit (0), Minimum 20")
+	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
 

@@ -1,5 +1,5 @@
 /*
-Templates use to create xml files of the epub.
+Templates use to create xml files of the EPUB.
 */
 package epubtemplates
 

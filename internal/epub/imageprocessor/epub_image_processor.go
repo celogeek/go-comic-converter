@@ -31,16 +31,16 @@ func (l LoadedImages) Images() []*epubimage.Image {
 	return res
 }
 
-type EpubImageProcessor struct {
+type EPUBImageProcessor struct {
 	*epuboptions.Options
 }
 
-func New(o *epuboptions.Options) *EpubImageProcessor {
-	return &EpubImageProcessor{o}
+func New(o *epuboptions.Options) *EPUBImageProcessor {
+	return &EPUBImageProcessor{o}
 }
 
 // extract and convert images
-func (e *EpubImageProcessor) Load() (LoadedImages, error) {
+func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
 	images := make(LoadedImages, 0)
 
 	imageCount, imageInput, err := e.load()
@@ -135,7 +135,7 @@ func (e *EpubImageProcessor) Load() (LoadedImages, error) {
 
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func (e *EpubImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
+func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
 	var filters, splitFilter []gift.Filter
 	var images []image.Image
 
@@ -220,7 +220,7 @@ func (e *EpubImageProcessor) transformImage(src image.Image, srcId int) []image.
 }
 
 // create a title page with the cover
-func (e *EpubImageProcessor) CoverTitleData(img image.Image, title string) *epubzip.ZipImage {
+func (e *EPUBImageProcessor) CoverTitleData(img image.Image, title string) *epubzip.ZipImage {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Bounds()))
