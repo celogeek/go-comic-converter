@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter/options"
 )
@@ -26,6 +27,7 @@ type Converter struct {
 
 	order           []converterOrder
 	isZeroValueErrs []error
+	startAt         time.Time
 }
 
 // Create a new parser
@@ -36,6 +38,7 @@ func New() *Converter {
 		Options: options,
 		Cmd:     cmd,
 		order:   make([]converterOrder, 0),
+		startAt: time.Now(),
 	}
 
 	var cmdOutput strings.Builder
@@ -298,4 +301,16 @@ func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
 	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
 	os.Exit(1)
+}
+
+func (c *Converter) Stats() {
+	// Display elapse time and memory usage
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+	fmt.Fprintf(
+		os.Stderr,
+		"Completed in %s, Memory usage %d Mb\n",
+		time.Since(c.startAt).Round(time.Millisecond),
+		mem.Sys/1024/1024,
+	)
 }
