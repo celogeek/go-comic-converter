@@ -38,12 +38,14 @@ $ go install github.com/celogeek/go-comic-converter/v2
 
 To force install a specific version:
 ```
-$ go install github.com/celogeek/go-comic-converter/v2@V2TAG
-```
+# specific version
+$ go install github.com/celogeek/go-comic-converter/v2@v2.4.0
 
-Example:
-```
-$ go install github.com/celogeek/go-comic-converter/v2@v2.0.6
+# main branch
+$ go install github.com/celogeek/go-comic-converter/v2@main
+
+# specific commit
+$ go install github.com/celogeek/go-comic-converter/v2@141aeae
 ```
 
 Add GOPATH to your PATH
@@ -58,12 +60,12 @@ You can check if a new version is available with:
 $ go-comic-converter -version
 go-comic-converter
   Path             : github.com/celogeek/go-comic-converter/v2
-  Sum              : h1:9xYksu1PlJ6QkAL/5U2ZbufEb1tavpdRcpTPPcAjiNs=
-  Version          : v2.3.3
-  Available Version: v2.3.3
+  Sum              : h1:qOYGRpdT4t6fPksFHHrMmg+AvKSliNL6JfNWcvLGesU=
+  Version          : v2.4.0
+  Available Version: v2.4.0
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.3.3
+$ go install github.com/celogeek/go-comic-converter/v2@v2.4.0
 ```
 
 # Supported image files
