@@ -31,6 +31,11 @@ func (i *Image) SpacePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.SpaceKey())
 }
 
+// path of the blank page into the EPUB
+func (i *Image) EPUBSpacePath() string {
+	return fmt.Sprintf("OEBPS/%s", i.SpacePath())
+}
+
 // key for page
 func (i *Image) PageKey() string {
 	return fmt.Sprintf("page_%d_p%d", i.Id, i.Part)
@@ -41,6 +46,11 @@ func (i *Image) PagePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
 }
 
+// page path into the EPUB
+func (i *Image) EPUBPagePath() string {
+	return fmt.Sprintf("OEBPS/%s", i.PagePath())
+}
+
 // key for image
 func (i *Image) ImgKey() string {
 	return fmt.Sprintf("img_%d_p%d", i.Id, i.Part)
@@ -49,6 +59,11 @@ func (i *Image) ImgKey() string {
 // image path
 func (i *Image) ImgPath() string {
 	return fmt.Sprintf("Images/%s.jpg", i.ImgKey())
+}
+
+// image path into the EPUB
+func (i *Image) EPUBImgPath() string {
+	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
 }
 
 // style to apply to the image.

@@ -4,11 +4,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/flate"
-	"fmt"
 	"hash/crc32"
 	"image"
 	"image/jpeg"
-	"os"
 	"time"
 )
 
@@ -17,18 +15,8 @@ type ZipImage struct {
 	Data   []byte
 }
 
-// compressed size of the image with the header
-func (img *ZipImage) CompressedSize() uint64 {
-	return img.Header.CompressedSize64 + 30 + uint64(len(img.Header.Name))
-}
-
-func exitWithError(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
-}
-
 // create gzip encoded jpeg
-func CompressImage(filename string, img image.Image, quality int) *ZipImage {
+func CompressImage(filename string, img image.Image, quality int) (*ZipImage, error) {
 	var (
 		data, cdata bytes.Buffer
 		err         error
@@ -36,22 +24,22 @@ func CompressImage(filename string, img image.Image, quality int) *ZipImage {
 
 	err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
 	if err != nil {
-		exitWithError(err)
+		return nil, err
 	}
 
 	wcdata, err := flate.NewWriter(&cdata, flate.BestCompression)
 	if err != nil {
-		exitWithError(err)
+		return nil, err
 	}
 
 	_, err = wcdata.Write(data.Bytes())
 	if err != nil {
-		exitWithError(err)
+		return nil, err
 	}
 
 	err = wcdata.Close()
 	if err != nil {
-		exitWithError(err)
+		return nil, err
 	}
 
 	t := time.Now()
@@ -66,5 +54,5 @@ func CompressImage(filename string, img image.Image, quality int) *ZipImage {
 			ModifiedDate:       uint16(t.Day() + int(t.Month())<<5 + (t.Year()-1980)<<9),
 		},
 		cdata.Bytes(),
-	}
+	}, nil
 }

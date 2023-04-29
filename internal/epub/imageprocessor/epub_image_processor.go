@@ -6,6 +6,7 @@ package epubimageprocessor
 import (
 	"fmt"
 	"image"
+	"os"
 	"sync"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
@@ -16,21 +17,6 @@ import (
 	"github.com/disintegration/gift"
 )
 
-type LoadedImage struct {
-	Image    *epubimage.Image
-	ZipImage *epubzip.ZipImage
-}
-
-type LoadedImages []*LoadedImage
-
-func (l LoadedImages) Images() []*epubimage.Image {
-	res := make([]*epubimage.Image, len(l))
-	for i, v := range l {
-		res[i] = v.Image
-	}
-	return res
-}
-
 type EPUBImageProcessor struct {
 	*epuboptions.Options
 }
@@ -40,9 +26,8 @@ func New(o *epuboptions.Options) *EPUBImageProcessor {
 }
 
 // extract and convert images
-func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
-	images := make(LoadedImages, 0)
-
+func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
+	images = make([]*epubimage.Image, 0)
 	imageCount, imageInput, err := e.load()
 	if err != nil {
 		return nil, err
@@ -51,19 +36,17 @@ func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
 	// dry run, skip convertion
 	if e.Dry {
 		for img := range imageInput {
-			images = append(images, &LoadedImage{
-				Image: &epubimage.Image{
-					Id:   img.Id,
-					Path: img.Path,
-					Name: img.Name,
-				},
+			images = append(images, &epubimage.Image{
+				Id:   img.Id,
+				Path: img.Path,
+				Name: img.Name,
 			})
 		}
 
 		return images, nil
 	}
 
-	imageOutput := make(chan *LoadedImage)
+	imageOutput := make(chan *epubimage.Image)
 
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
@@ -74,6 +57,12 @@ func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
 		TotalJob:    2,
 	})
 	wg := &sync.WaitGroup{}
+
+	imgStorage, err := epubzip.NewEPUBZipStorageImageWriter(e.ImgStorage())
+	if err != nil {
+		bar.Close()
+		return nil, err
+	}
 
 	for i := 0; i < e.WorkersRatio(50); i++ {
 		wg.Add(1)
@@ -101,10 +90,13 @@ func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
 						Path:       input.Path,
 						Name:       input.Name,
 					}
-					imageOutput <- &LoadedImage{
-						Image:    img,
-						ZipImage: epubzip.CompressImage(fmt.Sprintf("OEBPS/%s", img.ImgPath()), dst, e.Image.Quality),
+
+					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
+						bar.Close()
+						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						os.Exit(1)
 					}
+					imageOutput <- img
 				}
 			}
 		}()
@@ -112,17 +104,18 @@ func (e *EPUBImageProcessor) Load() (LoadedImages, error) {
 
 	go func() {
 		wg.Wait()
+		imgStorage.Close()
 		close(imageOutput)
 	}()
 
-	for output := range imageOutput {
-		if output.Image.Part == 0 {
+	for img := range imageOutput {
+		if img.Part == 0 {
 			bar.Add(1)
 		}
-		if e.Image.NoBlankImage && output.Image.IsBlank {
+		if e.Image.NoBlankImage && img.IsBlank {
 			continue
 		}
-		images = append(images, output)
+		images = append(images, img)
 	}
 	bar.Close()
 
@@ -220,7 +213,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 }
 
 // create a title page with the cover
-func (e *EPUBImageProcessor) CoverTitleData(img image.Image, title string) *epubzip.ZipImage {
+func (e *EPUBImageProcessor) CoverTitleData(img image.Image, title string) (*epubzip.ZipImage, error) {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(title))
 	dst := image.NewGray(g.Bounds(img.Bounds()))

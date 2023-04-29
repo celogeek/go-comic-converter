@@ -85,8 +85,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 	})
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return
 	}
 
 	totalImages = len(images)

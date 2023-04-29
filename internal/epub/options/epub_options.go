@@ -3,6 +3,8 @@ Options for EPUB creation.
 */
 package epuboptions
 
+import "fmt"
+
 type Crop struct {
 	Enabled                 bool
 	Left, Up, Right, Bottom int
@@ -46,4 +48,8 @@ func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
 		nbWorkers = 1
 	}
 	return
+}
+
+func (o *Options) ImgStorage() string {
+	return fmt.Sprintf("%s.tmp", o.Output)
 }
