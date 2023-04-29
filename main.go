@@ -20,7 +20,6 @@ import (
 
 func main() {
 	cmd := converter.New()
-	defer cmd.Stats()
 	if err := cmd.LoadConfig(); err != nil {
 		cmd.Fatal(err)
 	}
@@ -139,5 +138,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-
+	if !cmd.Options.Dry {
+		cmd.Stats()
+	}
 }
