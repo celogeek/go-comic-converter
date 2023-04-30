@@ -46,6 +46,7 @@ func New() Profiles {
 		{"KPW5", "Kindle Paperwhite 5/Signature Edition", 1236, 1648},
 		{"KO", "Kindle Oasis 2/3", 1264, 1680},
 		{"KS", "Kindle Scribe", 1860, 2480},
+		{"KHR", "Kindle High Resolution", 2400, 3840},
 		// Kobo
 		{"KoMT", "Kobo Mini/Touch", 600, 800},
 		{"KoG", "Kobo Glo", 768, 1024},
