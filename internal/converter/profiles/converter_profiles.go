@@ -16,7 +16,7 @@ type Profile struct {
 }
 
 // Recommended ratio of image for perfect rendering Portrait or Landscape.
-const PerfectRatio = 1.5
+const PerfectRatio = 1.6
 
 // Compute best dimension based on device size
 func (p Profile) PerfectDim() (int, int) {
