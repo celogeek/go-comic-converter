@@ -82,27 +82,27 @@ func New() *Options {
 }
 
 func (o *Options) Header() string {
-	return `Go Comic Converter
-
-Options:`
+	return "Go Comic Converter\n\nOptions:"
 }
 
 func (o *Options) String() string {
-	return fmt.Sprintf(`%s
-    Input                     : %s
-    Output                    : %s
-    Author                    : %s
-    Title                     : %s
-    Workers                   : %d%s
-`,
-		o.Header(),
-		o.Input,
-		o.Output,
-		o.Author,
-		o.Title,
-		o.Workers,
-		o.ShowConfig(),
-	)
+	var b strings.Builder
+	b.WriteString(o.Header())
+	for _, v := range []struct {
+		K string
+		V any
+	}{
+		{"Input", o.Input},
+		{"Output", o.Output},
+		{"Author", o.Author},
+		{"Title", o.Title},
+		{"Workers", o.Workers},
+	} {
+		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
+	}
+	b.WriteString(o.ShowConfig())
+	b.WriteRune('\n')
+	return b.String()
 }
 
 // Config file: ~/.go-comic-converter.yaml
@@ -161,40 +161,31 @@ func (o *Options) ShowConfig() string {
 		sortpathmode = "path=alphanum, file=alphanum"
 	}
 
-	return fmt.Sprintf(`
-    Profile                   : %s
-    ViewRatio                 : 1:%s
-    View                      : %s
-    Quality                   : %d
-    Crop                      : %v
-    CropRatio                 : %d Left - %d Up - %d Right - %d Bottom
-    Brightness                : %d
-    Contrast                  : %d
-    AutoRotate                : %v
-    AutoSplitDoublePage       : %v
-    NoBlankImage              : %v
-    Manga                     : %v
-    HasCover                  : %v
-    LimitMb                   : %s
-    StripFirstDirectoryFromToc: %v
-    SortPathMode              : %s`,
-		profileDesc,
-		strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"),
-		viewDesc,
-		o.Quality,
-		o.Crop,
-		o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom,
-		o.Brightness,
-		o.Contrast,
-		o.AutoRotate,
-		o.AutoSplitDoublePage,
-		o.NoBlankImage,
-		o.Manga,
-		o.HasCover,
-		limitmb,
-		o.StripFirstDirectoryFromToc,
-		sortpathmode,
-	)
+	var b strings.Builder
+	for _, v := range []struct {
+		K string
+		V any
+	}{
+		{"Profile", profileDesc},
+		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"))},
+		{"View", viewDesc},
+		{"Quality", o.Quality},
+		{"Crop", o.Crop},
+		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom)},
+		{"Brightness", o.Brightness},
+		{"Contrast", o.Contrast},
+		{"AutoRotate", o.AutoRotate},
+		{"AutoSplitDoublePage", o.AutoSplitDoublePage},
+		{"NoBlankImage", o.NoBlankImage},
+		{"Manga", o.Manga},
+		{"HasCover", o.HasCover},
+		{"LimitMb", limitmb},
+		{"StripFirstDirectoryFromToc", o.StripFirstDirectoryFromToc},
+		{"SortPathMode", sortpathmode},
+	} {
+		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
+	}
+	return b.String()
 }
 
 // reset all settings to default value
