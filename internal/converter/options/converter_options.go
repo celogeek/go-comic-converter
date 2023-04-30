@@ -23,6 +23,7 @@ type Options struct {
 	// Config
 	Profile                    string `yaml:"profile"`
 	Quality                    int    `yaml:"quality"`
+	Grayscale                  bool   `yaml:"grayscale"`
 	Crop                       bool   `yaml:"crop"`
 	CropRatioLeft              int    `yaml:"crop_ratio_left"`
 	CropRatioUp                int    `yaml:"crop_ratio_up"`
@@ -64,6 +65,7 @@ func New() *Options {
 	return &Options{
 		Profile:                    "",
 		Quality:                    85,
+		Grayscale:                  true,
 		Crop:                       true,
 		CropRatioLeft:              1,
 		CropRatioUp:                1,
@@ -174,6 +176,7 @@ func (o *Options) ShowConfig() string {
 		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"))},
 		{"View", viewDesc},
 		{"Quality", o.Quality},
+		{"Grayscale", o.Grayscale},
 		{"Crop", o.Crop},
 		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom)},
 		{"Brightness", o.Brightness},

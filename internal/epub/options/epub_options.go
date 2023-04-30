@@ -30,6 +30,7 @@ type Image struct {
 	Manga               bool
 	HasCover            bool
 	View                *View
+	GrayScale           bool
 }
 
 type Options struct {

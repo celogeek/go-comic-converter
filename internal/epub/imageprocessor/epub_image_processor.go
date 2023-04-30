@@ -6,6 +6,7 @@ package epubimageprocessor
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	"os"
 	"sync"
 
@@ -126,6 +127,37 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	return images, nil
 }
 
+func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
+	if e.Options.Image.GrayScale {
+		return image.NewGray(r)
+	}
+
+	switch t := src.(type) {
+	case *image.Gray:
+		return image.NewGray(r)
+	case *image.Gray16:
+		return image.NewGray16(r)
+	case *image.RGBA:
+		return image.NewRGBA(r)
+	case *image.RGBA64:
+		return image.NewRGBA64(r)
+	case *image.NRGBA:
+		return image.NewNRGBA(r)
+	case *image.NRGBA64:
+		return image.NewNRGBA64(r)
+	case *image.Alpha:
+		return image.NewAlpha(r)
+	case *image.Alpha16:
+		return image.NewAlpha16(r)
+	case *image.CMYK:
+		return image.NewCMYK(r)
+	case *image.Paletted:
+		return image.NewPaletted(r, t.Palette)
+	default:
+		return image.NewNRGBA64(r)
+	}
+}
+
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
 func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
@@ -177,7 +209,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	// convert
 	{
 		g := gift.New(filters...)
-		dst := image.NewGray(g.Bounds(src.Bounds()))
+		dst := e.createImage(src, g.Bounds(src.Bounds()))
 		g.Draw(dst, src)
 		images = append(images, dst)
 	}
@@ -204,7 +236,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 			epubimagefilters.CropSplitDoublePage(b),
 			epubimagefilters.Resize(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
 		)
-		dst := image.NewGray(g.Bounds(src.Bounds()))
+		dst := e.createImage(src, g.Bounds(src.Bounds()))
 		g.Draw(dst, src)
 		images = append(images, dst)
 	}
@@ -213,11 +245,11 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 }
 
 // create a title page with the cover
-func (e *EPUBImageProcessor) CoverTitleData(img image.Image, title string) (*epubzip.ZipImage, error) {
+func (e *EPUBImageProcessor) CoverTitleData(src image.Image, title string) (*epubzip.ZipImage, error) {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(title))
-	dst := image.NewGray(g.Bounds(img.Bounds()))
-	g.Draw(dst, img)
+	dst := e.createImage(src, g.Bounds(src.Bounds()))
+	g.Draw(dst, src)
 
 	return epubzip.CompressImage("OEBPS/Images/title.jpg", dst, e.Image.Quality)
 }

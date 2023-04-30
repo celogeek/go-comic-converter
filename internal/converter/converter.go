@@ -101,6 +101,7 @@ func (c *Converter) InitParse() {
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
 	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
+	c.AddBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
 	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
 	c.AddIntParam(&c.Options.CropRatioLeft, "crop-ratio-left", c.Options.CropRatioLeft, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
 	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
