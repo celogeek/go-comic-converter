@@ -273,8 +273,7 @@ func (e *ePub) Write() error {
 			})},
 			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, e.StripFirstDirectoryFromToc, part.Images)},
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
-				"PageWidth":  e.Image.View.Width,
-				"PageHeight": e.Image.View.Height,
+				"View": e.Image.View,
 			})},
 			{"OEBPS/Text/space_title.xhtml", e.render(epubtemplates.Blank, map[string]any{
 				"Title":    "Blank Page Title",

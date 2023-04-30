@@ -1,12 +1,12 @@
 body {
-    color: #000;
-    background: #FFF;
+    color: #{{ .View.Color.Foreground }};
+    background: #{{ .View.Color.Background }};
     top: 0;
     left: 0;
     margin: 0;
     padding: 0;
-    width: {{ .PageWidth }}px;
-    height: {{ .PageHeight }}px;
+    width: {{ .View.Width }}px;
+    height: {{ .View.Height }}px;
     text-align: center;
 }
 

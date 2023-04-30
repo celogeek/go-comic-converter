@@ -10,8 +10,13 @@ type Crop struct {
 	Left, Up, Right, Bottom int
 }
 
+type Color struct {
+	Foreground, Background string
+}
+
 type View struct {
 	Width, Height int
+	Color         Color
 }
 
 type Image struct {

@@ -39,6 +39,8 @@ type Options struct {
 	LimitMb                    int    `yaml:"limit_mb"`
 	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
 	SortPathMode               int    `yaml:"sort_path_mode"`
+	ForegroundColor            string `yaml:"foreground_color"`
+	BackgroundColor            string `yaml:"background_color"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -77,6 +79,8 @@ func New() *Options {
 		LimitMb:                    0,
 		StripFirstDirectoryFromToc: false,
 		SortPathMode:               1,
+		ForegroundColor:            "000",
+		BackgroundColor:            "FFF",
 		profiles:                   profiles.New(),
 	}
 }
@@ -182,6 +186,8 @@ func (o *Options) ShowConfig() string {
 		{"LimitMb", limitmb},
 		{"StripFirstDirectoryFromToc", o.StripFirstDirectoryFromToc},
 		{"SortPathMode", sortpathmode},
+		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor)},
+		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor)},
 	} {
 		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
 	}

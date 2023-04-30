@@ -132,6 +132,10 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			View: &epuboptions.View{
 				Width:  perfectWidth,
 				Height: perfectHeight,
+				Color: epuboptions.Color{
+					Foreground: cmd.Options.ForegroundColor,
+					Background: cmd.Options.BackgroundColor,
+				},
 			},
 		},
 	}).Write(); err != nil {

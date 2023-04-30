@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -116,6 +117,8 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
+	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexa format RGB. Black=000, White=FFF")
+	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -291,6 +294,16 @@ func (c *Converter) Validate() error {
 	// SortPathMode
 	if c.Options.SortPathMode < 0 || c.Options.SortPathMode > 2 {
 		return errors.New("sort should be 0, 1 or 2")
+	}
+
+	// Color
+	colorRegex := regexp.MustCompile("^[0-9A-F]{3}$")
+	if !colorRegex.MatchString(c.Options.ForegroundColor) {
+		return errors.New("foreground color must have color format in hexa: [0-9A-F]{3}")
+	}
+
+	if !colorRegex.MatchString(c.Options.BackgroundColor) {
+		return errors.New("background color must have color format in hexa: [0-9A-F]{3}")
 	}
 
 	return nil
