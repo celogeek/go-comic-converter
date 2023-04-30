@@ -19,6 +19,7 @@ type Image struct {
 	DoublePage bool
 	Path       string
 	Name       string
+	Position   string
 }
 
 // key name of the blank plage after the image
@@ -70,24 +71,17 @@ func (i *Image) EPUBImgPath() string {
 //
 // center by default.
 // align to left or right if it's part of the splitted double page.
-func (i *Image) ImgStyle(viewWidth, viewHeight int, manga bool) string {
+func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
 	marginW, marginH := float64(viewWidth-i.Width)/2, float64(viewHeight-i.Height)/2
-	left, top := marginW*100/float64(viewWidth), marginH*100/float64(viewHeight)
-	var align string
-	switch i.Part {
-	case 0:
-		align = fmt.Sprintf("left:%.2f%%", left)
-	case 1:
-		if manga {
-			align = "left:0"
-		} else {
+
+	if align == "" {
+		switch i.Position {
+		case "rendition:page-spread-left":
 			align = "right:0"
-		}
-	case 2:
-		if manga {
-			align = "right:0"
-		} else {
+		case "rendition:page-spread-right":
 			align = "left:0"
+		default:
+			align = fmt.Sprintf("left:%.2f%%", marginW*100/float64(viewWidth))
 		}
 	}
 
@@ -95,7 +89,7 @@ func (i *Image) ImgStyle(viewWidth, viewHeight int, manga bool) string {
 		"width:%dpx; height:%dpx; top:%.2f%%; %s;",
 		i.Width,
 		i.Height,
-		top,
+		marginH*100/float64(viewHeight),
 		align,
 	)
 }

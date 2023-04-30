@@ -77,7 +77,7 @@ func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
 			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 			"ImagePath":  img.ImgPath(),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, e.Image.Manga),
+			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
 		})),
 	)
 	if err == nil {
@@ -251,6 +251,10 @@ func (e *ePub) Write() error {
 		if totalParts > 1 {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
+		titleAlign := "left:0"
+		if e.Image.Manga {
+			titleAlign = "right:0"
+		}
 
 		content := []zipContent{
 			{"META-INF/container.xml", epubtemplates.Container},
@@ -280,7 +284,7 @@ func (e *ePub) Write() error {
 				"Title":      title,
 				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 				"ImagePath":  "Images/title.jpg",
-				"ImageStyle": part.Cover.ImgStyle(e.Image.View.Width, e.Image.View.Height, e.Image.Manga),
+				"ImageStyle": part.Cover.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 			})},
 		}
 

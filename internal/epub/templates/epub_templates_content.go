@@ -195,9 +195,11 @@ func getSpine(o *ContentOptions) []tag {
 				"",
 			})
 		}
+		// register position for style adjustment
+		img.Position = getSpread(img.DoublePage)
 		spine = append(spine, tag{
 			"itemref",
-			tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)},
+			tagAttrs{"idref": img.PageKey(), "properties": img.Position},
 			"",
 		})
 	}
