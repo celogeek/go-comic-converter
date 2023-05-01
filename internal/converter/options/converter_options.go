@@ -42,6 +42,7 @@ type Options struct {
 	SortPathMode               int    `yaml:"sort_path_mode"`
 	ForegroundColor            string `yaml:"foreground_color"`
 	BackgroundColor            string `yaml:"background_color"`
+	NoResize                   bool   `yaml:"noresize"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -83,6 +84,7 @@ func New() *Options {
 		SortPathMode:               1,
 		ForegroundColor:            "000",
 		BackgroundColor:            "FFF",
+		NoResize:                   false,
 		profiles:                   profiles.New(),
 	}
 }
@@ -191,6 +193,7 @@ func (o *Options) ShowConfig() string {
 		{"SortPathMode", sortpathmode},
 		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor)},
 		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor)},
+		{"Resize", !o.NoResize},
 	} {
 		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
 	}

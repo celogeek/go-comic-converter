@@ -201,10 +201,12 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		splitFilter = append(splitFilter, f)
 	}
 
-	filters = append(filters,
-		gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
-		epubimagefilters.Pixel(),
-	)
+	if e.Image.Resize {
+		f := gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling)
+		filters = append(filters, f)
+	}
+
+	filters = append(filters, epubimagefilters.Pixel())
 
 	// convert
 	{
@@ -232,10 +234,10 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	// convert double page
 	for _, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 		g := gift.New(splitFilter...)
-		g.Add(
-			epubimagefilters.CropSplitDoublePage(b),
-			gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
-		)
+		g.Add(epubimagefilters.CropSplitDoublePage(b))
+		if e.Image.Resize {
+			g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
+		}
 		dst := e.createImage(src, g.Bounds(src.Bounds()))
 		g.Draw(dst, src)
 		images = append(images, dst)

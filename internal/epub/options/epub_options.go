@@ -31,6 +31,7 @@ type Image struct {
 	HasCover            bool
 	View                *View
 	GrayScale           bool
+	Resize              bool
 }
 
 type Options struct {
