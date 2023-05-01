@@ -51,6 +51,7 @@ type Options struct {
 
 	// Other
 	Workers    int  `yaml:"-"`
+	NoFilter   bool `yaml:"-"`
 	Dry        bool `yaml:"-"`
 	DryVerbose bool `yaml:"-"`
 	Quiet      bool `yaml:"-"`

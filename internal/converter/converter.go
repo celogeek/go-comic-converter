@@ -128,6 +128,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
 	c.AddSection("Other")
+	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Disable all filter")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
 	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
@@ -211,6 +212,15 @@ func (c *Converter) Parse() {
 	if c.Options.Auto {
 		c.Options.AutoRotate = true
 		c.Options.AutoSplitDoublePage = true
+	}
+
+	if c.Options.NoFilter {
+		c.Options.Crop = false
+		c.Options.Brightness = 0
+		c.Options.Contrast = 0
+		c.Options.AutoRotate = false
+		c.Options.NoBlankImage = false
+		c.Options.NoResize = true
 	}
 }
 
