@@ -31,7 +31,6 @@ type Options struct {
 	CropRatioBottom            int    `yaml:"crop_ratio_bottom"`
 	Brightness                 int    `yaml:"brightness"`
 	Contrast                   int    `yaml:"contrast"`
-	Auto                       bool   `yaml:"-"`
 	AutoRotate                 bool   `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
 	NoBlankImage               bool   `yaml:"no_blank_image"`
@@ -50,9 +49,12 @@ type Options struct {
 	Save  bool `yaml:"-"`
 	Reset bool `yaml:"-"`
 
+	// Shortcut
+	Auto     bool `yaml:"-"`
+	NoFilter bool `yaml:"-"`
+
 	// Other
 	Workers    int  `yaml:"-"`
-	NoFilter   bool `yaml:"-"`
 	Dry        bool `yaml:"-"`
 	DryVerbose bool `yaml:"-"`
 	Quiet      bool `yaml:"-"`
@@ -157,10 +159,6 @@ func (o *Options) ShowConfig() string {
 			perfectHeight,
 		)
 	}
-	limitmb := "nolimit"
-	if o.LimitMb > 0 {
-		limitmb = fmt.Sprintf("%d Mb", o.LimitMb)
-	}
 
 	sortpathmode := ""
 	switch o.SortPathMode {
@@ -174,32 +172,35 @@ func (o *Options) ShowConfig() string {
 
 	var b strings.Builder
 	for _, v := range []struct {
-		K string
-		V any
+		Key       string
+		Value     any
+		Condition bool
 	}{
-		{"Profile", profileDesc},
-		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0"))},
-		{"View", viewDesc},
-		{"Quality", o.Quality},
-		{"Grayscale", o.Grayscale},
-		{"Crop", o.Crop},
-		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom)},
-		{"Brightness", o.Brightness},
-		{"Contrast", o.Contrast},
-		{"AutoRotate", o.AutoRotate},
-		{"AutoSplitDoublePage", o.AutoSplitDoublePage},
-		{"NoBlankImage", o.NoBlankImage},
-		{"Manga", o.Manga},
-		{"HasCover", o.HasCover},
-		{"LimitMb", limitmb},
-		{"StripFirstDirectoryFromToc", o.StripFirstDirectoryFromToc},
-		{"SortPathMode", sortpathmode},
-		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor)},
-		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor)},
-		{"Resize", !o.NoResize},
-		{"Format", o.Format},
+		{"Profile", profileDesc, true},
+		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0")), true},
+		{"View", viewDesc, true},
+		{"Format", o.Format, true},
+		{"Quality", o.Quality, o.Format == "jpeg"},
+		{"Grayscale", o.Grayscale, true},
+		{"Crop", o.Crop, true},
+		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
+		{"Brightness", o.Brightness, o.Brightness != 0},
+		{"Contrast", o.Contrast, o.Contrast != 0},
+		{"AutoRotate", o.AutoRotate, true},
+		{"AutoSplitDoublePage", o.AutoSplitDoublePage, true},
+		{"NoBlankImage", o.NoBlankImage, true},
+		{"Manga", o.Manga, true},
+		{"HasCover", o.HasCover, true},
+		{"LimitMb", fmt.Sprintf("%d Mb", o.LimitMb), o.LimitMb != 0},
+		{"StripFirstDirectoryFromToc", o.StripFirstDirectoryFromToc, true},
+		{"SortPathMode", sortpathmode, true},
+		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor), true},
+		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor), true},
+		{"Resize", !o.NoResize, true},
 	} {
-		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
+		if v.Condition {
+			b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.Key, v.Value))
+		}
 	}
 	return b.String()
 }

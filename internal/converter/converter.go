@@ -110,7 +110,6 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
-	c.AddBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
 	c.AddBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
 	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
 	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
@@ -128,8 +127,11 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
+	c.AddSection("Shortcut")
+	c.AddBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
+	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")
+
 	c.AddSection("Other")
-	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Disable all filter")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
 	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
