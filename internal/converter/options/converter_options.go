@@ -50,8 +50,12 @@ type Options struct {
 	Reset bool `yaml:"-"`
 
 	// Shortcut
-	Auto     bool `yaml:"-"`
-	NoFilter bool `yaml:"-"`
+	Auto         bool `yaml:"-"`
+	NoFilter     bool `yaml:"-"`
+	MaxQuality   bool `yaml:"-"`
+	BestQuality  bool `yaml:"-"`
+	GreatQuality bool `yaml:"-"`
+	GoodQuality  bool `yaml:"-"`
 
 	// Other
 	Workers    int  `yaml:"-"`

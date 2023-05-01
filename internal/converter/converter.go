@@ -130,6 +130,10 @@ func (c *Converter) InitParse() {
 	c.AddSection("Shortcut")
 	c.AddBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
 	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")
+	c.AddBoolParam(&c.Options.MaxQuality, "maxquality", false, "Max quality: color png + noresize")
+	c.AddBoolParam(&c.Options.BestQuality, "bestquality", false, "Max quality: color jpg q100 + noresize")
+	c.AddBoolParam(&c.Options.GreatQuality, "greatquality", false, "Max quality: grayscale jpg q90 + noresize")
+	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
 	c.AddSection("Other")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
@@ -215,6 +219,27 @@ func (c *Converter) Parse() {
 	if c.Options.Auto {
 		c.Options.AutoRotate = true
 		c.Options.AutoSplitDoublePage = true
+	}
+
+	if c.Options.MaxQuality {
+		c.Options.Format = "png"
+		c.Options.Grayscale = false
+		c.Options.NoResize = true
+	} else if c.Options.BestQuality {
+		c.Options.Format = "jpeg"
+		c.Options.Quality = 100
+		c.Options.Grayscale = false
+		c.Options.NoResize = true
+	} else if c.Options.GreatQuality {
+		c.Options.Format = "jpeg"
+		c.Options.Quality = 90
+		c.Options.Grayscale = true
+		c.Options.NoResize = true
+	} else if c.Options.GoodQuality {
+		c.Options.Format = "jpeg"
+		c.Options.Quality = 90
+		c.Options.Grayscale = true
+		c.Options.NoResize = false
 	}
 
 	if c.Options.NoFilter {
