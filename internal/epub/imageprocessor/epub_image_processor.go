@@ -202,7 +202,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	}
 
 	filters = append(filters,
-		epubimagefilters.Resize(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
+		gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
 		epubimagefilters.Pixel(),
 	)
 
@@ -234,7 +234,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		g := gift.New(splitFilter...)
 		g.Add(
 			epubimagefilters.CropSplitDoublePage(b),
-			epubimagefilters.Resize(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
+			gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling),
 		)
 		dst := e.createImage(src, g.Bounds(src.Bounds()))
 		g.Draw(dst, src)

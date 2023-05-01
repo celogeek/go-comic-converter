@@ -6,6 +6,7 @@ package epubimage
 import (
 	"fmt"
 	"image"
+	"strings"
 )
 
 type Image struct {
@@ -72,24 +73,48 @@ func (i *Image) EPUBImgPath() string {
 // center by default.
 // align to left or right if it's part of the splitted double page.
 func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
-	marginW, marginH := float64(viewWidth-i.Width)/2, float64(viewHeight-i.Height)/2
+	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
+	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
+	style := []string{}
+
+	style = append(style, fmt.Sprintf("width:%dpx", relWidth))
+	style = append(style, fmt.Sprintf("height:%dpx", relHeight))
+	style = append(style, fmt.Sprintf("top:%.2f%%", marginH*100/float64(viewHeight)))
 	if align == "" {
 		switch i.Position {
 		case "rendition:page-spread-left":
-			align = "right:0"
+			style = append(style, "right:0")
 		case "rendition:page-spread-right":
-			align = "left:0"
+			style = append(style, "left:0")
 		default:
-			align = fmt.Sprintf("left:%.2f%%", marginW*100/float64(viewWidth))
+			style = append(style, fmt.Sprintf("left:%.2f%%", marginW*100/float64(viewWidth)))
 		}
+	} else {
+		style = append(style, align)
 	}
 
-	return fmt.Sprintf(
-		"width:%dpx; height:%dpx; top:%.2f%%; %s;",
-		i.Width,
-		i.Height,
-		marginH*100/float64(viewHeight),
-		align,
-	)
+	return strings.Join(style, "; ")
+}
+
+func (i *Image) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {
+	w, h := viewWidth, viewHeight
+	srcw, srch := i.Width, i.Height
+
+	if w <= 0 || h <= 0 || srcw <= 0 || srch <= 0 {
+		return
+	}
+
+	wratio := float64(srcw) / float64(w)
+	hratio := float64(srch) / float64(h)
+
+	if wratio > hratio {
+		relWidth = w
+		relHeight = int(float64(srch)/wratio + 0.5)
+	} else {
+		relHeight = h
+		relWidth = int(float64(srcw)/hratio + 0.5)
+	}
+
+	return
 }
