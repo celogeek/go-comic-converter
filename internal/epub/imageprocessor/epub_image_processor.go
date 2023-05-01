@@ -38,9 +38,10 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	if e.Dry {
 		for img := range imageInput {
 			images = append(images, &epubimage.Image{
-				Id:   img.Id,
-				Path: img.Path,
-				Name: img.Name,
+				Id:     img.Id,
+				Path:   img.Path,
+				Name:   img.Name,
+				Format: e.Image.Format,
 			})
 		}
 
@@ -59,13 +60,17 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	})
 	wg := &sync.WaitGroup{}
 
-	imgStorage, err := epubzip.NewEPUBZipStorageImageWriter(e.ImgStorage())
+	imgStorage, err := epubzip.NewEPUBZipStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
 		bar.Close()
 		return nil, err
 	}
 
-	for i := 0; i < e.WorkersRatio(50); i++ {
+	wr := 50
+	if e.Image.Format == "png" {
+		wr = 100
+	}
+	for i := 0; i < e.WorkersRatio(wr); i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -90,6 +95,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
 						Path:       input.Path,
 						Name:       input.Name,
+						Format:     e.Image.Format,
 					}
 
 					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
@@ -253,5 +259,10 @@ func (e *EPUBImageProcessor) CoverTitleData(src image.Image, title string) (*epu
 	dst := e.createImage(src, g.Bounds(src.Bounds()))
 	g.Draw(dst, src)
 
-	return epubzip.CompressImage("OEBPS/Images/title.jpg", dst, e.Image.Quality)
+	return epubzip.CompressImage(
+		fmt.Sprintf("OEBPS/Images/title.%s", e.Image.Format),
+		e.Image.Format,
+		dst,
+		e.Image.Quality,
+	)
 }

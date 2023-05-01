@@ -127,7 +127,7 @@ func getManifest(o *ContentOptions) []tag {
 	var imageTags, pageTags, spaceTags []tag
 	addTag := func(img *epubimage.Image, withSpace bool) {
 		imageTags = append(imageTags,
-			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": "image/jpeg"}, ""},
+			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 		)
 		pageTags = append(pageTags,
 			tag{"item", tagAttrs{"id": img.PageKey(), "href": img.PagePath(), "media-type": "application/xhtml+xml"}, ""},
@@ -144,7 +144,7 @@ func getManifest(o *ContentOptions) []tag {
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 		{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
-		{"item", tagAttrs{"id": "img_title", "href": "Images/title.jpg", "media-type": "image/jpeg"}, ""},
+		{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 	}
 
 	if o.ImageOptions.HasCover || o.Current > 1 {

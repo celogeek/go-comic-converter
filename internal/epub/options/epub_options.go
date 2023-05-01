@@ -32,6 +32,7 @@ type Image struct {
 	View                *View
 	GrayScale           bool
 	Resize              bool
+	Format              string
 }
 
 type Options struct {

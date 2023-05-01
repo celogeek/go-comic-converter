@@ -4,9 +4,11 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/flate"
+	"fmt"
 	"hash/crc32"
 	"image"
 	"image/jpeg"
+	"image/png"
 	"time"
 )
 
@@ -16,13 +18,20 @@ type ZipImage struct {
 }
 
 // create gzip encoded jpeg
-func CompressImage(filename string, img image.Image, quality int) (*ZipImage, error) {
+func CompressImage(filename string, format string, img image.Image, quality int) (*ZipImage, error) {
 	var (
 		data, cdata bytes.Buffer
 		err         error
 	)
 
-	err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+	switch format {
+	case "png":
+		err = png.Encode(&data, img)
+	case "jpeg":
+		err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+	default:
+		err = fmt.Errorf("unknown format %q", format)
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -21,6 +21,7 @@ type Image struct {
 	Path       string
 	Name       string
 	Position   string
+	Format     string
 }
 
 // key name of the blank plage after the image
@@ -60,7 +61,7 @@ func (i *Image) ImgKey() string {
 
 // image path
 func (i *Image) ImgPath() string {
-	return fmt.Sprintf("Images/%s.jpg", i.ImgKey())
+	return fmt.Sprintf("Images/%s.%s", i.ImgKey(), i.Format)
 }
 
 // image path into the EPUB

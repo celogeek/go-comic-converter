@@ -282,7 +282,7 @@ func (e *ePub) Write() error {
 			{"OEBPS/Text/title.xhtml", e.render(epubtemplates.Text, map[string]any{
 				"Title":      title,
 				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-				"ImagePath":  "Images/title.jpg",
+				"ImagePath":  fmt.Sprintf("Images/title.%s", e.Image.Format),
 				"ImageStyle": part.Cover.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 			})},
 		}

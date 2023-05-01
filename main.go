@@ -139,6 +139,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 				},
 			},
 			Resize: !cmd.Options.NoResize,
+			Format: cmd.Options.Format,
 		},
 	}).Write(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

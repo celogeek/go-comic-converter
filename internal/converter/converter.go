@@ -121,6 +121,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexa format RGB. Black=000, White=FFF")
 	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
 	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
+	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -316,6 +317,11 @@ func (c *Converter) Validate() error {
 
 	if !colorRegex.MatchString(c.Options.BackgroundColor) {
 		return errors.New("background color must have color format in hexa: [0-9A-F]{3}")
+	}
+
+	// Format
+	if !(c.Options.Format == "jpeg" || c.Options.Format == "png") {
+		return errors.New("format should be jpeg or png")
 	}
 
 	return nil

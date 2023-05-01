@@ -43,6 +43,7 @@ type Options struct {
 	ForegroundColor            string `yaml:"foreground_color"`
 	BackgroundColor            string `yaml:"background_color"`
 	NoResize                   bool   `yaml:"noresize"`
+	Format                     string `yaml:"format"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -86,6 +87,7 @@ func New() *Options {
 		ForegroundColor:            "000",
 		BackgroundColor:            "FFF",
 		NoResize:                   false,
+		Format:                     "jpeg",
 		profiles:                   profiles.New(),
 	}
 }
@@ -195,6 +197,7 @@ func (o *Options) ShowConfig() string {
 		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor)},
 		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor)},
 		{"Resize", !o.NoResize},
+		{"Format", o.Format},
 	} {
 		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
 	}

@@ -8,19 +8,19 @@ import (
 )
 
 type EPUBZipStorageImageWriter struct {
-	fh *os.File
-	fz *zip.Writer
-
-	mut *sync.Mutex
+	fh     *os.File
+	fz     *zip.Writer
+	format string
+	mut    *sync.Mutex
 }
 
-func NewEPUBZipStorageImageWriter(filename string) (*EPUBZipStorageImageWriter, error) {
+func NewEPUBZipStorageImageWriter(filename string, format string) (*EPUBZipStorageImageWriter, error) {
 	fh, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
 	fz := zip.NewWriter(fh)
-	return &EPUBZipStorageImageWriter{fh, fz, &sync.Mutex{}}, nil
+	return &EPUBZipStorageImageWriter{fh, fz, format, &sync.Mutex{}}, nil
 }
 
 func (e *EPUBZipStorageImageWriter) Close() error {
@@ -32,7 +32,7 @@ func (e *EPUBZipStorageImageWriter) Close() error {
 }
 
 func (e *EPUBZipStorageImageWriter) Add(filename string, img image.Image, quality int) error {
-	zipImage, err := CompressImage(filename, img, quality)
+	zipImage, err := CompressImage(filename, e.format, img, quality)
 	if err != nil {
 		return err
 	}
