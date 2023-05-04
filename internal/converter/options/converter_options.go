@@ -21,28 +21,29 @@ type Options struct {
 	Title  string `yaml:"-"`
 
 	// Config
-	Profile                    string `yaml:"profile"`
-	Quality                    int    `yaml:"quality"`
-	Grayscale                  bool   `yaml:"grayscale"`
-	Crop                       bool   `yaml:"crop"`
-	CropRatioLeft              int    `yaml:"crop_ratio_left"`
-	CropRatioUp                int    `yaml:"crop_ratio_up"`
-	CropRatioRight             int    `yaml:"crop_ratio_right"`
-	CropRatioBottom            int    `yaml:"crop_ratio_bottom"`
-	Brightness                 int    `yaml:"brightness"`
-	Contrast                   int    `yaml:"contrast"`
-	AutoRotate                 bool   `yaml:"auto_rotate"`
-	AutoSplitDoublePage        bool   `yaml:"auto_split_double_page"`
-	NoBlankImage               bool   `yaml:"no_blank_image"`
-	Manga                      bool   `yaml:"manga"`
-	HasCover                   bool   `yaml:"has_cover"`
-	LimitMb                    int    `yaml:"limit_mb"`
-	StripFirstDirectoryFromToc bool   `yaml:"strip_first_directory_from_toc"`
-	SortPathMode               int    `yaml:"sort_path_mode"`
-	ForegroundColor            string `yaml:"foreground_color"`
-	BackgroundColor            string `yaml:"background_color"`
-	NoResize                   bool   `yaml:"noresize"`
-	Format                     string `yaml:"format"`
+	Profile                    string  `yaml:"profile"`
+	Quality                    int     `yaml:"quality"`
+	Grayscale                  bool    `yaml:"grayscale"`
+	Crop                       bool    `yaml:"crop"`
+	CropRatioLeft              int     `yaml:"crop_ratio_left"`
+	CropRatioUp                int     `yaml:"crop_ratio_up"`
+	CropRatioRight             int     `yaml:"crop_ratio_right"`
+	CropRatioBottom            int     `yaml:"crop_ratio_bottom"`
+	Brightness                 int     `yaml:"brightness"`
+	Contrast                   int     `yaml:"contrast"`
+	AutoRotate                 bool    `yaml:"auto_rotate"`
+	AutoSplitDoublePage        bool    `yaml:"auto_split_double_page"`
+	NoBlankImage               bool    `yaml:"no_blank_image"`
+	Manga                      bool    `yaml:"manga"`
+	HasCover                   bool    `yaml:"has_cover"`
+	LimitMb                    int     `yaml:"limit_mb"`
+	StripFirstDirectoryFromToc bool    `yaml:"strip_first_directory_from_toc"`
+	SortPathMode               int     `yaml:"sort_path_mode"`
+	ForegroundColor            string  `yaml:"foreground_color"`
+	BackgroundColor            string  `yaml:"background_color"`
+	NoResize                   bool    `yaml:"noresize"`
+	Format                     string  `yaml:"format"`
+	AspectRatio                float64 `yaml:"aspect_ratio"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -94,6 +95,7 @@ func New() *Options {
 		BackgroundColor:            "FFF",
 		NoResize:                   false,
 		Format:                     "jpeg",
+		AspectRatio:                0,
 		profiles:                   profiles.New(),
 	}
 }
@@ -145,7 +147,7 @@ func (o *Options) LoadConfig() error {
 
 // Get current settings for fields that can be saved
 func (o *Options) ShowConfig() string {
-	var profileDesc, viewDesc string
+	var profileDesc string
 	profile := o.GetProfile()
 	if profile != nil {
 		profileDesc = fmt.Sprintf(
@@ -154,13 +156,6 @@ func (o *Options) ShowConfig() string {
 			profile.Description,
 			profile.Width,
 			profile.Height,
-		)
-
-		perfectWidth, perfectHeight := profile.PerfectDim()
-		viewDesc = fmt.Sprintf(
-			"%dx%d",
-			perfectWidth,
-			perfectHeight,
 		)
 	}
 
@@ -174,6 +169,13 @@ func (o *Options) ShowConfig() string {
 		sortpathmode = "path=alphanum, file=alphanum"
 	}
 
+	aspectRatio := "auto"
+	if o.AspectRatio > 0 {
+		aspectRatio = fmt.Sprintf("1:%.02f", o.AspectRatio)
+	} else if o.AspectRatio < 0 {
+		aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+	}
+
 	var b strings.Builder
 	for _, v := range []struct {
 		Key       string
@@ -181,8 +183,6 @@ func (o *Options) ShowConfig() string {
 		Condition bool
 	}{
 		{"Profile", profileDesc, true},
-		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0")), true},
-		{"View", viewDesc, true},
 		{"Format", o.Format, true},
 		{"Quality", o.Quality, o.Format == "jpeg"},
 		{"Grayscale", o.Grayscale, true},
@@ -201,6 +201,7 @@ func (o *Options) ShowConfig() string {
 		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor), true},
 		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor), true},
 		{"Resize", !o.NoResize, true},
+		{"Aspect Ratio", aspectRatio, true},
 	} {
 		if v.Condition {
 			b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.Key, v.Value))

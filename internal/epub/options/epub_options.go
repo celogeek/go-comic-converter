@@ -16,6 +16,7 @@ type Color struct {
 
 type View struct {
 	Width, Height int
+	AspectRatio   float64
 	Color         Color
 }
 

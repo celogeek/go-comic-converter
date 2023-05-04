@@ -15,21 +15,6 @@ type Profile struct {
 	Height      int
 }
 
-// Recommended ratio of image for perfect rendering Portrait or Landscape.
-const PerfectRatio = 1.6
-
-// Compute best dimension based on device size
-func (p Profile) PerfectDim() (int, int) {
-	width, height := float64(p.Width), float64(p.Height)
-	perfectWidth, perfectHeight := height/PerfectRatio, width*PerfectRatio
-	if perfectWidth > width {
-		perfectWidth = width
-	} else {
-		perfectHeight = height
-	}
-	return int(perfectWidth), int(perfectHeight)
-}
-
 type Profiles []Profile
 
 // Initialize list of all supported profiles.

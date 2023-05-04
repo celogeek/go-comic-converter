@@ -99,7 +99,6 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	fmt.Fprintln(os.Stderr, cmd.Options)
 
 	profile := cmd.Options.GetProfile()
-	perfectWidth, perfectHeight := profile.PerfectDim()
 
 	if err := epub.New(&epuboptions.Options{
 		Input:                      cmd.Options.Input,
@@ -131,8 +130,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
 			View: &epuboptions.View{
-				Width:  perfectWidth,
-				Height: perfectHeight,
+				Width:       profile.Width,
+				Height:      profile.Height,
+				AspectRatio: cmd.Options.AspectRatio,
 				Color: epuboptions.Color{
 					Foreground: cmd.Options.ForegroundColor,
 					Background: cmd.Options.BackgroundColor,

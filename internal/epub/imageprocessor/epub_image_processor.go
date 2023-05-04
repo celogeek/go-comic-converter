@@ -85,17 +85,18 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 					}
 
 					img := &epubimage.Image{
-						Id:         input.Id,
-						Part:       part,
-						Raw:        raw,
-						Width:      dst.Bounds().Dx(),
-						Height:     dst.Bounds().Dy(),
-						IsCover:    input.Id == 0 && part == 0,
-						IsBlank:    dst.Bounds().Dx() == 1 && dst.Bounds().Dy() == 1,
-						DoublePage: part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
-						Path:       input.Path,
-						Name:       input.Name,
-						Format:     e.Image.Format,
+						Id:                  input.Id,
+						Part:                part,
+						Raw:                 raw,
+						Width:               dst.Bounds().Dx(),
+						Height:              dst.Bounds().Dy(),
+						IsCover:             input.Id == 0 && part == 0,
+						IsBlank:             dst.Bounds().Dx() == 1 && dst.Bounds().Dy() == 1,
+						DoublePage:          part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
+						Path:                input.Path,
+						Name:                input.Name,
+						Format:              e.Image.Format,
+						OriginalAspectRatio: float64(src.Bounds().Dy()) / float64(src.Bounds().Dx()),
 					}
 
 					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {

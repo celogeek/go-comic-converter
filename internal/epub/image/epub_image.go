@@ -10,18 +10,19 @@ import (
 )
 
 type Image struct {
-	Id         int
-	Part       int
-	Raw        image.Image
-	Width      int
-	Height     int
-	IsCover    bool
-	IsBlank    bool
-	DoublePage bool
-	Path       string
-	Name       string
-	Position   string
-	Format     string
+	Id                  int
+	Part                int
+	Raw                 image.Image
+	Width               int
+	Height              int
+	IsCover             bool
+	IsBlank             bool
+	DoublePage          bool
+	Path                string
+	Name                string
+	Position            string
+	Format              string
+	OriginalAspectRatio float64
 }
 
 // key name of the blank plage after the image
