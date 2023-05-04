@@ -84,6 +84,12 @@ func (c *Converter) AddIntParam(p *int, name string, value int, usage string) {
 	c.order = append(c.order, converterOrderName{value: name})
 }
 
+// Add an float parameter
+func (c *Converter) AddFloatParam(p *float64, name string, value float64, usage string) {
+	c.Cmd.Float64Var(p, name, value, usage)
+	c.order = append(c.order, converterOrderName{value: name})
+}
+
 // Add a boolean parameter
 func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string) {
 	c.Cmd.BoolVar(p, name, value, usage)
@@ -121,6 +127,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
 	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
+	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -349,6 +356,11 @@ func (c *Converter) Validate() error {
 	// Format
 	if !(c.Options.Format == "jpeg" || c.Options.Format == "png") {
 		return errors.New("format should be jpeg or png")
+	}
+
+	// Aspect Ratio
+	if c.Options.AspectRatio < 0 && c.Options.AspectRatio != -1 {
+		return errors.New("aspect ratio should be: -1, 0, > 0")
 	}
 
 	return nil

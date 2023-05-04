@@ -194,8 +194,7 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 	return c.WriteString("")
 }
 
-func (e *ePub) ComputeViewPort(epubParts []*epubPart) {
-	// readjusting view port
+func (e *ePub) computeAspectRatio(epubParts []*epubPart) float64 {
 	var (
 		bestAspectRatio      float64
 		bestAspectRatioCount int
@@ -209,7 +208,7 @@ func (e *ePub) ComputeViewPort(epubParts []*epubPart) {
 	for _, p := range epubParts {
 		aspectRatio[trunc(p.Cover.OriginalAspectRatio)]++
 		for _, i := range p.Images {
-			aspectRatio[trunc(i.OriginalAspectRatio)/100]++
+			aspectRatio[trunc(i.OriginalAspectRatio)]++
 		}
 	}
 
@@ -217,6 +216,20 @@ func (e *ePub) ComputeViewPort(epubParts []*epubPart) {
 		if v > bestAspectRatioCount {
 			bestAspectRatio, bestAspectRatioCount = k, v
 		}
+	}
+
+	return bestAspectRatio
+}
+
+func (e *ePub) computeViewPort(epubParts []*epubPart) {
+	if e.Image.View.AspectRatio == -1 {
+		return //keep device size
+	}
+
+	// readjusting view port
+	bestAspectRatio := e.Image.View.AspectRatio
+	if bestAspectRatio == 0 {
+		bestAspectRatio = e.computeAspectRatio(epubParts)
 	}
 
 	viewWidth, viewHeight := int(float64(e.Image.View.Height)/bestAspectRatio), int(float64(e.Image.View.Width)*bestAspectRatio)
@@ -265,7 +278,7 @@ func (e *ePub) Write() error {
 		Quiet:       e.Quiet,
 	})
 
-	e.ComputeViewPort(epubParts)
+	e.computeViewPort(epubParts)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
