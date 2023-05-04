@@ -202,7 +202,7 @@ func (e *ePub) computeAspectRatio(epubParts []*epubPart) float64 {
 	)
 
 	trunc := func(v float64) float64 {
-		return float64(math.Round(v*100)) / 100
+		return float64(math.Round(v*10000)) / 10000
 	}
 
 	for _, p := range epubParts {
