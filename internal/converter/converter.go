@@ -128,6 +128,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
 	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
+	c.AddBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")

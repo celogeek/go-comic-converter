@@ -130,9 +130,10 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			Manga:               cmd.Options.Manga,
 			HasCover:            cmd.Options.HasCover,
 			View: &epuboptions.View{
-				Width:       profile.Width,
-				Height:      profile.Height,
-				AspectRatio: cmd.Options.AspectRatio,
+				Width:        profile.Width,
+				Height:       profile.Height,
+				AspectRatio:  cmd.Options.AspectRatio,
+				PortraitOnly: cmd.Options.PortraitOnly,
 				Color: epuboptions.Color{
 					Foreground: cmd.Options.ForegroundColor,
 					Background: cmd.Options.BackgroundColor,
