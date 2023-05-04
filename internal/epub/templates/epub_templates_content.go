@@ -67,7 +67,12 @@ func Content(o *ContentOptions) string {
 	} else {
 		spine.CreateAttr("page-progression-direction", "ltr")
 	}
-	addToElement(spine, getSpine)
+
+	if o.ImageOptions.View.PortraitOnly {
+		addToElement(spine, getSpinePortrait)
+	} else {
+		addToElement(spine, getSpineAuto)
+	}
 
 	guide := pkg.CreateElement("guide")
 	addToElement(guide, getGuide)
@@ -82,9 +87,6 @@ func Content(o *ContentOptions) string {
 func getMeta(o *ContentOptions) []tag {
 	metas := []tag{
 		{"meta", tagAttrs{"property": "dcterms:modified"}, o.UpdatedAt},
-		{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
-		{"meta", tagAttrs{"property": "rendition:spread"}, "auto"},
-		{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
 		{"meta", tagAttrs{"property": "schema:accessMode"}, "visual"},
 		{"meta", tagAttrs{"property": "schema:accessModeSufficient"}, "visual"},
 		{"meta", tagAttrs{"property": "schema:accessibilityHazard"}, "noFlashingHazard"},
@@ -100,6 +102,20 @@ func getMeta(o *ContentOptions) []tag {
 		{"dc:publisher", tagAttrs{}, o.Publisher},
 		{"dc:contributor", tagAttrs{}, "Go Comic Convertor"},
 		{"dc:date", tagAttrs{}, o.UpdatedAt},
+	}
+
+	if o.ImageOptions.View.PortraitOnly {
+		metas = append(metas, []tag{
+			{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
+			{"meta", tagAttrs{"property": "rendition:spread"}, "none"},
+			{"meta", tagAttrs{"property": "rendition:orientation"}, "portrait"},
+		}...)
+	} else {
+		metas = append(metas, []tag{
+			{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
+			{"meta", tagAttrs{"property": "rendition:spread"}, "auto"},
+			{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
+		}...)
 	}
 
 	if o.ImageOptions.Manga {
@@ -142,9 +158,12 @@ func getManifest(o *ContentOptions) []tag {
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
-		{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+	}
+
+	if !o.ImageOptions.View.PortraitOnly {
+		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
 	}
 
 	if o.ImageOptions.HasCover || o.Current > 1 {
@@ -153,7 +172,7 @@ func getManifest(o *ContentOptions) []tag {
 
 	lastImage := o.Images[len(o.Images)-1]
 	for _, img := range o.Images {
-		addTag(img, img.DoublePage || (img.Part == 0 && img == lastImage))
+		addTag(img, !o.ImageOptions.View.PortraitOnly && (img.DoublePage || (img.Part == 0 && img == lastImage)))
 	}
 
 	items = append(items, imageTags...)
@@ -164,7 +183,7 @@ func getManifest(o *ContentOptions) []tag {
 }
 
 // spine part of the content
-func getSpine(o *ContentOptions) []tag {
+func getSpineAuto(o *ContentOptions) []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	getSpread := func(isDoublePage bool) string {
 		isOnTheRight = !isOnTheRight
@@ -211,6 +230,20 @@ func getSpine(o *ContentOptions) []tag {
 		})
 	}
 
+	return spine
+}
+
+func getSpinePortrait(o *ContentOptions) []tag {
+	spine := []tag{
+		{"itemref", tagAttrs{"idref": "page_title"}, ""},
+	}
+	for _, img := range o.Images {
+		spine = append(spine, tag{
+			"itemref",
+			tagAttrs{"idref": img.PageKey()},
+			"",
+		})
+	}
 	return spine
 }
 
