@@ -6,6 +6,7 @@ package epub
 import (
 	"archive/zip"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -193,6 +194,39 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 	return c.WriteString("")
 }
 
+func (e *ePub) ComputeViewPort(epubParts []*epubPart) {
+	// readjusting view port
+	var (
+		bestAspectRatio      float64
+		bestAspectRatioCount int
+		aspectRatio          = map[float64]int{}
+	)
+
+	trunc := func(v float64) float64 {
+		return float64(math.Round(v*100)) / 100
+	}
+
+	for _, p := range epubParts {
+		aspectRatio[trunc(p.Cover.OriginalAspectRatio)]++
+		for _, i := range p.Images {
+			aspectRatio[trunc(i.OriginalAspectRatio)/100]++
+		}
+	}
+
+	for k, v := range aspectRatio {
+		if v > bestAspectRatioCount {
+			bestAspectRatio, bestAspectRatioCount = k, v
+		}
+	}
+
+	viewWidth, viewHeight := int(float64(e.Image.View.Height)/bestAspectRatio), int(float64(e.Image.View.Width)*bestAspectRatio)
+	if viewWidth > e.Image.View.Width {
+		e.Image.View.Height = viewHeight
+	} else {
+		e.Image.View.Width = viewWidth
+	}
+}
+
 // create the zip
 func (e *ePub) Write() error {
 	type zipContent struct {
@@ -231,6 +265,7 @@ func (e *ePub) Write() error {
 		Quiet:       e.Quiet,
 	})
 
+	e.ComputeViewPort(epubParts)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""

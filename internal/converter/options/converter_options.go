@@ -145,7 +145,7 @@ func (o *Options) LoadConfig() error {
 
 // Get current settings for fields that can be saved
 func (o *Options) ShowConfig() string {
-	var profileDesc, viewDesc string
+	var profileDesc string
 	profile := o.GetProfile()
 	if profile != nil {
 		profileDesc = fmt.Sprintf(
@@ -154,13 +154,6 @@ func (o *Options) ShowConfig() string {
 			profile.Description,
 			profile.Width,
 			profile.Height,
-		)
-
-		perfectWidth, perfectHeight := profile.PerfectDim()
-		viewDesc = fmt.Sprintf(
-			"%dx%d",
-			perfectWidth,
-			perfectHeight,
 		)
 	}
 
@@ -181,8 +174,6 @@ func (o *Options) ShowConfig() string {
 		Condition bool
 	}{
 		{"Profile", profileDesc, true},
-		{"ViewRatio", fmt.Sprintf("1:%s", strings.TrimRight(fmt.Sprintf("%f", profiles.PerfectRatio), "0")), true},
-		{"View", viewDesc, true},
 		{"Format", o.Format, true},
 		{"Quality", o.Quality, o.Format == "jpeg"},
 		{"Grayscale", o.Grayscale, true},
