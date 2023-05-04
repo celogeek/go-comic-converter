@@ -44,6 +44,7 @@ type Options struct {
 	NoResize                   bool    `yaml:"noresize"`
 	Format                     string  `yaml:"format"`
 	AspectRatio                float64 `yaml:"aspect_ratio"`
+	PortraitOnly               bool    `yaml:"portrait_only"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -73,30 +74,20 @@ type Options struct {
 // Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:                    "",
-		Quality:                    85,
-		Grayscale:                  true,
-		Crop:                       true,
-		CropRatioLeft:              1,
-		CropRatioUp:                1,
-		CropRatioRight:             1,
-		CropRatioBottom:            3,
-		Brightness:                 0,
-		Contrast:                   0,
-		AutoRotate:                 false,
-		AutoSplitDoublePage:        false,
-		NoBlankImage:               true,
-		Manga:                      false,
-		HasCover:                   true,
-		LimitMb:                    0,
-		StripFirstDirectoryFromToc: false,
-		SortPathMode:               1,
-		ForegroundColor:            "000",
-		BackgroundColor:            "FFF",
-		NoResize:                   false,
-		Format:                     "jpeg",
-		AspectRatio:                0,
-		profiles:                   profiles.New(),
+		Quality:         85,
+		Grayscale:       true,
+		Crop:            true,
+		CropRatioLeft:   1,
+		CropRatioUp:     1,
+		CropRatioRight:  1,
+		CropRatioBottom: 3,
+		NoBlankImage:    true,
+		HasCover:        true,
+		SortPathMode:    1,
+		ForegroundColor: "000",
+		BackgroundColor: "FFF",
+		Format:          "jpeg",
+		profiles:        profiles.New(),
 	}
 }
 
@@ -202,6 +193,7 @@ func (o *Options) ShowConfig() string {
 		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor), true},
 		{"Resize", !o.NoResize, true},
 		{"Aspect Ratio", aspectRatio, true},
+		{"Portrait Only", o.PortraitOnly, true},
 	} {
 		if v.Condition {
 			b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.Key, v.Value))

@@ -299,9 +299,12 @@ func (e *ePub) Write() error {
 		if totalParts > 1 {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
-		titleAlign := "left:0"
-		if e.Image.Manga {
-			titleAlign = "right:0"
+		titleAlign := ""
+		if !e.Image.View.PortraitOnly {
+			titleAlign = "left:0"
+			if e.Image.Manga {
+				titleAlign = "right:0"
+			}
 		}
 
 		content := []zipContent{
@@ -323,16 +326,21 @@ func (e *ePub) Write() error {
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
 				"View": e.Image.View,
 			})},
-			{"OEBPS/Text/space_title.xhtml", e.render(epubtemplates.Blank, map[string]any{
-				"Title":    "Blank Page Title",
-				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			})},
+
 			{"OEBPS/Text/title.xhtml", e.render(epubtemplates.Text, map[string]any{
 				"Title":      title,
 				"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
 				"ImagePath":  fmt.Sprintf("Images/title.%s", e.Image.Format),
 				"ImageStyle": part.Cover.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 			})},
+		}
+		if !e.Image.View.PortraitOnly {
+			content = append(content, zipContent{
+				"OEBPS/Text/space_title.xhtml", e.render(epubtemplates.Blank, map[string]any{
+					"Title":    "Blank Page Title",
+					"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+				}),
+			})
 		}
 
 		if err = wz.WriteMagic(); err != nil {
@@ -367,7 +375,7 @@ func (e *ePub) Write() error {
 			}
 
 			// Double Page or Last Image that is not a double page
-			if img.DoublePage || (img.Part == 0 && img == lastImage) {
+			if !e.Image.View.PortraitOnly && (img.DoublePage || (img.Part == 0 && img == lastImage)) {
 				if err := e.writeBlank(wz, img); err != nil {
 					return err
 				}
