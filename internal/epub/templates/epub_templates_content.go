@@ -10,6 +10,7 @@ import (
 
 type ContentOptions struct {
 	Title        string
+	HasTitlePage bool
 	UID          string
 	Author       string
 	Publisher    string
@@ -156,14 +157,19 @@ func getManifest(o *ContentOptions) []tag {
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
-		{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
-		{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 		{"item", tagAttrs{"id": "page_cover", "href": "Text/cover.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "img_cover", "href": fmt.Sprintf("Images/cover.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 	}
 
-	if !o.ImageOptions.View.PortraitOnly {
-		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
+	if o.HasTitlePage {
+		items = append(items,
+			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
+			tag{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+		)
+
+		if !o.ImageOptions.View.PortraitOnly {
+			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
+		}
 	}
 
 	lastImage := o.Images[len(o.Images)-1]
@@ -198,9 +204,12 @@ func getSpineAuto(o *ContentOptions) []tag {
 		return fmt.Sprintf("%s layout-blank", getSpread(false))
 	}
 
-	spine := []tag{
-		{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
-		{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
+	spine := []tag{}
+	if o.HasTitlePage {
+		spine = append(spine,
+			tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
+			tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
+		)
 	}
 	for _, img := range o.Images {
 		if img.DoublePage && o.ImageOptions.Manga == isOnTheRight {
@@ -230,8 +239,11 @@ func getSpineAuto(o *ContentOptions) []tag {
 }
 
 func getSpinePortrait(o *ContentOptions) []tag {
-	spine := []tag{
-		{"itemref", tagAttrs{"idref": "page_title"}, ""},
+	spine := []tag{}
+	if o.HasTitlePage {
+		spine = append(spine,
+			tag{"itemref", tagAttrs{"idref": "page_title"}, ""},
+		)
 	}
 	for _, img := range o.Images {
 		spine = append(spine, tag{

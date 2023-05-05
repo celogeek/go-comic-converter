@@ -45,6 +45,7 @@ type Options struct {
 	Format                     string  `yaml:"format"`
 	AspectRatio                float64 `yaml:"aspect_ratio"`
 	PortraitOnly               bool    `yaml:"portrait_only"`
+	TitlePage                  int     `yaml:"title_page"`
 
 	// Default Config
 	Show  bool `yaml:"-"`
@@ -87,6 +88,7 @@ func New() *Options {
 		ForegroundColor: "000",
 		BackgroundColor: "FFF",
 		Format:          "jpeg",
+		TitlePage:       1,
 		profiles:        profiles.New(),
 	}
 }
@@ -167,6 +169,16 @@ func (o *Options) ShowConfig() string {
 		aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
 	}
 
+	titlePage := ""
+	switch o.TitlePage {
+	case 0:
+		titlePage = "never"
+	case 1:
+		titlePage = "always"
+	case 2:
+		titlePage = "when epub is splitted"
+	}
+
 	var b strings.Builder
 	for _, v := range []struct {
 		Key       string
@@ -194,6 +206,7 @@ func (o *Options) ShowConfig() string {
 		{"Resize", !o.NoResize, true},
 		{"Aspect Ratio", aspectRatio, true},
 		{"Portrait Only", o.PortraitOnly, true},
+		{"Title Page", titlePage, true},
 	} {
 		if v.Condition {
 			b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.Key, v.Value))

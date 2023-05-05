@@ -105,6 +105,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Output:                     cmd.Options.Output,
 		LimitMb:                    cmd.Options.LimitMb,
 		Title:                      cmd.Options.Title,
+		TitlePage:                  cmd.Options.TitlePage,
 		Author:                     cmd.Options.Author,
 		StripFirstDirectoryFromToc: cmd.Options.StripFirstDirectoryFromToc,
 		SortPathMode:               cmd.Options.SortPathMode,

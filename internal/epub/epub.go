@@ -372,6 +372,7 @@ func (e *ePub) Write() error {
 	})
 
 	e.computeViewPort(epubParts)
+	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
@@ -398,6 +399,7 @@ func (e *ePub) Write() error {
 			{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
 			{"OEBPS/content.opf", epubtemplates.Content(&epubtemplates.ContentOptions{
 				Title:        title,
+				HasTitlePage: hasTitlePage,
 				UID:          e.UID,
 				Author:       e.Author,
 				Publisher:    e.Publisher,
@@ -408,7 +410,7 @@ func (e *ePub) Write() error {
 				Current:      i + 1,
 				Total:        totalParts,
 			})},
-			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, e.StripFirstDirectoryFromToc, part.Images)},
+			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
 				"View": e.Image.View,
 			})},
@@ -427,8 +429,10 @@ func (e *ePub) Write() error {
 			return err
 		}
 
-		if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
-			return err
+		if hasTitlePage {
+			if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
+				return err
+			}
 		}
 
 		lastImage := part.Images[len(part.Images)-1]

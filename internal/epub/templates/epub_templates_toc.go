@@ -9,7 +9,7 @@ import (
 )
 
 // create toc
-func Toc(title string, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
+func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	doc.CreateDirective("DOCTYPE html")
@@ -55,7 +55,11 @@ func Toc(title string, stripFirstDirectoryFromToc bool, images []*epubimage.Imag
 
 	beginning := etree.NewElement("li")
 	beginningLink := beginning.CreateElement("a")
-	beginningLink.CreateAttr("href", "Text/title.xhtml")
+	if hasTitle {
+		beginningLink.CreateAttr("href", "Text/title.xhtml")
+	} else {
+		beginningLink.CreateAttr("href", images[0].PagePath())
+	}
 	beginningLink.CreateText(title)
 	ol.InsertChildAt(0, beginning)
 

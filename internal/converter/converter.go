@@ -129,6 +129,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
 	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 	c.AddBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
+	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is splitted")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -361,7 +362,12 @@ func (c *Converter) Validate() error {
 
 	// Aspect Ratio
 	if c.Options.AspectRatio < 0 && c.Options.AspectRatio != -1 {
-		return errors.New("aspect ratio should be: -1, 0, > 0")
+		return errors.New("aspect ratio should be -1, 0 or > 0")
+	}
+
+	// Title Page
+	if c.Options.TitlePage < 0 || c.Options.TitlePage > 2 {
+		return errors.New("title page should be 0, 1 or 2")
 	}
 
 	return nil

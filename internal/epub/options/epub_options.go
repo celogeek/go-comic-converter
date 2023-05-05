@@ -41,6 +41,7 @@ type Options struct {
 	Input                      string
 	Output                     string
 	Title                      string
+	TitlePage                  int
 	Author                     string
 	LimitMb                    int
 	StripFirstDirectoryFromToc bool
