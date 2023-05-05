@@ -24,6 +24,7 @@ type Options struct {
 	Profile                    string  `yaml:"profile"`
 	Quality                    int     `yaml:"quality"`
 	Grayscale                  bool    `yaml:"grayscale"`
+	GrayscaleMode              int     `yaml:"grayscale_mode"` // 0 = normal, 1 = average, 2 = luminance
 	Crop                       bool    `yaml:"crop"`
 	CropRatioLeft              int     `yaml:"crop_ratio_left"`
 	CropRatioUp                int     `yaml:"crop_ratio_up"`
@@ -179,6 +180,14 @@ func (o *Options) ShowConfig() string {
 		titlePage = "when epub is splitted"
 	}
 
+	grayscaleMode := "normal"
+	switch o.GrayscaleMode {
+	case 1:
+		grayscaleMode = "average"
+	case 2:
+		grayscaleMode = "luminance"
+	}
+
 	var b strings.Builder
 	for _, v := range []struct {
 		Key       string
@@ -189,6 +198,7 @@ func (o *Options) ShowConfig() string {
 		{"Format", o.Format, true},
 		{"Quality", o.Quality, o.Format == "jpeg"},
 		{"Grayscale", o.Grayscale, true},
+		{"Grayscale Mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
 		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},

@@ -108,6 +108,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
 	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
 	c.AddBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
+	c.AddIntParam(&c.Options.GrayscaleMode, "grayscale-mode", c.Options.GrayscaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
 	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
 	c.AddIntParam(&c.Options.CropRatioLeft, "crop-ratio-left", c.Options.CropRatioLeft, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
 	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
@@ -368,6 +369,11 @@ func (c *Converter) Validate() error {
 	// Title Page
 	if c.Options.TitlePage < 0 || c.Options.TitlePage > 2 {
 		return errors.New("title page should be 0, 1 or 2")
+	}
+
+	// Grayscale Mode
+	if c.Options.GrayscaleMode < 0 || c.Options.GrayscaleMode > 2 {
+		return errors.New("grayscale mode should be 0, 1 or 2")
 	}
 
 	return nil

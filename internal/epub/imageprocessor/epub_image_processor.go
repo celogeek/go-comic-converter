@@ -215,8 +215,23 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	}
 
 	if e.Image.GrayScale {
-		filters = append(filters, gift.Grayscale())
-		splitFilters = append(splitFilters, gift.Grayscale())
+		var f gift.Filter
+		switch e.Image.GrayScaleMode {
+		case 1: // average
+			f = gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
+				y := (r0 + g0 + b0) / 3
+				return y, y, y, a0
+			})
+		case 2: // luminance
+			f = gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
+				y := 0.2126*r0 + 0.7152*g0 + 0.0722*b0
+				return y, y, y, a0
+			})
+		default:
+			f = gift.Grayscale()
+		}
+		filters = append(filters, f)
+		splitFilters = append(splitFilters, f)
 	}
 
 	filters = append(filters, epubimagefilters.Pixel())

@@ -33,6 +33,7 @@ type Image struct {
 	HasCover            bool
 	View                *View
 	GrayScale           bool
+	GrayScaleMode       int
 	Resize              bool
 	Format              string
 }

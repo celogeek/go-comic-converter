@@ -114,8 +114,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		DryVerbose:                 cmd.Options.DryVerbose,
 		Quiet:                      cmd.Options.Quiet,
 		Image: &epuboptions.Image{
-			Quality:   cmd.Options.Quality,
-			GrayScale: cmd.Options.Grayscale,
+			Quality:       cmd.Options.Quality,
+			GrayScale:     cmd.Options.Grayscale,
+			GrayScaleMode: cmd.Options.GrayscaleMode,
 			Crop: &epuboptions.Crop{
 				Enabled: cmd.Options.Crop,
 				Left:    cmd.Options.CropRatioLeft,
