@@ -124,9 +124,7 @@ func getMeta(o *ContentOptions) []tag {
 		metas = append(metas, tag{"meta", tagAttrs{"name": "primary-writing-mode", "content": "horizontal-lr"}, ""})
 	}
 
-	if o.Cover != nil {
-		metas = append(metas, tag{"meta", tagAttrs{"name": "cover", "content": o.Cover.ImgKey()}, ""})
-	}
+	metas = append(metas, tag{"meta", tagAttrs{"name": "cover", "content": "img_cover"}, ""})
 
 	if o.Total > 1 {
 		metas = append(
@@ -160,14 +158,12 @@ func getManifest(o *ContentOptions) []tag {
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 		{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+		{"item", tagAttrs{"id": "page_cover", "href": "Text/cover.xhtml", "media-type": "application/xhtml+xml"}, ""},
+		{"item", tagAttrs{"id": "img_cover", "href": fmt.Sprintf("Images/cover.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 	}
 
 	if !o.ImageOptions.View.PortraitOnly {
 		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
-	}
-
-	if o.ImageOptions.HasCover || o.Current > 1 {
-		addTag(o.Cover, false)
 	}
 
 	lastImage := o.Images[len(o.Images)-1]
@@ -249,10 +245,8 @@ func getSpinePortrait(o *ContentOptions) []tag {
 
 // guide part of the content
 func getGuide(o *ContentOptions) []tag {
-	guide := []tag{}
-	if o.Cover != nil {
-		guide = append(guide, tag{"reference", tagAttrs{"type": "cover", "title": "cover", "href": o.Cover.PagePath()}, ""})
+	return []tag{
+		{"reference", tagAttrs{"type": "cover", "title": "cover", "href": "Text/cover.xhtml"}, ""},
+		{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].PagePath()}, ""},
 	}
-	guide = append(guide, tag{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].PagePath()}, ""})
-	return guide
 }

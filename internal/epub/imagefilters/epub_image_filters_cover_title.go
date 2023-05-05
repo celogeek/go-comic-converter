@@ -12,12 +12,17 @@ import (
 )
 
 // Create a title with the cover image
-func CoverTitle(title string) gift.Filter {
-	return &coverTitle{title}
+func CoverTitle(title string, align string, pctWidth int, pctMargin int, maxFontSize int, borderSize int) gift.Filter {
+	return &coverTitle{title, align, pctWidth, pctMargin, maxFontSize, borderSize}
 }
 
 type coverTitle struct {
-	title string
+	title       string
+	align       string
+	pctWidth    int
+	pctMargin   int
+	maxFontSize int
+	borderSize  int
 }
 
 // size is the same as source
@@ -28,28 +33,36 @@ func (p *coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 // blur the src image, and create a box with the title in the middle
 func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options) {
 	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
+	if p.title == "" {
+		return
+	}
 
 	srcWidth, srcHeight := src.Bounds().Dx(), src.Bounds().Dy()
 
 	// Calculate size of title
 	f, _ := truetype.Parse(gomonobold.TTF)
-	borderSize := 4
 	var fontSize, textWidth, textHeight int
-	for fontSize = 64; fontSize >= 12; fontSize -= 1 {
+	for fontSize = p.maxFontSize; fontSize >= 12; fontSize -= 1 {
 		face := truetype.NewFace(f, &truetype.Options{Size: float64(fontSize), DPI: 72})
 		textWidth = font.MeasureString(face, p.title).Ceil()
 		textHeight = face.Metrics().Ascent.Ceil() + face.Metrics().Descent.Ceil()
-		if textWidth+2*borderSize < srcWidth && 3*textHeight+2*borderSize < srcHeight {
+		if textWidth+2*p.borderSize < srcWidth*p.pctWidth/100 && 3*textHeight+2*p.borderSize < srcHeight {
 			break
 		}
 	}
 
 	// Draw rectangle in the middle of the image
-	textPosStart := srcHeight/2 - textHeight/2
-	textPosEnd := srcHeight/2 + textHeight/2
-	marginSize := fontSize
-	borderArea := image.Rect(0, textPosStart-borderSize-marginSize, srcWidth, textPosEnd+borderSize+marginSize)
-	textArea := image.Rect(borderSize, textPosStart-marginSize, srcWidth-borderSize, textPosEnd+marginSize)
+	marginSize := fontSize * p.pctMargin / 100
+	var textPosStart, textPosEnd int
+	if p.align == "bottom" {
+		textPosStart = srcHeight - textHeight - p.borderSize - marginSize
+		textPosEnd = srcHeight - p.borderSize - marginSize
+	} else {
+		textPosStart = srcHeight/2 - textHeight/2
+		textPosEnd = srcHeight/2 + textHeight/2
+	}
+	borderArea := image.Rect((srcWidth-(srcWidth*p.pctWidth/100))/2, textPosStart-p.borderSize-marginSize, (srcWidth+(srcWidth*p.pctWidth/100))/2, textPosEnd+p.borderSize+marginSize)
+	textArea := image.Rect(borderArea.Bounds().Min.X+p.borderSize, textPosStart-marginSize, borderArea.Bounds().Max.X-p.borderSize, textPosEnd+marginSize)
 
 	draw.Draw(
 		dst,
@@ -76,9 +89,10 @@ func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options
 	c.SetDst(dst)
 	c.SetSrc(image.Black)
 
-	textLeft := srcWidth/2 - textWidth/2
-	if textLeft < borderSize {
-		textLeft = borderSize
+	textLeft := textArea.Min.X + textArea.Dx()/2 - textWidth/2
+	if textLeft < textArea.Min.X {
+		textLeft = textArea.Min.X
 	}
-	c.DrawString(p.title, freetype.Pt(textLeft, srcHeight/2+textHeight/4))
+	textTop := textArea.Min.Y + textArea.Dy()/2 + textHeight/4
+	c.DrawString(p.title, freetype.Pt(textLeft, textTop))
 }

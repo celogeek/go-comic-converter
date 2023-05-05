@@ -6,6 +6,7 @@ package epubimageprocessor
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"os"
 	"sync"
@@ -168,7 +169,7 @@ func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) dra
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
 func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
-	var filters, splitFilter []gift.Filter
+	var filters, splitFilters []gift.Filter
 	var images []image.Image
 
 	// Lookup for margin if crop is enable or if we want to remove blank image
@@ -188,7 +189,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		// crop is enable or if blank image with noblankimage options
 		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
 			filters = append(filters, f)
-			splitFilter = append(splitFilter, f)
+			splitFilters = append(splitFilters, f)
 		}
 	}
 
@@ -199,18 +200,23 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	if e.Image.Contrast != 0 {
 		f := gift.Contrast(float32(e.Image.Contrast))
 		filters = append(filters, f)
-		splitFilter = append(splitFilter, f)
+		splitFilters = append(splitFilters, f)
 	}
 
 	if e.Image.Brightness != 0 {
 		f := gift.Brightness(float32(e.Image.Brightness))
 		filters = append(filters, f)
-		splitFilter = append(splitFilter, f)
+		splitFilters = append(splitFilters, f)
 	}
 
 	if e.Image.Resize {
 		f := gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling)
 		filters = append(filters, f)
+	}
+
+	if e.Image.GrayScale {
+		filters = append(filters, gift.Grayscale())
+		splitFilters = append(splitFilters, gift.Grayscale())
 	}
 
 	filters = append(filters, epubimagefilters.Pixel())
@@ -240,7 +246,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 
 	// convert double page
 	for _, b := range []bool{e.Image.Manga, !e.Image.Manga} {
-		g := gift.New(splitFilter...)
+		g := gift.New(splitFilters...)
 		g.Add(epubimagefilters.CropSplitDoublePage(b))
 		if e.Image.Resize {
 			g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
@@ -253,15 +259,52 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	return images
 }
 
+type CoverTitleDataOptions struct {
+	Src         image.Image
+	Name        string
+	Text        string
+	Align       string
+	PctWidth    int
+	PctMargin   int
+	MaxFontSize int
+	BorderSize  int
+}
+
+func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
+	return image.NewPaletted(bounds, color.Palette{
+		color.Gray{0x00},
+		color.Gray{0x11},
+		color.Gray{0x22},
+		color.Gray{0x33},
+		color.Gray{0x44},
+		color.Gray{0x55},
+		color.Gray{0x66},
+		color.Gray{0x77},
+		color.Gray{0x88},
+		color.Gray{0x99},
+		color.Gray{0xAA},
+		color.Gray{0xBB},
+		color.Gray{0xCC},
+		color.Gray{0xDD},
+		color.Gray{0xEE},
+		color.Gray{0xFF},
+	})
+}
+
 // create a title page with the cover
-func (e *EPUBImageProcessor) CoverTitleData(src image.Image, title string) (*epubzip.ZipImage, error) {
+func (e *EPUBImageProcessor) CoverTitleData(o *CoverTitleDataOptions) (*epubzip.ZipImage, error) {
 	// Create a blur version of the cover
-	g := gift.New(epubimagefilters.CoverTitle(title))
-	dst := e.createImage(src, g.Bounds(src.Bounds()))
-	g.Draw(dst, src)
+	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))
+	var dst draw.Image
+	if o.Name == "cover" && e.Image.GrayScale {
+		dst = e.Cover16LevelOfGray(o.Src.Bounds())
+	} else {
+		dst = e.createImage(o.Src, g.Bounds(o.Src.Bounds()))
+	}
+	g.Draw(dst, o.Src)
 
 	return epubzip.CompressImage(
-		fmt.Sprintf("OEBPS/Images/title.%s", e.Image.Format),
+		fmt.Sprintf("OEBPS/Images/%s.%s", o.Name, e.Image.Format),
 		e.Image.Format,
 		dst,
 		e.Image.Quality,

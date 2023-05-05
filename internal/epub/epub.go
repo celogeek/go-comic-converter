@@ -100,6 +100,49 @@ func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
 }
 
 // write title image
+func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, totalParts int) error {
+	title := "Cover"
+	text := ""
+	if totalParts > 1 {
+		text = fmt.Sprintf("%d / %d", part, totalParts)
+		title = fmt.Sprintf("%s %s", title, text)
+	}
+
+	if err := wz.WriteContent(
+		"OEBPS/Text/cover.xhtml",
+		[]byte(e.render(epubtemplates.Text, map[string]any{
+			"Title":      title,
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"ImagePath":  fmt.Sprintf("Images/cover.%s", e.Image.Format),
+			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+		})),
+	); err != nil {
+		return err
+	}
+
+	coverTitle, err := e.imageProcessor.CoverTitleData(&epubimageprocessor.CoverTitleDataOptions{
+		Src:         img.Raw,
+		Name:        "cover",
+		Text:        text,
+		Align:       "bottom",
+		PctWidth:    50,
+		PctMargin:   50,
+		MaxFontSize: 96,
+		BorderSize:  8,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := wz.WriteRaw(coverTitle); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// write title image
 func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title string) error {
 	titleAlign := ""
 	if !e.Image.View.PortraitOnly {
@@ -134,7 +177,16 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 		return err
 	}
 
-	coverTitle, err := e.imageProcessor.CoverTitleData(img.Raw, title)
+	coverTitle, err := e.imageProcessor.CoverTitleData(&epubimageprocessor.CoverTitleDataOptions{
+		Src:         img.Raw,
+		Name:        "title",
+		Text:        title,
+		Align:       "center",
+		PctWidth:    100,
+		PctMargin:   100,
+		MaxFontSize: 64,
+		BorderSize:  4,
+	})
 	if err != nil {
 		return err
 	}
@@ -184,11 +236,8 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 	// compute size of the EPUB part and try to be as close as possible of the target
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 	xhtmlSize := uint64(1024)
-	// descriptor files + title
-	baseSize := uint64(16*1024) + imgStorage.Size(cover.EPUBImgPath())
-	if e.Image.HasCover {
-		baseSize += imgStorage.Size(cover.EPUBImgPath())
-	}
+	// descriptor files + title + cover
+	baseSize := uint64(16*1024) + imgStorage.Size(cover.EPUBImgPath())*2
 
 	currentSize := baseSize
 	currentImages := make([]*epubimage.Image, 0)
@@ -203,9 +252,6 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 			})
 			part += 1
 			currentSize = baseSize
-			if !e.Image.HasCover {
-				currentSize += imgStorage.Size(cover.EPUBImgPath())
-			}
 			currentImages = make([]*epubimage.Image, 0)
 		}
 		currentSize += imgSize
@@ -377,16 +423,12 @@ func (e *ePub) Write() error {
 			}
 		}
 
-		if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
+		if err = e.writeCoverImage(wz, part.Cover, i+1, totalParts); err != nil {
 			return err
 		}
 
-		// Cover exist or part > 1
-		// If no cover, part 2 and more will include the image as a cover
-		if e.Image.HasCover || i > 0 {
-			if err := e.writeImage(wz, part.Cover, imgStorage.Get(part.Cover.EPUBImgPath())); err != nil {
-				return err
-			}
+		if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
+			return err
 		}
 
 		lastImage := part.Images[len(part.Images)-1]
