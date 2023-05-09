@@ -26,6 +26,7 @@ type Image struct {
 	Quality             int
 	Brightness          int
 	Contrast            int
+	AutoContrast        bool
 	AutoRotate          bool
 	AutoSplitDoublePage bool
 	NoBlankImage        bool

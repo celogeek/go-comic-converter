@@ -32,6 +32,7 @@ type Options struct {
 	CropRatioBottom            int     `yaml:"crop_ratio_bottom"`
 	Brightness                 int     `yaml:"brightness"`
 	Contrast                   int     `yaml:"contrast"`
+	AutoContrast               bool    `yaml:"auto_contrast"`
 	AutoRotate                 bool    `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool    `yaml:"auto_split_double_page"`
 	NoBlankImage               bool    `yaml:"no_blank_image"`
@@ -203,6 +204,7 @@ func (o *Options) ShowConfig() string {
 		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
+		{"AutoContrast", o.AutoContrast, true},
 		{"AutoRotate", o.AutoRotate, true},
 		{"AutoSplitDoublePage", o.AutoSplitDoublePage, true},
 		{"NoBlankImage", o.NoBlankImage, true},

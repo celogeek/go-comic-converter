@@ -116,6 +116,7 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
 	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
 	c.AddBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
 	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
@@ -227,6 +228,7 @@ func (c *Converter) Parse() {
 	}
 
 	if c.Options.Auto {
+		c.Options.AutoContrast = true
 		c.Options.AutoRotate = true
 		c.Options.AutoSplitDoublePage = true
 	}
@@ -256,6 +258,7 @@ func (c *Converter) Parse() {
 		c.Options.Crop = false
 		c.Options.Brightness = 0
 		c.Options.Contrast = 0
+		c.Options.AutoContrast = false
 		c.Options.AutoRotate = false
 		c.Options.NoBlankImage = false
 		c.Options.NoResize = true

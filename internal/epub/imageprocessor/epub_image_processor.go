@@ -197,6 +197,12 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		filters = append(filters, gift.Rotate90())
 	}
 
+	if e.Image.AutoContrast {
+		f := epubimagefilters.AutoContrast()
+		filters = append(filters, f)
+		splitFilters = append(splitFilters, f)
+	}
+
 	if e.Image.Contrast != 0 {
 		f := gift.Contrast(float32(e.Image.Contrast))
 		filters = append(filters, f)
