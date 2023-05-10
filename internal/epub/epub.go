@@ -237,7 +237,7 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 	maxSize := uint64(e.LimitMb * 1024 * 1024)
 	xhtmlSize := uint64(1024)
 	// descriptor files + title + cover
-	baseSize := uint64(16*1024) + imgStorage.Size(cover.EPUBImgPath())*2
+	baseSize := uint64(128*1024) + imgStorage.Size(cover.EPUBImgPath())*2
 
 	currentSize := baseSize
 	currentImages := make([]*epubimage.Image, 0)
