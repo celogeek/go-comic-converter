@@ -20,6 +20,10 @@ type Profiles []Profile
 // Initialize list of all supported profiles.
 func New() Profiles {
 	return []Profile{
+		// High Resolution for Tablette
+		{"HR", "High Resolution", 2400, 3840},
+		{"SR", "Standard Resolution", 1200, 1920},
+		//Kindle
 		{"K1", "Kindle 1", 600, 670},
 		{"K11", "Kindle 11", 1072, 1448},
 		{"K2", "Kindle 2", 600, 670},
@@ -45,8 +49,6 @@ func New() Profiles {
 		{"KoF", "Kobo Forma", 1440, 1920},
 		{"KoS", "Kobo Sage", 1440, 1920},
 		{"KoE", "Kobo Elipsa", 1404, 1872},
-		// High Resolution for Tablette
-		{"HR", "High Resolution", 2400, 3840},
 	}
 }
 
