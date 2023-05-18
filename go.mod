@@ -3,7 +3,7 @@ module github.com/celogeek/go-comic-converter/v2
 go 1.20
 
 require (
-	github.com/beevik/etree v1.1.4
+	github.com/beevik/etree v1.2.0
 	github.com/disintegration/gift v1.2.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
