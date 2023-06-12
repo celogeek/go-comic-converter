@@ -13,11 +13,13 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Customize output image quality
 - Intelligent cropping (support removing even page numbers)
 - Customize brightness and contrast
+- Auto contrast
 - Auto rotate (if reader mainly read on portrait)
 - Auto split double page (for easy read on portrait)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Support cover page or not (first page will be taken in that case)
+- Support title page (cover with embedded title and part)
 - Split EPUB size for easy upload
 - 3 sorting methods (depending on your source, you can ensure the page go in the right order)
 - Save and reuse your own perfect settings
@@ -60,12 +62,12 @@ You can check if a new version is available with:
 $ go-comic-converter -version
 go-comic-converter
   Path             : github.com/celogeek/go-comic-converter/v2
-  Sum              : h1:qOYGRpdT4t6fPksFHHrMmg+AvKSliNL6JfNWcvLGesU=
-  Version          : v2.4.0
-  Available Version: v2.4.0
+  Sum              : h1:4PRd8xrqnK6B1fNaKdUDdIR5CEhBmfUAl8IkUtNLz7s=
+  Version          : v2.6.3
+  Available Version: v2.6.3
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.4.0
+$ go install github.com/celogeek/go-comic-converter/v2@v2.6.3
 ```
 
 # Supported image files
@@ -83,7 +85,7 @@ The case for extensions doesn't matter.
 Convert every supported image files found in the input directory:
 
 ```
-$ go-comic-converter -profile KS -input ~/Download/MyComic
+$ go-comic-converter -profile SR -input ~/Download/MyComic
 ```
 
 By default it will output: ~/Download/MyComic.epub
@@ -93,7 +95,7 @@ By default it will output: ~/Download/MyComic.epub
 Convert every supported image files found in the input directory:
 
 ```
-$ go-comic-converter -profile KS -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
+$ go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
 ```
 
 By default it will output: ~/Download/MyComic.epub
@@ -108,7 +110,7 @@ If you send your ePub through Amazon service, you have some size limitation:
 You can split your file using the "-limitmb MB" option:
 
 ```
-go-comic-converter -profile KS -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -limitmb 200
+go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -limitmb 200
 ```
 
 If you have more than 1 file the output will be:
@@ -128,7 +130,7 @@ If the total is above 1, then the title of the EPUB include:
 If you want to preview what will be set during the convertion without running the conversion, then you can use the `-dry` option.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile KS -auto -manga -limitmb 200 -dry
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry
 Go Comic Converter
 
 Options:
@@ -137,22 +139,28 @@ Options:
     Author                    : GO Comic Converter
     Title                     : mymanga
     Workers                   : 8
-    Profile                   : KS - Kindle Scribe - 1860x2480
-    ViewRatio                 : 1:1.5
-    View                      : 1653x2480
-    Quality                   : 85
+    Profile                   : SR - Standard Resolution - 1200x1920
+    Format                    : jpeg
+    Quality                   : 90
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
-    AutoRotate                : true
-    AutoSplitDoublePage       : true
+    AutoContrast              : true
+    AutoRotate                : false
+    AutoSplitDoublePage       : false
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : 1:1.60
+    Portrait Only             : false
+    Title Page                : always
 
 TOC:
   - mymanga
@@ -168,7 +176,7 @@ You can choose different way to sort path and files, depending of your source. Y
 The option `sort` allow you to change the sorting order.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile KS -auto -manga -limitmb 200 -dry -dry-verbose -sort 2
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry -dry-verbose -sort 2
 Go Comic Converter
 
 Options:
@@ -177,22 +185,28 @@ Options:
     Author                    : GO Comic Converter
     Title                     : mymanga
     Workers                   : 8
-    Profile                   : KS - Kindle Scribe - 1860x2480
-    ViewRatio                 : 1:1.5
-    View                      : 1653x2480
-    Quality                   : 85
+    Profile                   : SR - Standard Resolution - 1200x1920
+    Format                    : jpeg
+    Quality                   : 90
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
-    AutoRotate                : true
-    AutoSplitDoublePage       : true
+    AutoContrast              : true
+    AutoRotate                : false
+    AutoSplitDoublePage       : false
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
-    SortPathMode              : path=alphanum, file=alphanum
+    SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : 1:1.60
+    Portrait Only             : false
+    Title Page                : always
 
 TOC:
   - mymanga
@@ -228,38 +242,43 @@ Go Comic Converter
 
 Options:
     Profile                   :
-    ViewRatio                 : 1:1.5
-    View                      :
+    Format                    : jpeg
     Quality                   : 85
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
+    AutoContrast              : false
     AutoRotate                : false
     AutoSplitDoublePage       : false
     NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
-    LimitMb                   : nolimit
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : auto
+    Portrait Only             : false
+    Title Page                : always
 ```
 
 ### Change default settings
 ```
-$ go-comic-converter -manga -auto -profile KS -limitmb 200 -save
+$ go-comic-converter -manga -auto -profile SR -limitmb 200 -save
 
 Go Comic Converter
 
 Options:
-    Profile                   : KS - Kindle Scribe - 1860x2480
-    ViewRatio                 : 1:1.5
-    View                      : 1653x2480
+    Profile                   : SR - Standard Resolution - 1200x1920
+    Format                    : jpeg
     Quality                   : 85
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
+    AutoContrast              : true
     AutoRotate                : true
     AutoSplitDoublePage       : true
     NoBlankImage              : true
@@ -268,6 +287,12 @@ Options:
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : auto
+    Portrait Only             : false
+    Title Page                : always
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -276,17 +301,15 @@ If you want to change a setting, you can change only one of them
 ```
 $ go-comic-converter -manga=0 -save
 
-Go Comic Converter
-
 Options:
-    Profile                   : KS - Kindle Scribe - 1860x2480
-    ViewRatio                 : 1:1.5
-    View                      : 1653x2480
+    Profile                   : SR - Standard Resolution - 1200x1920
+    Format                    : jpeg
     Quality                   : 85
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
+    AutoContrast              : true
     AutoRotate                : true
     AutoSplitDoublePage       : true
     NoBlankImage              : true
@@ -295,6 +318,12 @@ Options:
     LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : auto
+    Portrait Only             : false
+    Title Page                : always
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -308,63 +337,72 @@ Go Comic Converter
 
 Options:
     Profile                   :
-    ViewRatio                 : 1:1.5
-    View                      :
+    Format                    : jpeg
     Quality                   : 85
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
+    AutoContrast              : false
     AutoRotate                : false
     AutoSplitDoublePage       : false
     NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
-    LimitMb                   : nolimit
     StripFirstDirectoryFromToc: false
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : auto
+    Portrait Only             : false
+    Title Page                : always
 
 Reset default to ~/.go-comic-converter.yaml
 ```
 
 # My own settings
 
-After playing around with the options, I have my perfect settings for a Kindle Scribe.
+After playing around with the options, I have my perfect settings for all my devices.
 
 ```
 $ go-comic-converter -reset
-$ go-comic-converter -profile KS -quality 90 -autosplitdoublepage -manga -limitmb 200 -strip -save
-
-Go Comic Converter
+$ go-comic-converter -profile SR -quality 90 -autocontrast -manga -strip -aspect-ratio 1.6 -save
 
 Options:
-    Profile                   : KS - Kindle Scribe - 1860x2480
-    ViewRatio                 : 1:1.5
-    View                      : 1653x2480
+    Profile                   : SR - Standard Resolution - 1200x1920
+    Format                    : jpeg
     Quality                   : 90
+    Grayscale                 : true
+    Grayscale Mode            : normal
     Crop                      : true
     CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    Brightness                : 0
-    Contrast                  : 0
+    AutoContrast              : true
     AutoRotate                : false
-    AutoSplitDoublePage       : true
+    AutoSplitDoublePage       : false
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
-    LimitMb                   : 200 Mb
     StripFirstDirectoryFromToc: true
     SortPathMode              : path=alphanum, file=alpha
+    Foreground Color          : #000
+    Background Color          : #FFF
+    Resize                    : true
+    Aspect Ratio              : 1:1.60
+    Portrait Only             : false
+    Title Page                : always
 
 Saving to ~/.go-comic-converter.yaml
 ```
 
 Explanation:
-- `-profile KS`: Kindle Scribe
+- `-profile SR`: standard resolution (fast conversion from Amazon as images do not need to be resized)
 - `-quality 90`: JPEG output quality of images
-- `-autosplitdoublepage`: split double page into 2 images after displaying in full quality. Perfect render in landscape, great in portrait
+- `-autocontrast`: automatically improve contrast
 - `-manga`: manga mode, read right to left
 - `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
 - `-strip`: remove first level if alone on TOC, as offen comics include a main directory with the title
+- `aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
 # Help
 
 ```
@@ -385,6 +423,8 @@ Output:
 Config:
   -profile string
     	Profile to use:
+    	    - HR      ( 2400x3840 ) - High Resolution
+    	    - SR      ( 1200x1920 ) - Standard Resolution
     	    - K1      (   600x670 ) - Kindle 1
     	    - K11     ( 1072x1448 ) - Kindle 11
     	    - K2      (   600x670 ) - Kindle 2
@@ -411,6 +451,13 @@ Config:
     	    - KoE     ( 1404x1872 ) - Kobo Elipsa
   -quality int (default 85)
     	Quality of the image
+  -grayscale (default true)
+    	Grayscale image. Ideal for eInk devices.
+  -grayscale-mode int
+    	Grayscale Mode
+    	0 = normal
+    	1 = average
+    	2 = luminance
   -crop (default true)
     	Crop images
   -crop-ratio-left int (default 1)
@@ -425,10 +472,10 @@ Config:
     	Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker
   -contrast int
     	Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast
+  -autocontrast
+    	Improve contrast automatically
   -autorotate
     	Auto Rotate page when width > height
-  -auto
-    	Activate all automatic options
   -autosplitdoublepage
     	Auto Split double page when width > height
   -noblankimage (default true)
@@ -438,7 +485,7 @@ Config:
   -hascover (default true)
     	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.
   -limitmb int
-    	Limit size of the ePub: Default nolimit (0), Minimum 20
+    	Limit size of the EPUB: Default nolimit (0), Minimum 20
   -strip
     	Strip first directory from the TOC if only 1
   -sort int (default 1)
@@ -446,6 +493,26 @@ Config:
     	0 = alpha for path and file
     	1 = alphanum for path and alpha for file
     	2 = alphanum for path and file
+  -foreground-color string (default "000")
+    	Foreground color in hexa format RGB. Black=000, White=FFF
+  -background-color string (default "FFF")
+    	Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777
+  -noresize
+    	Do not reduce image size if exceed device size
+  -format string (default "jpeg")
+    	Format of output images: jpeg (lossy), png (lossless)
+  -aspect-ratio float
+    	Aspect ratio (height/width) of the output
+    	 -1 = same as device
+    	  0 = same as source
+    	1.6 = amazon advice for kindle
+  -portrait-only
+    	Portrait only: force orientation to portrait only.
+  -titlepage int (default 1)
+    	Title page
+    	0 = never
+    	1 = always
+    	2 = only if epub is splitted
 
 Default config:
   -show
@@ -455,8 +522,22 @@ Default config:
   -reset
     	Reset your parameters to default
 
+Shortcut:
+  -auto
+    	Activate all automatic options
+  -nofilter
+    	Deactivate all filters
+  -maxquality
+    	Max quality: color png + noresize
+  -bestquality
+    	Max quality: color jpg q100 + noresize
+  -greatquality
+    	Max quality: grayscale jpg q90 + noresize
+  -goodquality
+    	Max quality: grayscale jpg q90
+
 Other:
-  -workers int (default CPU)
+  -workers int (default number of CPUs)
     	Number of workers
   -dry
     	Dry run to show all options
