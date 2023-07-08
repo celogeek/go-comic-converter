@@ -453,5 +453,23 @@ func (e *ePub) Write() error {
 	bar.Close()
 	fmt.Fprintln(os.Stderr)
 
+	// display corrupted images
+	hasError := false
+	for pId, part := range epubParts {
+		if pId == 0 && e.Image.HasCover && part.Cover.Error != nil {
+			hasError = true
+			fmt.Fprintf(os.Stderr, "Error on image %s: %v\n", filepath.Join(part.Cover.Path, part.Cover.Name), part.Cover.Error)
+		}
+		for _, img := range part.Images {
+			if img.Part == 0 && img.Error != nil {
+				hasError = true
+				fmt.Fprintf(os.Stderr, "Error on image %s: %v\n", filepath.Join(img.Path, img.Name), img.Error)
+			}
+		}
+	}
+	if hasError {
+		fmt.Fprintln(os.Stderr)
+	}
+
 	return nil
 }

@@ -98,6 +98,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 						Name:                input.Name,
 						Format:              e.Image.Format,
 						OriginalAspectRatio: float64(src.Bounds().Dy()) / float64(src.Bounds().Dx()),
+						Error:               input.Error,
 					}
 
 					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
