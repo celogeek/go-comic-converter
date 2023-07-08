@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
@@ -16,9 +17,12 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/image/font/gofont/gomonobold"
 	_ "golang.org/x/image/webp"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
+	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode/v2"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
@@ -29,6 +33,7 @@ type tasks struct {
 	Image image.Image
 	Path  string
 	Name  string
+	Error error
 }
 
 var errNoImagesFound = errors.New("no images found")
@@ -67,6 +72,29 @@ func (e *EPUBImageProcessor) load() (totalImages int, output chan *tasks, err er
 			return
 		}
 	}
+}
+
+func (e *EPUBImageProcessor) corruptedImage(path, name string) image.Image {
+	var w, h float64 = 1200, 1920
+	f, _ := truetype.Parse(gomonobold.TTF)
+	face := truetype.NewFace(f, &truetype.Options{Size: 64, DPI: 72})
+	txt := name
+	if path != "" {
+		txt += "\nin " + filepath.Clean(path)
+	}
+	txt += "\nis corrupted!"
+
+	g := gg.NewContext(int(w), int(h))
+	g.SetColor(color.White)
+	g.Clear()
+	g.SetColor(color.Black)
+	g.DrawRoundedRectangle(0, 0, w, h, 0.5)
+	g.SetLineWidth(6)
+	g.Stroke()
+	g.DrawRoundedRectangle(0, 0, 480, 640, 0.5)
+	g.SetFontFace(face)
+	g.DrawStringWrapped(txt, w/2, h/2, 0.5, 0.5, 640, 1.5, gg.AlignCenter)
+	return g.Image()
 }
 
 // load a directory of images
@@ -119,18 +147,14 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
+				var err error
 				if !e.Dry {
-					f, err := os.Open(job.Path)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Path, err)
-						os.Exit(1)
+					var f *os.File
+					f, err = os.Open(job.Path)
+					if err == nil {
+						img, _, err = image.Decode(f)
+						f.Close()
 					}
-					img, _, err = image.Decode(f)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Path, err)
-						os.Exit(1)
-					}
-					f.Close()
 				}
 
 				p, fn := filepath.Split(job.Path)
@@ -139,11 +163,15 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 				} else {
 					p = p[len(input)+1:]
 				}
+				if err != nil {
+					img = e.corruptedImage(p, fn)
+				}
 				output <- &tasks{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
 					Name:  fn,
+					Error: err,
 				}
 			}
 		}()
@@ -211,26 +239,26 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
+				var err error
 				if !e.Dry {
-					f, err := job.F.Open()
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.F.Name, err)
-						os.Exit(1)
-					}
-					img, _, err = image.Decode(f)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.F.Name, err)
-						os.Exit(1)
+					var f io.ReadCloser
+					f, err = job.F.Open()
+					if err == nil {
+						img, _, err = image.Decode(f)
 					}
 					f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.F.Name))
+				if err != nil {
+					img = e.corruptedImage(p, fn)
+				}
 				output <- &tasks{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
 					Name:  fn,
+					Error: err,
 				}
 			}
 		}()
@@ -330,26 +358,26 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
+				var err error
 				if !e.Dry {
-					f, err := job.Open()
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Name, err)
-						os.Exit(1)
-					}
-					img, _, err = image.Decode(f)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", job.Name, err)
-						os.Exit(1)
+					var f io.ReadCloser
+					f, err = job.Open()
+					if err == nil {
+						img, _, err = image.Decode(f)
 					}
 					f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.Name))
+				if err != nil {
+					img = e.corruptedImage(p, fn)
+				}
 				output <- &tasks{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
 					Name:  fn,
+					Error: err,
 				}
 			}
 		}()
@@ -377,19 +405,21 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err
 		defer pdf.Close()
 		for i := 0; i < totalImages; i++ {
 			var img image.Image
+			var err error
 			if !e.Dry {
 				img, err = pdfimage.Extract(pdf, i+1)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, err)
-					os.Exit(1)
-				}
 			}
 
+			name := fmt.Sprintf(pageFmt, i+1)
+			if err != nil {
+				img = e.corruptedImage("", name)
+			}
 			output <- &tasks{
 				Id:    i,
 				Image: img,
 				Path:  "",
-				Name:  fmt.Sprintf(pageFmt, i+1),
+				Name:  name,
+				Error: err,
 			}
 		}
 	}()

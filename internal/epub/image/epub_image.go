@@ -23,6 +23,7 @@ type Image struct {
 	Position            string
 	Format              string
 	OriginalAspectRatio float64
+	Error               error
 }
 
 // key name of the blank plage after the image
