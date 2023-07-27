@@ -449,7 +449,7 @@ Config:
     	    - KoF     ( 1440x1920 ) - Kobo Forma
     	    - KoS     ( 1440x1920 ) - Kobo Sage
     	    - KoE     ( 1404x1872 ) - Kobo Elipsa
-			- RM      ( 1404x1872 ) - reMarkable 2
+    	    - RM      ( 1404x1872 ) - reMarkable 2
   -quality int (default 85)
     	Quality of the image
   -grayscale (default true)
