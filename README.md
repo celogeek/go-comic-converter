@@ -421,8 +421,8 @@ Output:
     	Title of the EPUB
 
 Config:
-  -profile string
-    	Profile to use:
+  -profile string (default "SR")
+    	Profile to use: 
     	    - HR      ( 2400x3840 ) - High Resolution
     	    - SR      ( 1200x1920 ) - Standard Resolution
     	    - K1      (   600x670 ) - Kindle 1
@@ -449,7 +449,8 @@ Config:
     	    - KoF     ( 1440x1920 ) - Kobo Forma
     	    - KoS     ( 1440x1920 ) - Kobo Sage
     	    - KoE     ( 1404x1872 ) - Kobo Elipsa
-    	    - RM      ( 1404x1872 ) - reMarkable 2
+    	    - RM1     ( 1404x1872 ) - reMarkable 1
+    	    - RM2     ( 1404x1872 ) - reMarkable 2
   -quality int (default 85)
     	Quality of the image
   -grayscale (default true)
