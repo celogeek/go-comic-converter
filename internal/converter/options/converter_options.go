@@ -77,6 +77,7 @@ type Options struct {
 // Initialize default options.
 func New() *Options {
 	return &Options{
+		Profile:         "SR",
 		Quality:         85,
 		Grayscale:       true,
 		Crop:            true,
