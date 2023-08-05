@@ -50,6 +50,7 @@ func New() Profiles {
 		{"KoS", "Kobo Sage", 1440, 1920},
 		{"KoE", "Kobo Elipsa", 1404, 1872},
 		// reMarkable
+		{"RM1", "reMarkable 1", 1404, 1872},
 		{"RM2", "reMarkable 2", 1404, 1872},
 	}
 }
