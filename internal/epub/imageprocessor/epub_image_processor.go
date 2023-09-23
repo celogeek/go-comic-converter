@@ -101,6 +101,14 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 						Error:               input.Error,
 					}
 
+					// do not keep double page if requested
+					if !img.IsCover &&
+						img.DoublePage &&
+						e.Options.Image.AutoSplitDoublePage &&
+						!e.Options.Image.KeepDoublePageIfSplitted {
+						continue
+					}
+
 					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
 						bar.Close()
 						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)

@@ -35,6 +35,7 @@ type Options struct {
 	AutoContrast               bool    `yaml:"auto_contrast"`
 	AutoRotate                 bool    `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool    `yaml:"auto_split_double_page"`
+	KeepDoublePageIfSplitted   bool    `yaml:"keep_double_page_if_splitted"`
 	NoBlankImage               bool    `yaml:"no_blank_image"`
 	Manga                      bool    `yaml:"manga"`
 	HasCover                   bool    `yaml:"has_cover"`
@@ -77,22 +78,23 @@ type Options struct {
 // Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:         "SR",
-		Quality:         85,
-		Grayscale:       true,
-		Crop:            true,
-		CropRatioLeft:   1,
-		CropRatioUp:     1,
-		CropRatioRight:  1,
-		CropRatioBottom: 3,
-		NoBlankImage:    true,
-		HasCover:        true,
-		SortPathMode:    1,
-		ForegroundColor: "000",
-		BackgroundColor: "FFF",
-		Format:          "jpeg",
-		TitlePage:       1,
-		profiles:        profiles.New(),
+		Profile:                  "SR",
+		Quality:                  85,
+		Grayscale:                true,
+		Crop:                     true,
+		CropRatioLeft:            1,
+		CropRatioUp:              1,
+		CropRatioRight:           1,
+		CropRatioBottom:          3,
+		NoBlankImage:             true,
+		HasCover:                 true,
+		KeepDoublePageIfSplitted: true,
+		SortPathMode:             1,
+		ForegroundColor:          "000",
+		BackgroundColor:          "FFF",
+		Format:                   "jpeg",
+		TitlePage:                1,
+		profiles:                 profiles.New(),
 	}
 }
 
@@ -208,6 +210,7 @@ func (o *Options) ShowConfig() string {
 		{"AutoContrast", o.AutoContrast, true},
 		{"AutoRotate", o.AutoRotate, true},
 		{"AutoSplitDoublePage", o.AutoSplitDoublePage, true},
+		{"KeepDoublePageIfSplitted", o.KeepDoublePageIfSplitted, o.AutoSplitDoublePage},
 		{"NoBlankImage", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
 		{"HasCover", o.HasCover, true},

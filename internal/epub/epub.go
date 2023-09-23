@@ -442,7 +442,10 @@ func (e *ePub) Write() error {
 			}
 
 			// Double Page or Last Image that is not a double page
-			if !e.Image.View.PortraitOnly && (img.DoublePage || (img.Part == 0 && img == lastImage)) {
+			if !e.Image.View.PortraitOnly &&
+				(img.DoublePage ||
+					(!e.Image.KeepDoublePageIfSplitted && img.Part == 1) ||
+					(img.Part == 0 && img == lastImage)) {
 				if err := e.writeBlank(wz, img); err != nil {
 					return err
 				}

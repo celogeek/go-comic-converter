@@ -174,7 +174,12 @@ func getManifest(o *ContentOptions) []tag {
 
 	lastImage := o.Images[len(o.Images)-1]
 	for _, img := range o.Images {
-		addTag(img, !o.ImageOptions.View.PortraitOnly && (img.DoublePage || (img.Part == 0 && img == lastImage)))
+		addTag(
+			img,
+			!o.ImageOptions.View.PortraitOnly &&
+				(img.DoublePage ||
+					(!o.ImageOptions.KeepDoublePageIfSplitted && img.Part == 1) ||
+					(img.Part == 0 && img == lastImage)))
 	}
 
 	items = append(items, imageTags...)
@@ -212,7 +217,7 @@ func getSpineAuto(o *ContentOptions) []tag {
 		)
 	}
 	for _, img := range o.Images {
-		if img.DoublePage && o.ImageOptions.Manga == isOnTheRight {
+		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
 				tagAttrs{"idref": img.SpaceKey(), "properties": getSpreadBlank()},

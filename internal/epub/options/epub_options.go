@@ -22,21 +22,22 @@ type View struct {
 }
 
 type Image struct {
-	Crop                *Crop
-	Quality             int
-	Brightness          int
-	Contrast            int
-	AutoContrast        bool
-	AutoRotate          bool
-	AutoSplitDoublePage bool
-	NoBlankImage        bool
-	Manga               bool
-	HasCover            bool
-	View                *View
-	GrayScale           bool
-	GrayScaleMode       int
-	Resize              bool
-	Format              string
+	Crop                     *Crop
+	Quality                  int
+	Brightness               int
+	Contrast                 int
+	AutoContrast             bool
+	AutoRotate               bool
+	AutoSplitDoublePage      bool
+	KeepDoublePageIfSplitted bool
+	NoBlankImage             bool
+	Manga                    bool
+	HasCover                 bool
+	View                     *View
+	GrayScale                bool
+	GrayScaleMode            int
+	Resize                   bool
+	Format                   string
 }
 
 type Options struct {
