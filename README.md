@@ -16,6 +16,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Auto contrast
 - Auto rotate (if reader mainly read on portrait)
 - Auto split double page (for easy read on portrait)
+- Keep double page if splitted
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Support cover page or not (first page will be taken in that case)
@@ -149,6 +150,7 @@ Options:
     AutoContrast              : true
     AutoRotate                : false
     AutoSplitDoublePage       : false
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
@@ -195,6 +197,7 @@ Options:
     AutoContrast              : true
     AutoRotate                : false
     AutoSplitDoublePage       : false
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
@@ -251,6 +254,7 @@ Options:
     AutoContrast              : false
     AutoRotate                : false
     AutoSplitDoublePage       : false
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
@@ -281,6 +285,7 @@ Options:
     AutoContrast              : true
     AutoRotate                : true
     AutoSplitDoublePage       : true
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
@@ -312,6 +317,7 @@ Options:
     AutoContrast              : true
     AutoRotate                : true
     AutoSplitDoublePage       : true
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
@@ -346,6 +352,7 @@ Options:
     AutoContrast              : false
     AutoRotate                : false
     AutoSplitDoublePage       : false
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : false
     HasCover                  : true
@@ -380,6 +387,7 @@ Options:
     AutoContrast              : true
     AutoRotate                : false
     AutoSplitDoublePage       : false
+    KeepDoublePageIfSplitted  : true
     NoBlankImage              : true
     Manga                     : true
     HasCover                  : true
@@ -422,7 +430,7 @@ Output:
 
 Config:
   -profile string (default "SR")
-    	Profile to use: 
+    	Profile to use:
     	    - HR      ( 2400x3840 ) - High Resolution
     	    - SR      ( 1200x1920 ) - Standard Resolution
     	    - K1      (   600x670 ) - Kindle 1
@@ -480,6 +488,8 @@ Config:
     	Auto Rotate page when width > height
   -autosplitdoublepage
     	Auto Split double page when width > height
+  -keepdoublepageifsplitted (default true)
+    	Keep the double page if splitted
   -noblankimage (default true)
     	Remove blank image
   -manga
