@@ -48,6 +48,7 @@ type Options struct {
 	Format                     string  `yaml:"format"`
 	AspectRatio                float64 `yaml:"aspect_ratio"`
 	PortraitOnly               bool    `yaml:"portrait_only"`
+	AppleBookCompatibility     bool    `yaml:"apple_book_compatibility"`
 	TitlePage                  int     `yaml:"title_page"`
 
 	// Default Config
@@ -209,8 +210,8 @@ func (o *Options) ShowConfig() string {
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"AutoContrast", o.AutoContrast, true},
 		{"AutoRotate", o.AutoRotate, true},
-		{"AutoSplitDoublePage", o.AutoSplitDoublePage, true},
-		{"KeepDoublePageIfSplitted", o.KeepDoublePageIfSplitted, o.AutoSplitDoublePage},
+		{"AutoSplitDoublePage", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
+		{"KeepDoublePageIfSplitted", o.KeepDoublePageIfSplitted, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
 		{"NoBlankImage", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
 		{"HasCover", o.HasCover, true},
@@ -223,9 +224,10 @@ func (o *Options) ShowConfig() string {
 		{"Aspect Ratio", aspectRatio, true},
 		{"Portrait Only", o.PortraitOnly, true},
 		{"Title Page", titlePage, true},
+		{"Apple Book Compatibility", o.AppleBookCompatibility, !o.PortraitOnly},
 	} {
 		if v.Condition {
-			b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.Key, v.Value))
+			b.WriteString(fmt.Sprintf("\n    %-30s: %v", v.Key, v.Value))
 		}
 	}
 	return b.String()

@@ -25,6 +25,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - 3 sorting methods (depending on your source, you can ensure the page go in the right order)
 - Save and reuse your own perfect settings
 - Multi tasks for fast conversion
+- Apple Book Compatibility Mode
 
 When you read the comic on a Kindle, you can customize how you read it with the `Aa` button:
 - Landscape / Portrait
@@ -135,34 +136,35 @@ $ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -li
 Go Comic Converter
 
 Options:
-    Input                     : ~/Downloads/mymanga.cbr
-    Output                    : ~/Downloads/mymanga.epub
-    Author                    : GO Comic Converter
-    Title                     : mymanga
-    Workers                   : 8
-    Profile                   : SR - Standard Resolution - 1200x1920
-    Format                    : jpeg
-    Quality                   : 90
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : true
-    AutoRotate                : false
-    AutoSplitDoublePage       : false
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : true
-    HasCover                  : true
-    LimitMb                   : 200 Mb
-    StripFirstDirectoryFromToc: true
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : 1:1.60
-    Portrait Only             : false
-    Title Page                : always
+    Input                         : ~/Downloads/mymanga.cbr
+    Output                        : ~/Downloads/mymanga.epub
+    Author                        : GO Comic Converter
+    Title                         : mymanga
+    Workers                       : 8
+    Profile                       : SR - Standard Resolution - 1200x1920
+    Format                        : jpeg
+    Quality                       : 90
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : true
+    AutoRotate                    : false
+    AutoSplitDoublePage           : false
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : true
+    HasCover                      : true
+    LimitMb                       : 200 Mb
+    StripFirstDirectoryFromToc    : true
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : 1:1.60
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 TOC:
   - mymanga
@@ -182,34 +184,35 @@ $ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -li
 Go Comic Converter
 
 Options:
-    Input                     : ~/Downloads/mymanga.cbr
-    Output                    : ~/Downloads/mymanga.epub
-    Author                    : GO Comic Converter
-    Title                     : mymanga
-    Workers                   : 8
-    Profile                   : SR - Standard Resolution - 1200x1920
-    Format                    : jpeg
-    Quality                   : 90
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : true
-    AutoRotate                : false
-    AutoSplitDoublePage       : false
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : true
-    HasCover                  : true
-    LimitMb                   : 200 Mb
-    StripFirstDirectoryFromToc: true
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : 1:1.60
-    Portrait Only             : false
-    Title Page                : always
+    Input                         : ~/Downloads/mymanga.cbr
+    Output                        : ~/Downloads/mymanga.epub
+    Author                        : GO Comic Converter
+    Title                         : mymanga
+    Workers                       : 8
+    Profile                       : SR - Standard Resolution - 1200x1920
+    Format                        : jpeg
+    Quality                       : 90
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : true
+    AutoRotate                    : false
+    AutoSplitDoublePage           : false
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : true
+    HasCover                      : true
+    LimitMb                       : 200 Mb
+    StripFirstDirectoryFromToc    : true
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : 1:1.60
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 TOC:
   - mymanga
@@ -244,28 +247,29 @@ $ go-comic-converter -show
 Go Comic Converter
 
 Options:
-    Profile                   :
-    Format                    : jpeg
-    Quality                   : 85
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : false
-    AutoRotate                : false
-    AutoSplitDoublePage       : false
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : false
-    HasCover                  : true
-    StripFirstDirectoryFromToc: false
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : auto
-    Portrait Only             : false
-    Title Page                : always
+    Profile                       :
+    Format                        : jpeg
+    Quality                       : 85
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : false
+    AutoRotate                    : false
+    AutoSplitDoublePage           : false
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : false
+    HasCover                      : true
+    StripFirstDirectoryFromToc    : false
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : auto
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 ```
 
 ### Change default settings
@@ -275,29 +279,30 @@ $ go-comic-converter -manga -auto -profile SR -limitmb 200 -save
 Go Comic Converter
 
 Options:
-    Profile                   : SR - Standard Resolution - 1200x1920
-    Format                    : jpeg
-    Quality                   : 85
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : true
-    AutoRotate                : true
-    AutoSplitDoublePage       : true
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : true
-    HasCover                  : true
-    LimitMb                   : 200 Mb
-    StripFirstDirectoryFromToc: false
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : auto
-    Portrait Only             : false
-    Title Page                : always
+    Profile                       : SR - Standard Resolution - 1200x1920
+    Format                        : jpeg
+    Quality                       : 85
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : true
+    AutoRotate                    : true
+    AutoSplitDoublePage           : true
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : true
+    HasCover                      : true
+    LimitMb                       : 200 Mb
+    StripFirstDirectoryFromToc    : false
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : auto
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -307,29 +312,30 @@ If you want to change a setting, you can change only one of them
 $ go-comic-converter -manga=0 -save
 
 Options:
-    Profile                   : SR - Standard Resolution - 1200x1920
-    Format                    : jpeg
-    Quality                   : 85
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : true
-    AutoRotate                : true
-    AutoSplitDoublePage       : true
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : false
-    HasCover                  : true
-    LimitMb                   : 200 Mb
-    StripFirstDirectoryFromToc: false
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : auto
-    Portrait Only             : false
-    Title Page                : always
+    Profile                       : SR - Standard Resolution - 1200x1920
+    Format                        : jpeg
+    Quality                       : 85
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : true
+    AutoRotate                    : true
+    AutoSplitDoublePage           : true
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : false
+    HasCover                      : true
+    LimitMb                       : 200 Mb
+    StripFirstDirectoryFromToc    : false
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : auto
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -343,27 +349,28 @@ Go Comic Converter
 
 Options:
     Profile                   :
-    Format                    : jpeg
-    Quality                   : 85
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : false
-    AutoRotate                : false
-    AutoSplitDoublePage       : false
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : false
-    HasCover                  : true
-    StripFirstDirectoryFromToc: false
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : auto
-    Portrait Only             : false
-    Title Page                : always
+    Format                        : jpeg
+    Quality                       : 85
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : false
+    AutoRotate                    : false
+    AutoSplitDoublePage           : false
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : false
+    HasCover                      : true
+    StripFirstDirectoryFromToc    : false
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : auto
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 Reset default to ~/.go-comic-converter.yaml
 ```
@@ -377,28 +384,29 @@ $ go-comic-converter -reset
 $ go-comic-converter -profile SR -quality 90 -autocontrast -manga -strip -aspect-ratio 1.6 -save
 
 Options:
-    Profile                   : SR - Standard Resolution - 1200x1920
-    Format                    : jpeg
-    Quality                   : 90
-    Grayscale                 : true
-    Grayscale Mode            : normal
-    Crop                      : true
-    CropRatio                 : 1 Left - 1 Up - 1 Right - 3 Bottom
-    AutoContrast              : true
-    AutoRotate                : false
-    AutoSplitDoublePage       : false
-    KeepDoublePageIfSplitted  : true
-    NoBlankImage              : true
-    Manga                     : true
-    HasCover                  : true
-    StripFirstDirectoryFromToc: true
-    SortPathMode              : path=alphanum, file=alpha
-    Foreground Color          : #000
-    Background Color          : #FFF
-    Resize                    : true
-    Aspect Ratio              : 1:1.60
-    Portrait Only             : false
-    Title Page                : always
+    Profile                       : SR - Standard Resolution - 1200x1920
+    Format                        : jpeg
+    Quality                       : 90
+    Grayscale                     : true
+    Grayscale Mode                : normal
+    Crop                          : true
+    CropRatio                     : 1 Left - 1 Up - 1 Right - 3 Bottom
+    AutoContrast                  : true
+    AutoRotate                    : false
+    AutoSplitDoublePage           : false
+    KeepDoublePageIfSplitted      : true
+    NoBlankImage                  : true
+    Manga                         : true
+    HasCover                      : true
+    StripFirstDirectoryFromToc    : true
+    SortPathMode                  : path=alphanum, file=alpha
+    Foreground Color              : #000
+    Background Color              : #FFF
+    Resize                        : true
+    Aspect Ratio                  : 1:1.60
+    Portrait Only                 : false
+    Title Page                    : always
+    Apple Book Compatibility      : false
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -547,6 +555,10 @@ Shortcut:
     	Max quality: grayscale jpg q90 + noresize
   -goodquality
     	Max quality: grayscale jpg q90
+
+Compatibility:
+  -applebookcompatibility
+    	Apple book compatibility
 
 Other:
   -workers int (default number of CPUs)

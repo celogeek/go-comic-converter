@@ -192,6 +192,9 @@ func getManifest(o *ContentOptions) []tag {
 // spine part of the content
 func getSpineAuto(o *ContentOptions) []tag {
 	isOnTheRight := !o.ImageOptions.Manga
+	if o.ImageOptions.AppleBookCompatibility {
+		isOnTheRight = !isOnTheRight
+	}
 	getSpread := func(isDoublePage bool) string {
 		isOnTheRight = !isOnTheRight
 		if isDoublePage {
@@ -211,10 +214,16 @@ func getSpineAuto(o *ContentOptions) []tag {
 
 	spine := []tag{}
 	if o.HasTitlePage {
-		spine = append(spine,
-			tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
-			tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
-		)
+		if !o.ImageOptions.AppleBookCompatibility {
+			spine = append(spine,
+				tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
+				tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
+			)
+		} else {
+			spine = append(spine,
+				tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(true)}, ""},
+			)
+		}
 	}
 	for _, img := range o.Images {
 		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {

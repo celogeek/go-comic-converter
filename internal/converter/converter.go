@@ -147,6 +147,9 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.GreatQuality, "greatquality", false, "Max quality: grayscale jpg q90 + noresize")
 	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
+	c.AddSection("Compatibility")
+	c.AddBoolParam(&c.Options.AppleBookCompatibility, "applebookcompatibility", c.Options.AppleBookCompatibility, "Apple book compatibility")
+
 	c.AddSection("Other")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
@@ -263,6 +266,11 @@ func (c *Converter) Parse() {
 		c.Options.AutoRotate = false
 		c.Options.NoBlankImage = false
 		c.Options.NoResize = true
+	}
+
+	if c.Options.AppleBookCompatibility {
+		c.Options.AutoSplitDoublePage = true
+		c.Options.KeepDoublePageIfSplitted = false
 	}
 }
 

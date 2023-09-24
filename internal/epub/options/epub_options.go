@@ -38,6 +38,7 @@ type Image struct {
 	GrayScaleMode            int
 	Resize                   bool
 	Format                   string
+	AppleBookCompatibility   bool
 }
 
 type Options struct {
