@@ -369,6 +369,7 @@ func (e *ePub) Write() error {
 		CurrentJob:  2,
 		TotalJob:    2,
 		Quiet:       e.Quiet,
+		Json:        e.Json,
 	})
 
 	e.computeViewPort(epubParts)
@@ -454,7 +455,9 @@ func (e *ePub) Write() error {
 		bar.Add(1)
 	}
 	bar.Close()
-	fmt.Fprintln(os.Stderr)
+	if !e.Json {
+		fmt.Fprintln(os.Stderr)
+	}
 
 	// display corrupted images
 	hasError := false

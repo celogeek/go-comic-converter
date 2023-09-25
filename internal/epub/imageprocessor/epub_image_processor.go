@@ -54,6 +54,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
 		Quiet:       e.Quiet,
+		Json:        e.Json,
 		Max:         imageCount,
 		Description: "Processing",
 		CurrentJob:  1,

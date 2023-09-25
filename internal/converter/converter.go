@@ -8,6 +8,7 @@ It use goflag with additional feature:
 package converter
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -155,6 +156,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
 	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
 	c.AddBoolParam(&c.Options.Quiet, "quiet", false, "Disable progress bar")
+	c.AddBoolParam(&c.Options.Json, "json", false, "Output progression and information in Json format")
 	c.AddBoolParam(&c.Options.Version, "version", false, "Show current and available version")
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }
@@ -400,12 +402,24 @@ func (c *Converter) Fatal(err error) {
 
 func (c *Converter) Stats() {
 	// Display elapse time and memory usage
+	elapse := time.Since(c.startAt).Round(time.Millisecond)
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
-	fmt.Fprintf(
-		os.Stderr,
-		"Completed in %s, Memory usage %d Mb\n",
-		time.Since(c.startAt).Round(time.Millisecond),
-		mem.Sys/1024/1024,
-	)
+
+	if c.Options.Json {
+		json.NewEncoder(os.Stdout).Encode(map[string]any{
+			"type": "stats",
+			"data": map[string]any{
+				"elapse":          elapse,
+				"memory_usage_mb": mem.Sys / 1024 / 1024,
+			},
+		})
+	} else {
+		fmt.Fprintf(
+			os.Stderr,
+			"Completed in %s, Memory usage %d Mb\n",
+			elapse,
+			mem.Sys/1024/1024,
+		)
+	}
 }

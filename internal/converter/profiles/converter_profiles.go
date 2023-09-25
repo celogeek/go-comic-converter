@@ -9,10 +9,10 @@ import (
 )
 
 type Profile struct {
-	Code        string
-	Description string
-	Width       int
-	Height      int
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	Width       int    `json:"width"`
+	Height      int    `json:"height"`
 }
 
 type Profiles []Profile

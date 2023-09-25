@@ -53,6 +53,7 @@ type Options struct {
 	DryVerbose                 bool
 	SortPathMode               int
 	Quiet                      bool
+	Json                       bool
 	Workers                    int
 	Image                      *Image
 }

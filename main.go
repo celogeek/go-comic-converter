@@ -8,6 +8,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -96,7 +97,13 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		cmd.Fatal(err)
 	}
 
-	fmt.Fprintln(os.Stderr, cmd.Options)
+	if cmd.Options.Json {
+		json.NewEncoder(os.Stdout).Encode(map[string]any{
+			"type": "options", "data": cmd.Options,
+		})
+	} else {
+		fmt.Fprintln(os.Stderr, cmd.Options)
+	}
 
 	profile := cmd.Options.GetProfile()
 
@@ -113,6 +120,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Dry:                        cmd.Options.Dry,
 		DryVerbose:                 cmd.Options.DryVerbose,
 		Quiet:                      cmd.Options.Quiet,
+		Json:                       cmd.Options.Json,
 		Image: &epuboptions.Image{
 			Crop:                     &epuboptions.Crop{Enabled: cmd.Options.Crop, Left: cmd.Options.CropRatioLeft, Up: cmd.Options.CropRatioUp, Right: cmd.Options.CropRatioRight, Bottom: cmd.Options.CropRatioBottom},
 			Quality:                  cmd.Options.Quality,

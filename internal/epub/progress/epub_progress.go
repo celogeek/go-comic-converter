@@ -13,6 +13,7 @@ import (
 
 type Options struct {
 	Quiet       bool
+	Json        bool
 	Max         int
 	Description string
 	CurrentJob  int
@@ -21,13 +22,18 @@ type Options struct {
 
 type EpubProgress interface {
 	Add(num int) error
-	Close() (err error)
+	Close() error
 }
 
 func New(o Options) EpubProgress {
 	if o.Quiet {
 		return progressbar.DefaultSilent(int64(o.Max))
 	}
+
+	if o.Json {
+		return newEpubProgressJson(o)
+	}
+
 	fmtJob := fmt.Sprintf("%%0%dd", len(fmt.Sprint(o.TotalJob)))
 	fmtDesc := fmt.Sprintf("[%s/%s] %%-15s", fmtJob, fmtJob)
 	return progressbar.NewOptions(o.Max,

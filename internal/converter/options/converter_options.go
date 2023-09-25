@@ -4,6 +4,7 @@ Manage options with default value from config.
 package options
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -69,6 +70,7 @@ type Options struct {
 	Dry        bool `yaml:"-"`
 	DryVerbose bool `yaml:"-"`
 	Quiet      bool `yaml:"-"`
+	Json       bool `yaml:"-"`
 	Version    bool `yaml:"-"`
 	Help       bool `yaml:"-"`
 
@@ -116,11 +118,71 @@ func (o *Options) String() string {
 		{"Title", o.Title},
 		{"Workers", o.Workers},
 	} {
-		b.WriteString(fmt.Sprintf("\n    %-26s: %v", v.K, v.V))
+		b.WriteString(fmt.Sprintf("\n    %-32s: %v", v.K, v.V))
 	}
 	b.WriteString(o.ShowConfig())
 	b.WriteRune('\n')
 	return b.String()
+}
+
+func (o *Options) MarshalJSON() ([]byte, error) {
+	out := map[string]any{
+		"input":                      o.Input,
+		"output":                     o.Output,
+		"author":                     o.Author,
+		"title":                      o.Title,
+		"workers":                    o.Workers,
+		"profile":                    o.GetProfile(),
+		"format":                     o.Format,
+		"grayscale":                  o.Grayscale,
+		"crop":                       o.Crop,
+		"autocontrast":               o.AutoContrast,
+		"autorotate":                 o.AutoRotate,
+		"noblankimage":               o.NoBlankImage,
+		"manga":                      o.Manga,
+		"hascover":                   o.HasCover,
+		"stripfirstdirectoryfromtoc": o.StripFirstDirectoryFromToc,
+		"sortpathmode":               o.SortPathMode,
+		"foregroundcolor":            o.ForegroundColor,
+		"backgroundcolor":            o.BackgroundColor,
+		"resize":                     !o.NoResize,
+		"aspectratio":                o.AspectRatio,
+		"portraitonly":               o.PortraitOnly,
+		"titlepage":                  o.TitlePage,
+	}
+	if o.Format == "jpeg" {
+		out["quality"] = o.Quality
+	}
+	if o.Grayscale {
+		out["grayscale_mode"] = o.GrayscaleMode
+	}
+	if o.Crop {
+		out["crop_ratio"] = map[string]any{
+			"left":   o.CropRatioLeft,
+			"right":  o.CropRatioRight,
+			"up":     o.CropRatioUp,
+			"bottom": o.CropRatioBottom,
+		}
+	}
+	if o.Brightness != 0 {
+		out["brightness"] = o.Brightness
+	}
+	if o.Contrast != 0 {
+		out["contrast"] = o.Contrast
+	}
+	if o.PortraitOnly || !o.AppleBookCompatibility {
+		out["autosplitdoublepage"] = o.AutoSplitDoublePage
+		if o.AutoSplitDoublePage {
+			out["keepdoublepageifsplitted"] = o.KeepDoublePageIfSplitted
+		}
+	}
+	if o.LimitMb != 0 {
+		out["limitmb"] = o.LimitMb
+	}
+	if !o.PortraitOnly {
+		out["applebookcompatibility"] = o.AppleBookCompatibility
+	}
+	return json.Marshal(out)
 }
 
 // Config file: ~/.go-comic-converter.yaml
@@ -205,19 +267,19 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale Mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"CropRatio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
+		{"Crop Ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
-		{"AutoContrast", o.AutoContrast, true},
-		{"AutoRotate", o.AutoRotate, true},
-		{"AutoSplitDoublePage", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
-		{"KeepDoublePageIfSplitted", o.KeepDoublePageIfSplitted, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
-		{"NoBlankImage", o.NoBlankImage, true},
+		{"Auto Contrast", o.AutoContrast, true},
+		{"Auto Rotate", o.AutoRotate, true},
+		{"Auto Split DoublePage", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
+		{"Keep DoublePage If Splitted", o.KeepDoublePageIfSplitted, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
+		{"No Blank Image", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
-		{"HasCover", o.HasCover, true},
-		{"LimitMb", fmt.Sprintf("%d Mb", o.LimitMb), o.LimitMb != 0},
-		{"StripFirstDirectoryFromToc", o.StripFirstDirectoryFromToc, true},
-		{"SortPathMode", sortpathmode, true},
+		{"Has Cover", o.HasCover, true},
+		{"Limit", fmt.Sprintf("%d Mb", o.LimitMb), o.LimitMb != 0},
+		{"Strip First Directory From Toc", o.StripFirstDirectoryFromToc, true},
+		{"Sort Path Mode", sortpathmode, true},
 		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor), true},
 		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor), true},
 		{"Resize", !o.NoResize, true},
@@ -227,7 +289,7 @@ func (o *Options) ShowConfig() string {
 		{"Apple Book Compatibility", o.AppleBookCompatibility, !o.PortraitOnly},
 	} {
 		if v.Condition {
-			b.WriteString(fmt.Sprintf("\n    %-30s: %v", v.Key, v.Value))
+			b.WriteString(fmt.Sprintf("\n    %-32s: %v", v.Key, v.Value))
 		}
 	}
 	return b.String()
