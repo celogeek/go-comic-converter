@@ -6,6 +6,7 @@ package epubprogress
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -18,7 +19,12 @@ type Options struct {
 	TotalJob    int
 }
 
-func New(o Options) *progressbar.ProgressBar {
+type EpubProgress interface {
+	Add(num int) error
+	Close() (err error)
+}
+
+func New(o Options) EpubProgress {
 	if o.Quiet {
 		return progressbar.DefaultSilent(int64(o.Max))
 	}
@@ -26,6 +32,7 @@ func New(o Options) *progressbar.ProgressBar {
 	fmtDesc := fmt.Sprintf("[%s/%s] %%-15s", fmtJob, fmtJob)
 	return progressbar.NewOptions(o.Max,
 		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionThrottle(65*time.Millisecond),
 		progressbar.OptionOnCompletion(func() {
 			fmt.Fprint(os.Stderr, "\n")
 		}),
