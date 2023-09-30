@@ -410,7 +410,7 @@ func (c *Converter) Stats() {
 		json.NewEncoder(os.Stdout).Encode(map[string]any{
 			"type": "stats",
 			"data": map[string]any{
-				"elapse":          elapse,
+				"elapse_ms":       elapse.Milliseconds(),
 				"memory_usage_mb": mem.Sys / 1024 / 1024,
 			},
 		})
