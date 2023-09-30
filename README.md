@@ -26,6 +26,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Save and reuse your own perfect settings
 - Multi tasks for fast conversion
 - Apple Book Compatibility Mode
+- JSON output for programmatic usage
 
 When you read the comic on a Kindle, you can customize how you read it with the `Aa` button:
 - Landscape / Portrait
@@ -569,6 +570,8 @@ Other:
     	Display also sorted files after the TOC
   -quiet
     	Disable progress bar
+  -json
+    	Output progression and information in Json format
   -version
     	Show current and available version
   -help
