@@ -75,10 +75,9 @@ func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  img.ImgPath(),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"Title":    fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
+			"ViewPort": e.Image.View.Port(),
+			"Image":    img.ImgStyle("", e.Image.View.Width, e.Image.View.Height),
 		})),
 	)
 	if err == nil {
@@ -94,7 +93,7 @@ func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
 		img.EPUBSpacePath(),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
-			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"ViewPort": e.Image.View.Port(),
 		})),
 	)
 }
@@ -111,10 +110,9 @@ func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, 
 	if err := wz.WriteContent(
 		"OEBPS/Text/cover.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/cover.%s", e.Image.Format),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"Title":    title,
+			"ViewPort": e.Image.View.Port(),
+			"Image":    img.ImgStyle("cover", e.Image.View.Width, e.Image.View.Height),
 		})),
 	); err != nil {
 		return err
@@ -144,21 +142,12 @@ func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, 
 
 // write title image
 func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title string) error {
-	titleAlign := ""
-	if !e.Image.View.PortraitOnly {
-		if e.Image.Manga {
-			titleAlign = "right:0"
-		} else {
-			titleAlign = "left:0"
-		}
-	}
-
 	if !e.Image.View.PortraitOnly {
 		if err := wz.WriteContent(
 			"OEBPS/Text/space_title.xhtml",
 			[]byte(e.render(epubtemplates.Blank, map[string]any{
 				"Title":    "Blank Page Title",
-				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+				"ViewPort": e.Image.View.Port(),
 			})),
 		); err != nil {
 			return err
@@ -168,10 +157,9 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 	if err := wz.WriteContent(
 		"OEBPS/Text/title.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/title.%s", e.Image.Format),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
+			"Title":    title,
+			"ViewPort": e.Image.View.Port(),
+			"Image":    img.ImgStyle("title", e.Image.View.Width, e.Image.View.Height),
 		})),
 	); err != nil {
 		return err

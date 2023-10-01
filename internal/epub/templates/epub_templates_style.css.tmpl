@@ -1,18 +1,31 @@
+@page {
+  margin: 0;
+  padding: 0;
+}
+
 body {
-    color: #{{ .View.Color.Foreground }};
-    background: #{{ .View.Color.Background }};
-    top: 0;
-    left: 0;
-    margin: 0;
-    padding: 0;
-    width: {{ .View.Width }}px;
-    height: {{ .View.Height }}px;
-    text-align: center;
+  color: #{{ .View.Color.Foreground }};
+  background: #{{ .View.Color.Background }};
+  width: {{ .View.Width }}px;
+  height: {{ .View.Height }}px;
+  margin: 0;
+  padding: 0;
+}
+
+div {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  position: absolute;
+}
+
+span {
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
 }
 
 img {
-  position: absolute;
-  margin:0;
-  padding:0;
-  z-index:0;
+  margin: 0;
+  padding: 0;
 }

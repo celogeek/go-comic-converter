@@ -7,7 +7,11 @@
     <link href="style.css" type="text/css" rel="stylesheet"/>
     <meta name="viewport" content="{{ .ViewPort }}"/>
   </head>
-  <body>
-    <img src="../{{ .ImagePath }}" alt="{{ .Title }}" style="{{ .ImageStyle }}"/>
+  <body style="">
+    <div style="top:{{ .Image.Top }}%; {{ .Image.Align }}">
+      <span>
+        <img src="../{{ .Image.Path }}" alt="{{ .Title }}" width="{{ .Image.Width }}" height="{{ .Image.Height }}"/>
+      </span>
+    </div>
   </body>
 </html>
