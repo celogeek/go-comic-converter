@@ -6,7 +6,6 @@ package epubimage
 import (
 	"fmt"
 	"image"
-	"strings"
 )
 
 type Image struct {
@@ -66,38 +65,24 @@ func (i *Image) ImgPath() string {
 	return fmt.Sprintf("Images/%s.%s", i.ImgKey(), i.Format)
 }
 
+// special path
+func (i *Image) ImgSpecialPath(kind string) string {
+	if kind == "" {
+		return i.ImgPath()
+	}
+	return fmt.Sprintf("Images/%s.%s", kind, i.Format)
+}
+
 // image path into the EPUB
 func (i *Image) EPUBImgPath() string {
 	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
 }
 
-// style to apply to the image.
-//
-// center by default.
-// align to left or right if it's part of the splitted double page.
-func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
-	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
-	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
+func (i *Image) Top(viewWidth, viewHeight int) string {
+	_, relHeight := i.RelSize(viewWidth, viewHeight)
+	marginH := float64(viewHeight-relHeight) / 2
 
-	style := []string{}
-
-	style = append(style, fmt.Sprintf("width:%dpx", relWidth))
-	style = append(style, fmt.Sprintf("height:%dpx", relHeight))
-	style = append(style, fmt.Sprintf("top:%.2f%%", marginH*100/float64(viewHeight)))
-	if align == "" {
-		switch i.Position {
-		case "rendition:page-spread-left":
-			style = append(style, "right:0")
-		case "rendition:page-spread-right":
-			style = append(style, "left:0")
-		default:
-			style = append(style, fmt.Sprintf("left:%.2f%%", marginW*100/float64(viewWidth)))
-		}
-	} else {
-		style = append(style, align)
-	}
-
-	return strings.Join(style, "; ")
+	return fmt.Sprintf("%.2f", marginH*100/float64(viewHeight))
 }
 
 func (i *Image) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {
@@ -120,4 +105,13 @@ func (i *Image) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {
 	}
 
 	return
+}
+
+func (i *Image) ImgStyle(kind string, viewWidth, viewHeight int) map[string]any {
+	return map[string]any{
+		"Path":   i.ImgSpecialPath(kind),
+		"Width":  i.Width,
+		"Height": i.Height,
+		"Top":    i.Top(viewWidth, viewHeight),
+	}
 }

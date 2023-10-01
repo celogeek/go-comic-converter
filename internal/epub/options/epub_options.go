@@ -21,6 +21,10 @@ type View struct {
 	Color         Color
 }
 
+func (v *View) Port() string {
+	return fmt.Sprintf("width=%d, height=%d", v.Width, v.Height)
+}
+
 type Image struct {
 	Crop                     *Crop
 	Quality                  int
