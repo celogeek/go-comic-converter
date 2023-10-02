@@ -4,6 +4,8 @@
 }
 
 body {
+  color: #{{ .View.Color.Foreground }};
+  background: #{{ .View.Color.Background }};
   display: block;
   margin: 0;
   padding: 0;
@@ -19,5 +21,4 @@ div {
 img {
   margin: 0;
   padding: 0;
-  height: {{ .View.Height }}px;
 }
