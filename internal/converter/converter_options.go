@@ -1,7 +1,7 @@
 /*
 Manage options with default value from config.
 */
-package options
+package converter
 
 import (
 	"encoding/json"
@@ -10,11 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
 )
 
-type Options struct {
+type converterOptions struct {
 	// Output
 	Input  string `yaml:"-"`
 	Output string `yaml:"-"`
@@ -75,12 +74,12 @@ type Options struct {
 	Help       bool `yaml:"-"`
 
 	// Internal
-	profiles profiles.Profiles
+	profiles converterProfiles
 }
 
 // Initialize default options.
-func New() *Options {
-	return &Options{
+func newOptions() *converterOptions {
+	return &converterOptions{
 		Profile:                  "SR",
 		Quality:                  85,
 		Grayscale:                true,
@@ -97,15 +96,15 @@ func New() *Options {
 		BackgroundColor:          "FFF",
 		Format:                   "jpeg",
 		TitlePage:                1,
-		profiles:                 profiles.New(),
+		profiles:                 newProfiles(),
 	}
 }
 
-func (o *Options) Header() string {
+func (o *converterOptions) Header() string {
 	return "Go Comic Converter\n\nOptions:"
 }
 
-func (o *Options) String() string {
+func (o *converterOptions) String() string {
 	var b strings.Builder
 	b.WriteString(o.Header())
 	for _, v := range []struct {
@@ -125,7 +124,7 @@ func (o *Options) String() string {
 	return b.String()
 }
 
-func (o *Options) MarshalJSON() ([]byte, error) {
+func (o *converterOptions) MarshalJSON() ([]byte, error) {
 	out := map[string]any{
 		"input":                      o.Input,
 		"output":                     o.Output,
@@ -186,13 +185,13 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 }
 
 // Config file: ~/.go-comic-converter.yaml
-func (o *Options) FileName() string {
+func (o *converterOptions) FileName() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".go-comic-converter.yaml")
 }
 
 // Load config files
-func (o *Options) LoadConfig() error {
+func (o *converterOptions) LoadConfig() error {
 	f, err := os.Open(o.FileName())
 	if err != nil {
 		return nil
@@ -207,7 +206,7 @@ func (o *Options) LoadConfig() error {
 }
 
 // Get current settings for fields that can be saved
-func (o *Options) ShowConfig() string {
+func (o *converterOptions) ShowConfig() string {
 	var profileDesc string
 	profile := o.GetProfile()
 	if profile != nil {
@@ -296,13 +295,13 @@ func (o *Options) ShowConfig() string {
 }
 
 // reset all settings to default value
-func (o *Options) ResetConfig() error {
-	New().SaveConfig()
+func (o *converterOptions) ResetConfig() error {
+	newOptions().SaveConfig()
 	return o.LoadConfig()
 }
 
 // save all current settings as futur default value
-func (o *Options) SaveConfig() error {
+func (o *converterOptions) SaveConfig() error {
 	f, err := os.Create(o.FileName())
 	if err != nil {
 		return err
@@ -312,11 +311,11 @@ func (o *Options) SaveConfig() error {
 }
 
 // shortcut to get current profile
-func (o *Options) GetProfile() *profiles.Profile {
+func (o *converterOptions) GetProfile() *converterProfile {
 	return o.profiles.Get(o.Profile)
 }
 
 // all available profiles
-func (o *Options) AvailableProfiles() string {
+func (o *converterOptions) AvailableProfiles() string {
 	return o.profiles.String()
 }

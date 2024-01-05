@@ -1,25 +1,25 @@
 /*
 Manage supported profiles for go-comic-converter.
 */
-package profiles
+package converter
 
 import (
 	"fmt"
 	"strings"
 )
 
-type Profile struct {
+type converterProfile struct {
 	Code        string `json:"code"`
 	Description string `json:"description"`
 	Width       int    `json:"width"`
 	Height      int    `json:"height"`
 }
 
-type Profiles []Profile
+type converterProfiles []*converterProfile
 
 // Initialize list of all supported profiles.
-func New() Profiles {
-	return []Profile{
+func newProfiles() converterProfiles {
+	return []*converterProfile{
 		// High Resolution for Tablette
 		{"HR", "High Resolution", 2400, 3840},
 		{"SR", "Standard Resolution", 1200, 1920},
@@ -55,7 +55,7 @@ func New() Profiles {
 	}
 }
 
-func (p Profiles) String() string {
+func (p converterProfiles) String() string {
 	s := make([]string, 0)
 	for _, v := range p {
 		s = append(s, fmt.Sprintf(
@@ -69,10 +69,10 @@ func (p Profiles) String() string {
 }
 
 // Lookup profile by code
-func (p Profiles) Get(name string) *Profile {
+func (p converterProfiles) Get(name string) *converterProfile {
 	for _, profile := range p {
 		if profile.Code == name {
-			return &profile
+			return profile
 		}
 	}
 	return nil
