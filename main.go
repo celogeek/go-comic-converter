@@ -14,8 +14,8 @@ import (
 	"runtime/debug"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter"
-	"github.com/celogeek/go-comic-converter/v2/internal/epub"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epub"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
 	"github.com/tcnksm/go-latest"
 )
 
@@ -106,8 +106,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	}
 
 	profile := cmd.Options.GetProfile()
-
-	if err := epub.New(&epuboptions.Options{
+	options := &epuboptions.EPUBOptions{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
 		LimitMb:                    cmd.Options.LimitMb,
@@ -122,7 +121,13 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Quiet:                      cmd.Options.Quiet,
 		Json:                       cmd.Options.Json,
 		Image: &epuboptions.Image{
-			Crop:                     &epuboptions.Crop{Enabled: cmd.Options.Crop, Left: cmd.Options.CropRatioLeft, Up: cmd.Options.CropRatioUp, Right: cmd.Options.CropRatioRight, Bottom: cmd.Options.CropRatioBottom},
+			Crop: &epuboptions.Crop{
+				Enabled: cmd.Options.Crop,
+				Left:    cmd.Options.CropRatioLeft,
+				Up:      cmd.Options.CropRatioUp,
+				Right:   cmd.Options.CropRatioRight,
+				Bottom:  cmd.Options.CropRatioBottom,
+			},
 			Quality:                  cmd.Options.Quality,
 			Brightness:               cmd.Options.Brightness,
 			Contrast:                 cmd.Options.Contrast,
@@ -133,14 +138,25 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankImage:             cmd.Options.NoBlankImage,
 			Manga:                    cmd.Options.Manga,
 			HasCover:                 cmd.Options.HasCover,
-			View:                     &epuboptions.View{Width: profile.Width, Height: profile.Height, AspectRatio: cmd.Options.AspectRatio, PortraitOnly: cmd.Options.PortraitOnly, Color: epuboptions.Color{Foreground: cmd.Options.ForegroundColor, Background: cmd.Options.BackgroundColor}},
-			GrayScale:                cmd.Options.Grayscale,
-			GrayScaleMode:            cmd.Options.GrayscaleMode,
-			Resize:                   !cmd.Options.NoResize,
-			Format:                   cmd.Options.Format,
-			AppleBookCompatibility:   cmd.Options.AppleBookCompatibility,
+			View: &epuboptions.View{
+				Width:        profile.Width,
+				Height:       profile.Height,
+				AspectRatio:  cmd.Options.AspectRatio,
+				PortraitOnly: cmd.Options.PortraitOnly,
+				Color: epuboptions.Color{
+					Foreground: cmd.Options.ForegroundColor,
+					Background: cmd.Options.BackgroundColor,
+				},
+			},
+			GrayScale:              cmd.Options.Grayscale,
+			GrayScaleMode:          cmd.Options.GrayscaleMode,
+			Resize:                 !cmd.Options.NoResize,
+			Format:                 cmd.Options.Format,
+			AppleBookCompatibility: cmd.Options.AppleBookCompatibility,
 		},
-	}).Write(); err != nil {
+	}
+
+	if err := epub.Generate(options); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
