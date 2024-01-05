@@ -51,7 +51,7 @@ func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
 
 // Load images from input
 func (e *EPUBImageProcessor) load() (totalImages int, output chan *tasks, err error) {
-	fi, err := os.Stat(e.Input)
+	fi, err := os.Stat(e.options.Input)
 	if err != nil {
 		return
 	}
@@ -60,7 +60,7 @@ func (e *EPUBImageProcessor) load() (totalImages int, output chan *tasks, err er
 	if fi.IsDir() {
 		return e.loadDir()
 	} else {
-		switch ext := strings.ToLower(filepath.Ext(e.Input)); ext {
+		switch ext := strings.ToLower(filepath.Ext(e.options.Input)); ext {
 		case ".cbz", ".zip":
 			return e.loadCbz()
 		case ".cbr", ".rar":
@@ -101,7 +101,7 @@ func (e *EPUBImageProcessor) corruptedImage(path, name string) image.Image {
 func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err error) {
 	images := make([]string, 0)
 
-	input := filepath.Clean(e.Input)
+	input := filepath.Clean(e.options.Input)
 	err = filepath.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -123,7 +123,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 		return
 	}
 
-	sort.Sort(sortpath.By(images, e.SortPathMode))
+	sort.Sort(sortpath.By(images, e.options.SortPathMode))
 
 	// Queue all file with id
 	type job struct {
@@ -139,16 +139,16 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 	}()
 
 	// read in parallel and get an image
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *tasks, e.options.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for j := 0; j < e.options.WorkersRatio(50); j++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
 				var err error
-				if !e.Dry {
+				if !e.options.Dry {
 					var f *os.File
 					f, err = os.Open(job.Path)
 					if err == nil {
@@ -188,7 +188,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 
 // load a zip file that include images
 func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err error) {
-	r, err := zip.OpenReader(e.Input)
+	r, err := zip.OpenReader(e.options.Input)
 	if err != nil {
 		return
 	}
@@ -212,7 +212,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 	for _, img := range images {
 		names = append(names, img.Name)
 	}
-	sort.Sort(sortpath.By(names, e.SortPathMode))
+	sort.Sort(sortpath.By(names, e.options.SortPathMode))
 
 	indexedNames := make(map[string]int)
 	for i, name := range names {
@@ -231,16 +231,16 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 		}
 	}()
 
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *tasks, e.options.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for j := 0; j < e.options.WorkersRatio(50); j++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
 				var err error
-				if !e.Dry {
+				if !e.options.Dry {
 					var f io.ReadCloser
 					f, err = job.F.Open()
 					if err == nil {
@@ -275,7 +275,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 // load a rar file that include images
 func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err error) {
 	var isSolid bool
-	files, err := rardecode.List(e.Input)
+	files, err := rardecode.List(e.options.Input)
 	if err != nil {
 		return
 	}
@@ -296,7 +296,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 		return
 	}
 
-	sort.Sort(sortpath.By(names, e.SortPathMode))
+	sort.Sort(sortpath.By(names, e.options.SortPathMode))
 
 	indexedNames := make(map[string]int)
 	for i, name := range names {
@@ -312,10 +312,10 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 	jobs := make(chan *job)
 	go func() {
 		defer close(jobs)
-		if isSolid && !e.Dry {
-			r, rerr := rardecode.OpenReader(e.Input)
+		if isSolid && !e.options.Dry {
+			r, rerr := rardecode.OpenReader(e.options.Input)
 			if rerr != nil {
-				fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", e.Input, rerr)
+				fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", e.options.Input, rerr)
 				os.Exit(1)
 			}
 			defer r.Close()
@@ -350,16 +350,16 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 	}()
 
 	// send file to the queue
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *tasks, e.options.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for j := 0; j < e.options.WorkersRatio(50); j++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for job := range jobs {
 				var img image.Image
 				var err error
-				if !e.Dry {
+				if !e.options.Dry {
 					var f io.ReadCloser
 					f, err = job.Open()
 					if err == nil {
@@ -391,7 +391,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 
 // extract image from a pdf
 func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err error) {
-	pdf := pdfread.Load(e.Input)
+	pdf := pdfread.Load(e.options.Input)
 	if pdf == nil {
 		err = fmt.Errorf("can't read pdf")
 		return
@@ -406,7 +406,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err
 		for i := 0; i < totalImages; i++ {
 			var img image.Image
 			var err error
-			if !e.Dry {
+			if !e.options.Dry {
 				img, err = pdfimage.Extract(pdf, i+1)
 			}
 
