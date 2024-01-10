@@ -4,6 +4,7 @@ create a progress bar with custom settings.
 package epubprogress
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -20,18 +21,21 @@ type Options struct {
 	TotalJob    int
 }
 
-type EpubProgress interface {
+type epubProgress interface {
 	Add(num int) error
 	Close() error
 }
 
-func New(o Options) EpubProgress {
+func New(o Options) epubProgress {
 	if o.Quiet {
 		return progressbar.DefaultSilent(int64(o.Max))
 	}
 
 	if o.Json {
-		return newEpubProgressJson(o)
+		return &epubProgressJson{
+			o: o,
+			e: json.NewEncoder(os.Stdout),
+		}
 	}
 
 	fmtJob := fmt.Sprintf("%%0%dd", len(fmt.Sprint(o.TotalJob)))

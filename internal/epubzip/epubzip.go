@@ -63,7 +63,7 @@ func (e *EPUBZip) Copy(fz *zip.File) error {
 }
 
 // Write image. They are already compressed, so we write them down directly.
-func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
+func (e *EPUBZip) WriteRaw(raw *EPUBZipImage) error {
 	m, err := e.wz.CreateRaw(raw.Header)
 	if err != nil {
 		return err

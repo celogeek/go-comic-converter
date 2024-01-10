@@ -41,7 +41,7 @@ type Image struct {
 	AppleBookCompatibility   bool
 }
 
-type Options struct {
+type EPUBOptions struct {
 	Input                      string
 	Output                     string
 	Title                      string
@@ -58,7 +58,7 @@ type Options struct {
 	Image                      *Image
 }
 
-func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
+func (o *EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {
 	nbWorkers = o.Workers * pct / 100
 	if nbWorkers < 1 {
 		nbWorkers = 1
@@ -66,6 +66,6 @@ func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
 	return
 }
 
-func (o *Options) ImgStorage() string {
+func (o *EPUBOptions) Temp() string {
 	return fmt.Sprintf("%s.tmp", o.Output)
 }

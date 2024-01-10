@@ -14,17 +14,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/celogeek/go-comic-converter/v2/internal/converter/options"
 )
 
-type Converter struct {
-	Options *options.Options
+type converter struct {
+	Options *converterOptions
 	Cmd     *flag.FlagSet
 
 	order           []converterOrder
@@ -33,10 +30,10 @@ type Converter struct {
 }
 
 // Create a new parser
-func New() *Converter {
-	options := options.New()
+func New() *converter {
+	options := newOptions()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
-	conv := &Converter{
+	conv := &converter{
 		Options: options,
 		Cmd:     cmd,
 		order:   make([]converterOrder, 0),
@@ -64,169 +61,76 @@ func New() *Converter {
 }
 
 // Load default options (config + default)
-func (c *Converter) LoadConfig() error {
+func (c *converter) LoadConfig() error {
 	return c.Options.LoadConfig()
 }
 
-// Create a new section of config
-func (c *Converter) AddSection(section string) {
-	c.order = append(c.order, converterOrderSection{value: section})
-}
-
-// Add a string parameter
-func (c *Converter) AddStringParam(p *string, name string, value string, usage string) {
-	c.Cmd.StringVar(p, name, value, usage)
-	c.order = append(c.order, converterOrderName{value: name, isString: true})
-}
-
-// Add an integer parameter
-func (c *Converter) AddIntParam(p *int, name string, value int, usage string) {
-	c.Cmd.IntVar(p, name, value, usage)
-	c.order = append(c.order, converterOrderName{value: name})
-}
-
-// Add an float parameter
-func (c *Converter) AddFloatParam(p *float64, name string, value float64, usage string) {
-	c.Cmd.Float64Var(p, name, value, usage)
-	c.order = append(c.order, converterOrderName{value: name})
-}
-
-// Add a boolean parameter
-func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string) {
-	c.Cmd.BoolVar(p, name, value, usage)
-	c.order = append(c.order, converterOrderName{value: name})
-}
-
 // Initialize the parser with all section and parameter.
-func (c *Converter) InitParse() {
-	c.AddSection("Output")
-	c.AddStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
-	c.AddStringParam(&c.Options.Output, "output", "", "Output of the EPUB (directory or EPUB): (default [INPUT].epub)")
-	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the EPUB")
-	c.AddStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
+func (c *converter) InitParse() {
+	c.addSection("Output")
+	c.addStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
+	c.addStringParam(&c.Options.Output, "output", "", "Output of the EPUB (directory or EPUB): (default [INPUT].epub)")
+	c.addStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the EPUB")
+	c.addStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
 
-	c.AddSection("Config")
-	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
-	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
-	c.AddBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
-	c.AddIntParam(&c.Options.GrayscaleMode, "grayscale-mode", c.Options.GrayscaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
-	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
-	c.AddIntParam(&c.Options.CropRatioLeft, "crop-ratio-left", c.Options.CropRatioLeft, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
-	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
-	c.AddIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
-	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
-	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
-	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
-	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
-	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
-	c.AddBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
-	c.AddBoolParam(&c.Options.KeepDoublePageIfSplitted, "keepdoublepageifsplitted", c.Options.KeepDoublePageIfSplitted, "Keep the double page if splitted")
-	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
-	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
-	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
-	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
-	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
-	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
-	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexa format RGB. Black=000, White=FFF")
-	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
-	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
-	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
-	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
-	c.AddBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
-	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is splitted")
+	c.addSection("Config")
+	c.addStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
+	c.addIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
+	c.addBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
+	c.addIntParam(&c.Options.GrayscaleMode, "grayscale-mode", c.Options.GrayscaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
+	c.addBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
+	c.addIntParam(&c.Options.CropRatioLeft, "crop-ratio-left", c.Options.CropRatioLeft, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
+	c.addIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
+	c.addIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
+	c.addIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
+	c.addIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
+	c.addIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	c.addBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
+	c.addBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
+	c.addBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
+	c.addBoolParam(&c.Options.KeepDoublePageIfSplitted, "keepdoublepageifsplitted", c.Options.KeepDoublePageIfSplitted, "Keep the double page if splitted")
+	c.addBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
+	c.addBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
+	c.addBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
+	c.addIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
+	c.addBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
+	c.addIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
+	c.addStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexa format RGB. Black=000, White=FFF")
+	c.addStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
+	c.addBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
+	c.addStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
+	c.addFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
+	c.addBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
+	c.addIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is splitted")
 
-	c.AddSection("Default config")
-	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
-	c.AddBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
-	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
+	c.addSection("Default config")
+	c.addBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
+	c.addBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
+	c.addBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
-	c.AddSection("Shortcut")
-	c.AddBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
-	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")
-	c.AddBoolParam(&c.Options.MaxQuality, "maxquality", false, "Max quality: color png + noresize")
-	c.AddBoolParam(&c.Options.BestQuality, "bestquality", false, "Max quality: color jpg q100 + noresize")
-	c.AddBoolParam(&c.Options.GreatQuality, "greatquality", false, "Max quality: grayscale jpg q90 + noresize")
-	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
+	c.addSection("Shortcut")
+	c.addBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
+	c.addBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")
+	c.addBoolParam(&c.Options.MaxQuality, "maxquality", false, "Max quality: color png + noresize")
+	c.addBoolParam(&c.Options.BestQuality, "bestquality", false, "Max quality: color jpg q100 + noresize")
+	c.addBoolParam(&c.Options.GreatQuality, "greatquality", false, "Max quality: grayscale jpg q90 + noresize")
+	c.addBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
-	c.AddSection("Compatibility")
-	c.AddBoolParam(&c.Options.AppleBookCompatibility, "applebookcompatibility", c.Options.AppleBookCompatibility, "Apple book compatibility")
+	c.addSection("Compatibility")
+	c.addBoolParam(&c.Options.AppleBookCompatibility, "applebookcompatibility", c.Options.AppleBookCompatibility, "Apple book compatibility")
 
-	c.AddSection("Other")
-	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
-	c.AddBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
-	c.AddBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
-	c.AddBoolParam(&c.Options.Quiet, "quiet", false, "Disable progress bar")
-	c.AddBoolParam(&c.Options.Json, "json", false, "Output progression and information in Json format")
-	c.AddBoolParam(&c.Options.Version, "version", false, "Show current and available version")
-	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
-}
-
-// Customize version of FlagSet.PrintDefaults
-func (c *Converter) Usage(isString bool, f *flag.Flag) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
-	name, usage := flag.UnquoteUsage(f)
-	if len(name) > 0 {
-		b.WriteString(" ")
-		b.WriteString(name)
-	}
-	// Print the default value only if it differs to the zero value
-	// for this flag type.
-	if isZero, err := c.isZeroValue(f, f.DefValue); err != nil {
-		c.isZeroValueErrs = append(c.isZeroValueErrs, err)
-	} else if !isZero {
-		if isString {
-			fmt.Fprintf(&b, " (default %q)", f.DefValue)
-		} else {
-			fmt.Fprintf(&b, " (default %v)", f.DefValue)
-		}
-	}
-
-	// Boolean flags of one ASCII letter are so common we
-	// treat them specially, putting their usage on the same line.
-	if b.Len() <= 4 { // space, space, '-', 'x'.
-		b.WriteString("\t")
-	} else {
-		// Four spaces before the tab triggers good alignment
-		// for both 4- and 8-space tab stops.
-		b.WriteString("\n    \t")
-	}
-	b.WriteString(strings.ReplaceAll(usage, "\n", "\n    \t"))
-
-	return b.String()
-}
-
-// Taken from flag package as it is private and needed for usage.
-//
-// isZeroValue determines whether the string represents the zero
-// value for a flag.
-func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error) {
-	// Build a zero value of the flag's Value type, and see if the
-	// result of calling its String method equals the value passed in.
-	// This works unless the Value type is itself an interface type.
-	typ := reflect.TypeOf(f.Value)
-	var z reflect.Value
-	if typ.Kind() == reflect.Pointer {
-		z = reflect.New(typ.Elem())
-	} else {
-		z = reflect.Zero(typ)
-	}
-	// Catch panics calling the String method, which shouldn't prevent the
-	// usage message from being printed, but that we should report to the
-	// user so that they know to fix their code.
-	defer func() {
-		if e := recover(); e != nil {
-			if typ.Kind() == reflect.Pointer {
-				typ = typ.Elem()
-			}
-			err = fmt.Errorf("panic calling String method on zero %v for flag %s: %v", typ, f.Name, e)
-		}
-	}()
-	return value == z.Interface().(flag.Value).String(), nil
+	c.addSection("Other")
+	c.addIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
+	c.addBoolParam(&c.Options.Dry, "dry", false, "Dry run to show all options")
+	c.addBoolParam(&c.Options.DryVerbose, "dry-verbose", false, "Display also sorted files after the TOC")
+	c.addBoolParam(&c.Options.Quiet, "quiet", false, "Disable progress bar")
+	c.addBoolParam(&c.Options.Json, "json", false, "Output progression and information in Json format")
+	c.addBoolParam(&c.Options.Version, "version", false, "Show current and available version")
+	c.addBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }
 
 // Parse all parameters
-func (c *Converter) Parse() {
+func (c *converter) Parse() {
 	c.Cmd.Parse(os.Args[1:])
 	if c.Options.Help {
 		c.Cmd.Usage()
@@ -277,7 +181,7 @@ func (c *Converter) Parse() {
 }
 
 // Check parameters
-func (c *Converter) Validate() error {
+func (c *converter) Validate() error {
 	// Check input
 	if c.Options.Input == "" {
 		return errors.New("missing input")
@@ -393,14 +297,49 @@ func (c *Converter) Validate() error {
 	return nil
 }
 
+// Customize version of FlagSet.PrintDefaults
+func (c *converter) Usage(isString bool, f *flag.Flag) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
+	name, usage := flag.UnquoteUsage(f)
+	if len(name) > 0 {
+		b.WriteString(" ")
+		b.WriteString(name)
+	}
+	// Print the default value only if it differs to the zero value
+	// for this flag type.
+	if isZero, err := c.isZeroValue(f, f.DefValue); err != nil {
+		c.isZeroValueErrs = append(c.isZeroValueErrs, err)
+	} else if !isZero {
+		if isString {
+			fmt.Fprintf(&b, " (default %q)", f.DefValue)
+		} else {
+			fmt.Fprintf(&b, " (default %v)", f.DefValue)
+		}
+	}
+
+	// Boolean flags of one ASCII letter are so common we
+	// treat them specially, putting their usage on the same line.
+	if b.Len() <= 4 { // space, space, '-', 'x'.
+		b.WriteString("\t")
+	} else {
+		// Four spaces before the tab triggers good alignment
+		// for both 4- and 8-space tab stops.
+		b.WriteString("\n    \t")
+	}
+	b.WriteString(strings.ReplaceAll(usage, "\n", "\n    \t"))
+
+	return b.String()
+}
+
 // Helper to show usage, err and exit 1
-func (c *Converter) Fatal(err error) {
+func (c *converter) Fatal(err error) {
 	c.Cmd.Usage()
 	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
 	os.Exit(1)
 }
 
-func (c *Converter) Stats() {
+func (c *converter) Stats() {
 	// Display elapse time and memory usage
 	elapse := time.Since(c.startAt).Round(time.Millisecond)
 	var mem runtime.MemStats

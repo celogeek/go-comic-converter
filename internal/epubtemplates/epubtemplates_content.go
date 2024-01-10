@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/beevik/etree"
-	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimage"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
 )
 
 type ContentOptions struct {
@@ -16,8 +16,8 @@ type ContentOptions struct {
 	Publisher    string
 	UpdatedAt    string
 	ImageOptions *epuboptions.Image
-	Cover        *epubimage.Image
-	Images       []*epubimage.Image
+	Cover        *epubimage.EPUBImage
+	Images       []*epubimage.EPUBImage
 	Current      int
 	Total        int
 }
@@ -140,7 +140,7 @@ func getMeta(o *ContentOptions) []tag {
 
 func getManifest(o *ContentOptions) []tag {
 	var imageTags, pageTags, spaceTags []tag
-	addTag := func(img *epubimage.Image, withSpace bool) {
+	addTag := func(img *epubimage.EPUBImage, withSpace bool) {
 		imageTags = append(imageTags,
 			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 		)

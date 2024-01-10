@@ -6,55 +6,54 @@ package epubimageprocessor
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"image/draw"
 	"os"
 	"sync"
 
-	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
-	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
-	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimage"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimagefilters"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubprogress"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubzip"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
 	"github.com/disintegration/gift"
 )
 
 type EPUBImageProcessor struct {
-	*epuboptions.Options
+	options *epuboptions.EPUBOptions
 }
 
-func New(o *epuboptions.Options) *EPUBImageProcessor {
+func New(o *epuboptions.EPUBOptions) *EPUBImageProcessor {
 	return &EPUBImageProcessor{o}
 }
 
 // extract and convert images
-func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
-	images = make([]*epubimage.Image, 0)
+func (e *EPUBImageProcessor) Load() (images []*epubimage.EPUBImage, err error) {
+	images = make([]*epubimage.EPUBImage, 0)
 	imageCount, imageInput, err := e.load()
 	if err != nil {
 		return nil, err
 	}
 
 	// dry run, skip convertion
-	if e.Dry {
+	if e.options.Dry {
 		for img := range imageInput {
-			images = append(images, &epubimage.Image{
+			images = append(images, &epubimage.EPUBImage{
 				Id:     img.Id,
 				Path:   img.Path,
 				Name:   img.Name,
-				Format: e.Image.Format,
+				Format: e.options.Image.Format,
 			})
 		}
 
 		return images, nil
 	}
 
-	imageOutput := make(chan *epubimage.Image)
+	imageOutput := make(chan *epubimage.EPUBImage)
 
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       e.Quiet,
-		Json:        e.Json,
+		Quiet:       e.options.Quiet,
+		Json:        e.options.Json,
 		Max:         imageCount,
 		Description: "Processing",
 		CurrentJob:  1,
@@ -62,17 +61,17 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	})
 	wg := &sync.WaitGroup{}
 
-	imgStorage, err := epubzip.NewEPUBZipStorageImageWriter(e.ImgStorage(), e.Image.Format)
+	imgStorage, err := epubzip.NewImageWriter(e.options.Temp(), e.options.Image.Format)
 	if err != nil {
 		bar.Close()
 		return nil, err
 	}
 
 	wr := 50
-	if e.Image.Format == "png" {
+	if e.options.Image.Format == "png" {
 		wr = 100
 	}
-	for i := 0; i < e.WorkersRatio(wr); i++ {
+	for i := 0; i < e.options.WorkersRatio(wr); i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -86,7 +85,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 						raw = dst
 					}
 
-					img := &epubimage.Image{
+					img := &epubimage.EPUBImage{
 						Id:                  input.Id,
 						Part:                part,
 						Raw:                 raw,
@@ -97,7 +96,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 						DoublePage:          part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
 						Path:                input.Path,
 						Name:                input.Name,
-						Format:              e.Image.Format,
+						Format:              e.options.Image.Format,
 						OriginalAspectRatio: float64(src.Bounds().Dy()) / float64(src.Bounds().Dx()),
 						Error:               input.Error,
 					}
@@ -105,12 +104,12 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 					// do not keep double page if requested
 					if !img.IsCover &&
 						img.DoublePage &&
-						e.Options.Image.AutoSplitDoublePage &&
-						!e.Options.Image.KeepDoublePageIfSplitted {
+						e.options.Image.AutoSplitDoublePage &&
+						!e.options.Image.KeepDoublePageIfSplitted {
 						continue
 					}
 
-					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
+					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.options.Image.Quality); err != nil {
 						bar.Close()
 						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
 						os.Exit(1)
@@ -131,7 +130,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 		if img.Part == 0 {
 			bar.Add(1)
 		}
-		if e.Image.NoBlankImage && img.IsBlank {
+		if e.options.Image.NoBlankImage && img.IsBlank {
 			continue
 		}
 		images = append(images, img)
@@ -146,7 +145,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 }
 
 func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
-	if e.Options.Image.GrayScale {
+	if e.options.Image.GrayScale {
 		return image.NewGray(r)
 	}
 
@@ -183,13 +182,13 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	var images []image.Image
 
 	// Lookup for margin if crop is enable or if we want to remove blank image
-	if e.Image.Crop.Enabled || e.Image.NoBlankImage {
+	if e.options.Image.Crop.Enabled || e.options.Image.NoBlankImage {
 		f := epubimagefilters.AutoCrop(
 			src,
-			e.Image.Crop.Left,
-			e.Image.Crop.Up,
-			e.Image.Crop.Right,
-			e.Image.Crop.Bottom,
+			e.options.Image.Crop.Left,
+			e.options.Image.Crop.Up,
+			e.options.Image.Crop.Right,
+			e.options.Image.Crop.Bottom,
 		)
 
 		// detect if blank image
@@ -197,42 +196,42 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		isBlank := size.Dx() == 0 && size.Dy() == 0
 
 		// crop is enable or if blank image with noblankimage options
-		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
+		if e.options.Image.Crop.Enabled || (e.options.Image.NoBlankImage && isBlank) {
 			filters = append(filters, f)
 			splitFilters = append(splitFilters, f)
 		}
 	}
 
-	if e.Image.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
+	if e.options.Image.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
 		filters = append(filters, gift.Rotate90())
 	}
 
-	if e.Image.AutoContrast {
+	if e.options.Image.AutoContrast {
 		f := epubimagefilters.AutoContrast()
 		filters = append(filters, f)
 		splitFilters = append(splitFilters, f)
 	}
 
-	if e.Image.Contrast != 0 {
-		f := gift.Contrast(float32(e.Image.Contrast))
+	if e.options.Image.Contrast != 0 {
+		f := gift.Contrast(float32(e.options.Image.Contrast))
 		filters = append(filters, f)
 		splitFilters = append(splitFilters, f)
 	}
 
-	if e.Image.Brightness != 0 {
-		f := gift.Brightness(float32(e.Image.Brightness))
+	if e.options.Image.Brightness != 0 {
+		f := gift.Brightness(float32(e.options.Image.Brightness))
 		filters = append(filters, f)
 		splitFilters = append(splitFilters, f)
 	}
 
-	if e.Image.Resize {
-		f := gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling)
+	if e.options.Image.Resize {
+		f := gift.ResizeToFit(e.options.Image.View.Width, e.options.Image.View.Height, gift.LanczosResampling)
 		filters = append(filters, f)
 	}
 
-	if e.Image.GrayScale {
+	if e.options.Image.GrayScale {
 		var f gift.Filter
-		switch e.Image.GrayScaleMode {
+		switch e.options.Image.GrayScaleMode {
 		case 1: // average
 			f = gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
 				y := (r0 + g0 + b0) / 3
@@ -261,7 +260,7 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	}
 
 	// auto split off
-	if !e.Image.AutoSplitDoublePage {
+	if !e.options.Image.AutoSplitDoublePage {
 		return images
 	}
 
@@ -271,16 +270,16 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	}
 
 	// cover
-	if e.Image.HasCover && srcId == 0 {
+	if e.options.Image.HasCover && srcId == 0 {
 		return images
 	}
 
 	// convert double page
-	for _, b := range []bool{e.Image.Manga, !e.Image.Manga} {
+	for _, b := range []bool{e.options.Image.Manga, !e.options.Image.Manga} {
 		g := gift.New(splitFilters...)
 		g.Add(epubimagefilters.CropSplitDoublePage(b))
-		if e.Image.Resize {
-			g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
+		if e.options.Image.Resize {
+			g.Add(gift.ResizeToFit(e.options.Image.View.Width, e.options.Image.View.Height, gift.LanczosResampling))
 		}
 		dst := e.createImage(src, g.Bounds(src.Bounds()))
 		g.Draw(dst, src)
@@ -288,56 +287,4 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 	}
 
 	return images
-}
-
-type CoverTitleDataOptions struct {
-	Src         image.Image
-	Name        string
-	Text        string
-	Align       string
-	PctWidth    int
-	PctMargin   int
-	MaxFontSize int
-	BorderSize  int
-}
-
-func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
-	return image.NewPaletted(bounds, color.Palette{
-		color.Gray{0x00},
-		color.Gray{0x11},
-		color.Gray{0x22},
-		color.Gray{0x33},
-		color.Gray{0x44},
-		color.Gray{0x55},
-		color.Gray{0x66},
-		color.Gray{0x77},
-		color.Gray{0x88},
-		color.Gray{0x99},
-		color.Gray{0xAA},
-		color.Gray{0xBB},
-		color.Gray{0xCC},
-		color.Gray{0xDD},
-		color.Gray{0xEE},
-		color.Gray{0xFF},
-	})
-}
-
-// create a title page with the cover
-func (e *EPUBImageProcessor) CoverTitleData(o *CoverTitleDataOptions) (*epubzip.ZipImage, error) {
-	// Create a blur version of the cover
-	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))
-	var dst draw.Image
-	if o.Name == "cover" && e.Image.GrayScale {
-		dst = e.Cover16LevelOfGray(o.Src.Bounds())
-	} else {
-		dst = e.createImage(o.Src, g.Bounds(o.Src.Bounds()))
-	}
-	g.Draw(dst, o.Src)
-
-	return epubzip.CompressImage(
-		fmt.Sprintf("OEBPS/Images/%s.%s", o.Name, e.Image.Format),
-		e.Image.Format,
-		dst,
-		e.Image.Quality,
-	)
 }

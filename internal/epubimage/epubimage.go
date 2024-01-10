@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type Image struct {
+type EPUBImage struct {
 	Id                  int
 	Part                int
 	Raw                 image.Image
@@ -27,47 +27,47 @@ type Image struct {
 }
 
 // key name of the blank plage after the image
-func (i *Image) SpaceKey() string {
+func (i *EPUBImage) SpaceKey() string {
 	return fmt.Sprintf("space_%d", i.Id)
 }
 
 // path of the blank page
-func (i *Image) SpacePath() string {
+func (i *EPUBImage) SpacePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.SpaceKey())
 }
 
 // path of the blank page into the EPUB
-func (i *Image) EPUBSpacePath() string {
+func (i *EPUBImage) EPUBSpacePath() string {
 	return fmt.Sprintf("OEBPS/%s", i.SpacePath())
 }
 
 // key for page
-func (i *Image) PageKey() string {
+func (i *EPUBImage) PageKey() string {
 	return fmt.Sprintf("page_%d_p%d", i.Id, i.Part)
 }
 
 // page path linked to the image
-func (i *Image) PagePath() string {
+func (i *EPUBImage) PagePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
 }
 
 // page path into the EPUB
-func (i *Image) EPUBPagePath() string {
+func (i *EPUBImage) EPUBPagePath() string {
 	return fmt.Sprintf("OEBPS/%s", i.PagePath())
 }
 
 // key for image
-func (i *Image) ImgKey() string {
+func (i *EPUBImage) ImgKey() string {
 	return fmt.Sprintf("img_%d_p%d", i.Id, i.Part)
 }
 
 // image path
-func (i *Image) ImgPath() string {
+func (i *EPUBImage) ImgPath() string {
 	return fmt.Sprintf("Images/%s.%s", i.ImgKey(), i.Format)
 }
 
 // image path into the EPUB
-func (i *Image) EPUBImgPath() string {
+func (i *EPUBImage) EPUBImgPath() string {
 	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
 }
 
@@ -75,7 +75,7 @@ func (i *Image) EPUBImgPath() string {
 //
 // center by default.
 // align to left or right if it's part of the splitted double page.
-func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
+func (i *EPUBImage) ImgStyle(viewWidth, viewHeight int, align string) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
@@ -100,7 +100,7 @@ func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
 	return strings.Join(style, "; ")
 }
 
-func (i *Image) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {
+func (i *EPUBImage) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {
 	w, h := viewWidth, viewHeight
 	srcw, srch := i.Width, i.Height
 

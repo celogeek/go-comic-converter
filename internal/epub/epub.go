@@ -15,34 +15,35 @@ import (
 	"text/template"
 	"time"
 
-	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
-	epubimageprocessor "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessor"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
-	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
-	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
-	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
-	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimage"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimageprocessor"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubprogress"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubtemplates"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubtree"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubzip"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
 	"github.com/gofrs/uuid"
 )
 
 type ePub struct {
-	*epuboptions.Options
-	UID       string
-	Publisher string
-	UpdatedAt string
+	options *epuboptions.EPUBOptions
+
+	uid       string
+	publisher string
+	updatedAt string
 
 	templateProcessor *template.Template
 	imageProcessor    *epubimageprocessor.EPUBImageProcessor
 }
 
 type epubPart struct {
-	Cover  *epubimage.Image
-	Images []*epubimage.Image
+	Cover  *epubimage.EPUBImage
+	Images []*epubimage.EPUBImage
 	Reader *zip.ReadCloser
 }
 
 // initialize EPUB
-func New(options *epuboptions.Options) *ePub {
+func New(options *epuboptions.EPUBOptions) *ePub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
@@ -51,10 +52,10 @@ func New(options *epuboptions.Options) *ePub {
 	})
 
 	return &ePub{
-		Options:           options,
-		UID:               uid.String(),
-		Publisher:         "GO Comic Converter",
-		UpdatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		options:           options,
+		uid:               uid.String(),
+		publisher:         "GO Comic Converter",
+		updatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		templateProcessor: tmpl,
 		imageProcessor:    epubimageprocessor.New(options),
 	}
@@ -71,14 +72,14 @@ func (e *ePub) render(templateString string, data map[string]any) string {
 }
 
 // write image to the zip
-func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip.File) error {
+func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.EPUBImage, zipImg *zip.File) error {
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.options.Image.View.Width, e.options.Image.View.Height),
 			"ImagePath":  img.ImgPath(),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"ImageStyle": img.ImgStyle(e.options.Image.View.Width, e.options.Image.View.Height, ""),
 		})),
 	)
 	if err == nil {
@@ -89,18 +90,18 @@ func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip
 }
 
 // write blank page
-func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
+func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.EPUBImage) error {
 	return wz.WriteContent(
 		img.EPUBSpacePath(),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
 			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
-			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.options.Image.View.Width, e.options.Image.View.Height),
 		})),
 	)
 }
 
 // write title image
-func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, totalParts int) error {
+func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.EPUBImage, part, totalParts int) error {
 	title := "Cover"
 	text := ""
 	if totalParts > 1 {
@@ -112,9 +113,9 @@ func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, 
 		"OEBPS/Text/cover.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/cover.%s", e.Image.Format),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.options.Image.View.Width, e.options.Image.View.Height),
+			"ImagePath":  fmt.Sprintf("Images/cover.%s", e.options.Image.Format),
+			"ImageStyle": img.ImgStyle(e.options.Image.View.Width, e.options.Image.View.Height, ""),
 		})),
 	); err != nil {
 		return err
@@ -143,22 +144,22 @@ func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, 
 }
 
 // write title image
-func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title string) error {
+func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.EPUBImage, title string) error {
 	titleAlign := ""
-	if !e.Image.View.PortraitOnly {
-		if e.Image.Manga {
+	if !e.options.Image.View.PortraitOnly {
+		if e.options.Image.Manga {
 			titleAlign = "right:0"
 		} else {
 			titleAlign = "left:0"
 		}
 	}
 
-	if !e.Image.View.PortraitOnly {
+	if !e.options.Image.View.PortraitOnly {
 		if err := wz.WriteContent(
 			"OEBPS/Text/space_title.xhtml",
 			[]byte(e.render(epubtemplates.Blank, map[string]any{
 				"Title":    "Blank Page Title",
-				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.options.Image.View.Width, e.options.Image.View.Height),
 			})),
 		); err != nil {
 			return err
@@ -169,9 +170,9 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 		"OEBPS/Text/title.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/title.%s", e.Image.Format),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
+			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.options.Image.View.Width, e.options.Image.View.Height),
+			"ImagePath":  fmt.Sprintf("Images/title.%s", e.options.Image.Format),
+			"ImageStyle": img.ImgStyle(e.options.Image.View.Width, e.options.Image.View.Height, titleAlign),
 		})),
 	); err != nil {
 		return err
@@ -199,7 +200,7 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 }
 
 // extract image and split it into part
-func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorageImageReader, err error) {
+func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipImageReader, err error) {
 	images, err := e.imageProcessor.Load()
 
 	if err != nil {
@@ -216,11 +217,11 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 
 	parts = make([]*epubPart, 0)
 	cover := images[0]
-	if e.Image.HasCover {
+	if e.options.Image.HasCover {
 		images = images[1:]
 	}
 
-	if e.Dry {
+	if e.options.Dry {
 		parts = append(parts, &epubPart{
 			Cover:  cover,
 			Images: images,
@@ -228,19 +229,19 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 		return parts, nil, nil
 	}
 
-	imgStorage, err = epubzip.NewEPUBZipStorageImageReader(e.ImgStorage())
+	imgStorage, err = epubzip.NewImageReader(e.options.Temp())
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// compute size of the EPUB part and try to be as close as possible of the target
-	maxSize := uint64(e.LimitMb * 1024 * 1024)
+	maxSize := uint64(e.options.LimitMb * 1024 * 1024)
 	xhtmlSize := uint64(1024)
 	// descriptor files + title + cover
 	baseSize := uint64(128*1024) + imgStorage.Size(cover.EPUBImgPath())*2
 
 	currentSize := baseSize
-	currentImages := make([]*epubimage.Image, 0)
+	currentImages := make([]*epubimage.EPUBImage, 0)
 	part := 1
 
 	for _, img := range images {
@@ -252,7 +253,7 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 			})
 			part += 1
 			currentSize = baseSize
-			currentImages = make([]*epubimage.Image, 0)
+			currentImages = make([]*epubimage.EPUBImage, 0)
 		}
 		currentSize += imgSize
 		currentImages = append(currentImages, img)
@@ -270,7 +271,7 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 // create a tree from the directories.
 //
 // this is used to simulate the toc.
-func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
+func (e *ePub) getTree(images []*epubimage.EPUBImage, skip_files bool) string {
 	t := epubtree.New()
 	for _, img := range images {
 		if skip_files {
@@ -280,7 +281,7 @@ func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
 		}
 	}
 	c := t.Root()
-	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
+	if skip_files && e.options.StripFirstDirectoryFromToc && len(c.Children) == 1 {
 		c = c.Children[0]
 	}
 
@@ -315,21 +316,21 @@ func (e *ePub) computeAspectRatio(epubParts []*epubPart) float64 {
 }
 
 func (e *ePub) computeViewPort(epubParts []*epubPart) {
-	if e.Image.View.AspectRatio == -1 {
+	if e.options.Image.View.AspectRatio == -1 {
 		return //keep device size
 	}
 
 	// readjusting view port
-	bestAspectRatio := e.Image.View.AspectRatio
+	bestAspectRatio := e.options.Image.View.AspectRatio
 	if bestAspectRatio == 0 {
 		bestAspectRatio = e.computeAspectRatio(epubParts)
 	}
 
-	viewWidth, viewHeight := int(float64(e.Image.View.Height)/bestAspectRatio), int(float64(e.Image.View.Width)*bestAspectRatio)
-	if viewWidth > e.Image.View.Width {
-		e.Image.View.Height = viewHeight
+	viewWidth, viewHeight := int(float64(e.options.Image.View.Height)/bestAspectRatio), int(float64(e.options.Image.View.Width)*bestAspectRatio)
+	if viewWidth > e.options.Image.View.Width {
+		e.options.Image.View.Height = viewHeight
 	} else {
-		e.Image.View.Width = viewWidth
+		e.options.Image.View.Width = viewWidth
 	}
 }
 
@@ -345,12 +346,12 @@ func (e *ePub) Write() error {
 		return err
 	}
 
-	if e.Dry {
+	if e.options.Dry {
 		p := epubParts[0]
-		fmt.Fprintf(os.Stderr, "TOC:\n  - %s\n%s\n", e.Title, e.getTree(p.Images, true))
-		if e.DryVerbose {
-			if e.Image.HasCover {
-				fmt.Fprintf(os.Stderr, "Cover:\n%s\n", e.getTree([]*epubimage.Image{p.Cover}, false))
+		fmt.Fprintf(os.Stderr, "TOC:\n  - %s\n%s\n", e.options.Title, e.getTree(p.Images, true))
+		if e.options.DryVerbose {
+			if e.options.Image.HasCover {
+				fmt.Fprintf(os.Stderr, "Cover:\n%s\n", e.getTree([]*epubimage.EPUBImage{p.Cover}, false))
 			}
 			fmt.Fprintf(os.Stderr, "Files:\n%s\n", e.getTree(p.Images, false))
 		}
@@ -368,14 +369,14 @@ func (e *ePub) Write() error {
 		Description: "Writing Part",
 		CurrentJob:  2,
 		TotalJob:    2,
-		Quiet:       e.Quiet,
-		Json:        e.Json,
+		Quiet:       e.options.Quiet,
+		Json:        e.options.Json,
 	})
 
 	e.computeViewPort(epubParts)
-	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
+	hasTitlePage := e.options.TitlePage == 1 || (e.options.TitlePage == 2 && totalParts > 1)
 	for i, part := range epubParts {
-		ext := filepath.Ext(e.Output)
+		ext := filepath.Ext(e.options.Output)
 		suffix := ""
 		if totalParts > 1 {
 			fmtLen := len(fmt.Sprint(totalParts))
@@ -383,14 +384,14 @@ func (e *ePub) Write() error {
 			suffix = fmt.Sprintf(fmtPart, i+1, totalParts)
 		}
 
-		path := fmt.Sprintf("%s%s%s", e.Output[0:len(e.Output)-len(ext)], suffix, ext)
+		path := fmt.Sprintf("%s%s%s", e.options.Output[0:len(e.options.Output)-len(ext)], suffix, ext)
 		wz, err := epubzip.New(path)
 		if err != nil {
 			return err
 		}
 		defer wz.Close()
 
-		title := e.Title
+		title := e.options.Title
 		if totalParts > 1 {
 			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
 		}
@@ -401,19 +402,19 @@ func (e *ePub) Write() error {
 			{"OEBPS/content.opf", epubtemplates.Content(&epubtemplates.ContentOptions{
 				Title:        title,
 				HasTitlePage: hasTitlePage,
-				UID:          e.UID,
-				Author:       e.Author,
-				Publisher:    e.Publisher,
-				UpdatedAt:    e.UpdatedAt,
-				ImageOptions: e.Image,
+				UID:          e.uid,
+				Author:       e.options.Author,
+				Publisher:    e.publisher,
+				UpdatedAt:    e.updatedAt,
+				ImageOptions: e.options.Image,
 				Cover:        part.Cover,
 				Images:       part.Images,
 				Current:      i + 1,
 				Total:        totalParts,
 			})},
-			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
+			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.options.StripFirstDirectoryFromToc, part.Images)},
 			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
-				"View": e.Image.View,
+				"View": e.options.Image.View,
 			})},
 		}
 
@@ -443,9 +444,9 @@ func (e *ePub) Write() error {
 			}
 
 			// Double Page or Last Image that is not a double page
-			if !e.Image.View.PortraitOnly &&
+			if !e.options.Image.View.PortraitOnly &&
 				(img.DoublePage ||
-					(!e.Image.KeepDoublePageIfSplitted && img.Part == 1) ||
+					(!e.options.Image.KeepDoublePageIfSplitted && img.Part == 1) ||
 					(img.Part == 0 && img == lastImage)) {
 				if err := e.writeBlank(wz, img); err != nil {
 					return err
@@ -455,14 +456,14 @@ func (e *ePub) Write() error {
 		bar.Add(1)
 	}
 	bar.Close()
-	if !e.Json {
+	if !e.options.Json {
 		fmt.Fprintln(os.Stderr)
 	}
 
 	// display corrupted images
 	hasError := false
 	for pId, part := range epubParts {
-		if pId == 0 && e.Image.HasCover && part.Cover.Error != nil {
+		if pId == 0 && e.options.Image.HasCover && part.Cover.Error != nil {
 			hasError = true
 			fmt.Fprintf(os.Stderr, "Error on image %s: %v\n", filepath.Join(part.Cover.Path, part.Cover.Name), part.Cover.Error)
 		}

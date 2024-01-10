@@ -2,23 +2,15 @@ package epubprogress
 
 import (
 	"encoding/json"
-	"os"
 )
 
-type EpubProgressJson struct {
+type epubProgressJson struct {
 	o       Options
 	e       *json.Encoder
 	current int
 }
 
-func newEpubProgressJson(o Options) EpubProgress {
-	return &EpubProgressJson{
-		o: o,
-		e: json.NewEncoder(os.Stdout),
-	}
-}
-
-func (p *EpubProgressJson) Add(num int) error {
+func (p *epubProgressJson) Add(num int) error {
 	p.current += num
 	p.e.Encode(map[string]any{
 		"type": "progress",
@@ -37,6 +29,6 @@ func (p *EpubProgressJson) Add(num int) error {
 	return nil
 }
 
-func (p *EpubProgressJson) Close() error {
+func (p *epubProgressJson) Close() error {
 	return nil
 }

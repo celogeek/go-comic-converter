@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-type ZipImage struct {
+type EPUBZipImage struct {
 	Header *zip.FileHeader
 	Data   []byte
 }
 
 // create gzip encoded jpeg
-func CompressImage(filename string, format string, img image.Image, quality int) (*ZipImage, error) {
+func CompressImage(filename string, format string, img image.Image, quality int) (*EPUBZipImage, error) {
 	var (
 		data, cdata bytes.Buffer
 		err         error
@@ -52,7 +52,7 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 	}
 
 	t := time.Now()
-	return &ZipImage{
+	return &EPUBZipImage{
 		&zip.FileHeader{
 			Name:               filename,
 			CompressedSize64:   uint64(cdata.Len()),

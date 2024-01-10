@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
-	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
+	"github.com/celogeek/go-comic-converter/v2/internal/epubimage"
 )
 
 // create toc
-func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
+func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []*epubimage.EPUBImage) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	doc.CreateDirective("DOCTYPE html")
