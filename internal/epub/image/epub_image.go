@@ -15,7 +15,6 @@ type Image struct {
 	Raw                 image.Image
 	Width               int
 	Height              int
-	IsCover             bool
 	IsBlank             bool
 	DoublePage          bool
 	Path                string
