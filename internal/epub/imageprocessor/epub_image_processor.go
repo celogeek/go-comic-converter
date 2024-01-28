@@ -78,43 +78,38 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 			defer wg.Done()
 
 			for input := range imageInput {
-				src := input.Image
+				img := e.transformImage(input, 0, e.Image.Manga)
 
-				for part, dst := range e.transformImage(src, input.Id) {
-					var raw image.Image
-					if input.Id == 0 && part == 0 {
-						raw = dst
-					}
-
-					img := &epubimage.Image{
-						Id:                  input.Id,
-						Part:                part,
-						Raw:                 raw,
-						Width:               dst.Bounds().Dx(),
-						Height:              dst.Bounds().Dy(),
-						IsCover:             input.Id == 0 && part == 0,
-						IsBlank:             dst.Bounds().Dx() == 1 && dst.Bounds().Dy() == 1,
-						DoublePage:          part == 0 && src.Bounds().Dx() > src.Bounds().Dy(),
-						Path:                input.Path,
-						Name:                input.Name,
-						Format:              e.Image.Format,
-						OriginalAspectRatio: float64(src.Bounds().Dy()) / float64(src.Bounds().Dx()),
-						Error:               input.Error,
-					}
-
-					// do not keep double page if requested
-					if !img.IsCover &&
-						img.DoublePage &&
-						e.Options.Image.AutoSplitDoublePage &&
-						!e.Options.Image.KeepDoublePageIfSplitted {
-						continue
-					}
-
-					if err = imgStorage.Add(img.EPUBImgPath(), dst, e.Image.Quality); err != nil {
+				// do not keep double page if requested
+				if !(img.DoublePage && input.Id > 0 &&
+					e.Options.Image.AutoSplitDoublePage && !e.Options.Image.KeepDoublePageIfSplitted) {
+					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						bar.Close()
 						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
+					// do not keep raw image except for cover
+					if img.Id > 0 {
+						img.Raw = nil
+					}
+					imageOutput <- img
+				}
+
+				// DOUBLE PAGE
+				if !e.Image.AutoSplitDoublePage || // No split required
+					!img.DoublePage || // Not a double page
+					(e.Image.HasCover && img.Id == 0) { // Cover
+					continue
+				}
+
+				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
+					img = e.transformImage(input, i+1, b)
+					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
+						bar.Close()
+						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						os.Exit(1)
+					}
+					img.Raw = nil
 					imageOutput <- img
 				}
 			}
@@ -178,14 +173,20 @@ func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) dra
 
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.Image {
-	var filters, splitFilters []gift.Filter
-	var images []image.Image
+func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *epubimage.Image {
+	g := gift.New()
+	src := input.Image
+	srcBounds := src.Bounds()
+
+	if part > 0 {
+		g.Add(epubimagefilters.CropSplitDoublePage(right))
+	}
 
 	// Lookup for margin if crop is enable or if we want to remove blank image
 	if e.Image.Crop.Enabled || e.Image.NoBlankImage {
 		f := epubimagefilters.AutoCrop(
 			src,
+			g.Bounds(src.Bounds()),
 			e.Image.Crop.Left,
 			e.Image.Crop.Up,
 			e.Image.Crop.Right,
@@ -193,41 +194,37 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		)
 
 		// detect if blank image
-		size := f.Bounds(src.Bounds())
+		size := f.Bounds(srcBounds)
 		isBlank := size.Dx() == 0 && size.Dy() == 0
 
 		// crop is enable or if blank image with noblankimage options
 		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
-			filters = append(filters, f)
-			splitFilters = append(splitFilters, f)
+			g.Add(f)
 		}
 	}
 
-	if e.Image.AutoRotate && src.Bounds().Dx() > src.Bounds().Dy() {
-		filters = append(filters, gift.Rotate90())
+	dstBounds := g.Bounds(src.Bounds())
+	// Original && Cropped version need to landscape oriented
+	isDoublePage := srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
+
+	if part == 0 && e.Image.AutoRotate && isDoublePage {
+		g.Add(gift.Rotate90())
 	}
 
 	if e.Image.AutoContrast {
-		f := epubimagefilters.AutoContrast()
-		filters = append(filters, f)
-		splitFilters = append(splitFilters, f)
+		g.Add(epubimagefilters.AutoContrast())
 	}
 
 	if e.Image.Contrast != 0 {
-		f := gift.Contrast(float32(e.Image.Contrast))
-		filters = append(filters, f)
-		splitFilters = append(splitFilters, f)
+		g.Add(gift.Contrast(float32(e.Image.Contrast)))
 	}
 
 	if e.Image.Brightness != 0 {
-		f := gift.Brightness(float32(e.Image.Brightness))
-		filters = append(filters, f)
-		splitFilters = append(splitFilters, f)
+		g.Add(gift.Brightness(float32(e.Image.Brightness)))
 	}
 
 	if e.Image.Resize {
-		f := gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling)
-		filters = append(filters, f)
+		g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
 	}
 
 	if e.Image.GrayScale {
@@ -246,48 +243,29 @@ func (e *EPUBImageProcessor) transformImage(src image.Image, srcId int) []image.
 		default:
 			f = gift.Grayscale()
 		}
-		filters = append(filters, f)
-		splitFilters = append(splitFilters, f)
+		g.Add(f)
 	}
 
-	filters = append(filters, epubimagefilters.Pixel())
+	g.Add(epubimagefilters.Pixel())
 
-	// convert
-	{
-		g := gift.New(filters...)
-		dst := e.createImage(src, g.Bounds(src.Bounds()))
-		g.Draw(dst, src)
-		images = append(images, dst)
+	dst := e.createImage(src, g.Bounds(src.Bounds()))
+	g.Draw(dst, src)
+
+	return &epubimage.Image{
+		Id:                  input.Id,
+		Part:                part,
+		Raw:                 dst,
+		Width:               dst.Bounds().Dx(),
+		Height:              dst.Bounds().Dy(),
+		IsBlank:             dst.Bounds().Dx() == 1 && dst.Bounds().Dy() == 1,
+		DoublePage:          isDoublePage,
+		Path:                input.Path,
+		Name:                input.Name,
+		Format:              e.Image.Format,
+		OriginalAspectRatio: float64(src.Bounds().Dy()) / float64(src.Bounds().Dx()),
+		Error:               input.Error,
 	}
 
-	// auto split off
-	if !e.Image.AutoSplitDoublePage {
-		return images
-	}
-
-	// portrait, no need to split
-	if src.Bounds().Dx() <= src.Bounds().Dy() {
-		return images
-	}
-
-	// cover
-	if e.Image.HasCover && srcId == 0 {
-		return images
-	}
-
-	// convert double page
-	for _, b := range []bool{e.Image.Manga, !e.Image.Manga} {
-		g := gift.New(splitFilters...)
-		g.Add(epubimagefilters.CropSplitDoublePage(b))
-		if e.Image.Resize {
-			g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
-		}
-		dst := e.createImage(src, g.Bounds(src.Bounds()))
-		g.Draw(dst, src)
-		images = append(images, dst)
-	}
-
-	return images
 }
 
 type CoverTitleDataOptions struct {
