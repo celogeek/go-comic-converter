@@ -28,7 +28,7 @@ import (
 	"github.com/raff/pdfreader/pdfread"
 )
 
-type tasks struct {
+type task struct {
 	Id    int
 	Image image.Image
 	Path  string
@@ -50,7 +50,7 @@ func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
 }
 
 // Load images from input
-func (e *EPUBImageProcessor) load() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) load() (totalImages int, output chan *task, err error) {
 	fi, err := os.Stat(e.Input)
 	if err != nil {
 		return
@@ -98,7 +98,7 @@ func (e *EPUBImageProcessor) corruptedImage(path, name string) image.Image {
 }
 
 // load a directory of images
-func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err error) {
 	images := make([]string, 0)
 
 	input := filepath.Clean(e.Input)
@@ -139,7 +139,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 	}()
 
 	// read in parallel and get an image
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for j := 0; j < e.WorkersRatio(50); j++ {
 		wg.Add(1)
@@ -166,7 +166,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &tasks{
+				output <- &task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -187,7 +187,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *tasks, err
 }
 
 // load a zip file that include images
-func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err error) {
 	r, err := zip.OpenReader(e.Input)
 	if err != nil {
 		return
@@ -231,7 +231,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 		}
 	}()
 
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for j := 0; j < e.WorkersRatio(50); j++ {
 		wg.Add(1)
@@ -253,7 +253,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &tasks{
+				output <- &task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -273,7 +273,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *tasks, err
 }
 
 // load a rar file that include images
-func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err error) {
 	var isSolid bool
 	files, err := rardecode.List(e.Input)
 	if err != nil {
@@ -350,7 +350,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 	}()
 
 	// send file to the queue
-	output = make(chan *tasks, e.Workers)
+	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for j := 0; j < e.WorkersRatio(50); j++ {
 		wg.Add(1)
@@ -372,7 +372,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &tasks{
+				output <- &task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -390,7 +390,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *tasks, err
 }
 
 // extract image from a pdf
-func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err error) {
+func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *task, err error) {
 	pdf := pdfread.Load(e.Input)
 	if pdf == nil {
 		err = fmt.Errorf("can't read pdf")
@@ -399,7 +399,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err
 
 	totalImages = len(pdf.Pages())
 	pageFmt := fmt.Sprintf("page %%0%dd", len(fmt.Sprintf("%d", totalImages)))
-	output = make(chan *tasks)
+	output = make(chan *task)
 	go func() {
 		defer close(output)
 		defer pdf.Close()
@@ -414,7 +414,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *tasks, err
 			if err != nil {
 				img = e.corruptedImage("", name)
 			}
-			output <- &tasks{
+			output <- &task{
 				Id:    i,
 				Image: img,
 				Path:  "",

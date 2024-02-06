@@ -8,9 +8,9 @@ import (
 )
 
 // Lookup for margin and crop
-func AutoCrop(img image.Image, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int) gift.Filter {
+func AutoCrop(img image.Image, bounds image.Rectangle, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int) gift.Filter {
 	return gift.Crop(
-		findMarging(img, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}),
+		findMargin(img, bounds, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}),
 	)
 }
 
@@ -25,8 +25,8 @@ type cutRatioOptions struct {
 	Left, Up, Right, Bottom int
 }
 
-func findMarging(img image.Image, cutRatio cutRatioOptions) image.Rectangle {
-	imgArea := img.Bounds()
+func findMargin(img image.Image, bounds image.Rectangle, cutRatio cutRatioOptions) image.Rectangle {
+	imgArea := bounds
 
 LEFT:
 	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
