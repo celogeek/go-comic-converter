@@ -7,7 +7,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
-// Lookup for margin and crop
+// AutoCrop Lookup for margin and crop
 func AutoCrop(img image.Image, bounds image.Rectangle, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int) gift.Filter {
 	return gift.Crop(
 		findMargin(img, bounds, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}),

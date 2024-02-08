@@ -39,7 +39,7 @@ func (b by) Swap(i, j int) {
 	b.paths[i], b.paths[j] = b.paths[j], b.paths[i]
 }
 
-// use sortpath.By with sort.Sort
+// By use sortpath.By with sort.Sort
 func By(filenames []string, mode int) by {
 	p := [][]part{}
 	for _, filename := range filenames {

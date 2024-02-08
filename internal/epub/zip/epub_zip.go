@@ -1,5 +1,5 @@
 /*
-Helper to write EPUB files.
+Package epubzip Helper to write EPUB files.
 
 We create a zip with the magic EPUB mimetype.
 */
@@ -16,7 +16,7 @@ type EPUBZip struct {
 	wz *zip.Writer
 }
 
-// create a new EPUB
+// New create a new EPUB
 func New(path string) (*EPUBZip, error) {
 	w, err := os.Create(path)
 	if err != nil {
@@ -26,7 +26,7 @@ func New(path string) (*EPUBZip, error) {
 	return &EPUBZip{w, wz}, nil
 }
 
-// close compress pipe and file.
+// Close close compress pipe and file.
 func (e *EPUBZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
@@ -34,7 +34,8 @@ func (e *EPUBZip) Close() error {
 	return e.w.Close()
 }
 
-// Write mimetype, in a very specific way.
+// WriteMagic Write mimetype, in a very specific way.
+//
 // This will be valid with epubcheck tools.
 func (e *EPUBZip) WriteMagic() error {
 	t := time.Now()
@@ -62,7 +63,7 @@ func (e *EPUBZip) Copy(fz *zip.File) error {
 	return e.wz.Copy(fz)
 }
 
-// Write image. They are already compressed, so we write them down directly.
+// WriteRaw Write image. They are already compressed, so we write them down directly.
 func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
 	m, err := e.wz.CreateRaw(raw.Header)
 	if err != nil {
@@ -72,7 +73,7 @@ func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
 	return err
 }
 
-// Write file. Compressed it using deflate.
+// WriteContent Write file. Compressed it using deflate.
 func (e *EPUBZip) WriteContent(file string, content []byte) error {
 	m, err := e.wz.CreateHeader(&zip.FileHeader{
 		Name:     file,

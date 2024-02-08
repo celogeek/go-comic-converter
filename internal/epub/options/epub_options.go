@@ -1,6 +1,4 @@
-/*
-Options for EPUB creation.
-*/
+// Package epuboptions Options for EPUB creation.
 package epuboptions
 
 import "fmt"

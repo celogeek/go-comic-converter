@@ -1,6 +1,4 @@
-/*
-Image helpers to transform image.
-*/
+// Package epubimage Image helpers to transform image.
 package epubimage
 
 import (
@@ -50,22 +48,22 @@ func (i *Image) PagePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
 }
 
-// page path into the EPUB
+// EPUBPagePath page path into the EPUB
 func (i *Image) EPUBPagePath() string {
 	return fmt.Sprintf("OEBPS/%s", i.PagePath())
 }
 
-// key for image
+// ImgKey key for image
 func (i *Image) ImgKey() string {
 	return fmt.Sprintf("img_%d_p%d", i.Id, i.Part)
 }
 
-// image path
+// ImgPath image path
 func (i *Image) ImgPath() string {
 	return fmt.Sprintf("Images/%s.%s", i.ImgKey(), i.Format)
 }
 
-// image path into the EPUB
+// EPUBImgPath image path into the EPUB
 func (i *Image) EPUBImgPath() string {
 	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
 }

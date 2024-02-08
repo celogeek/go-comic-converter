@@ -1,6 +1,4 @@
-/*
-create a progress bar with custom settings.
-*/
+// Package epubprogress create a progress bar with custom settings.
 package epubprogress
 
 import (

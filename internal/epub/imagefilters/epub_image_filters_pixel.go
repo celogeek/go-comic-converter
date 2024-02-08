@@ -8,7 +8,8 @@ import (
 	"github.com/disintegration/gift"
 )
 
-// Generate a blank pixel 1x1, if the size of the image is 0x0.
+// Pixel Generate a blank pixel 1x1, if the size of the image is 0x0.
+//
 // An image 0x0 is not a valid image, and failed to read.
 func Pixel() gift.Filter {
 	return &pixel{}

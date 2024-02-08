@@ -8,7 +8,7 @@ import (
 	"github.com/disintegration/gift"
 )
 
-// Automatically improve contrast
+// AutoContrast Automatically improve contrast
 func AutoContrast() *autocontrast {
 	return &autocontrast{}
 }

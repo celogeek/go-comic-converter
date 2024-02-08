@@ -1,6 +1,4 @@
-/*
-Manage supported profiles for go-comic-converter.
-*/
+// Package profiles manage supported profiles for go-comic-converter.
 package profiles
 
 import (
@@ -17,7 +15,7 @@ type Profile struct {
 
 type Profiles []Profile
 
-// Initialize list of all supported profiles.
+// New Initialize list of all supported profiles.
 func New() Profiles {
 	return []Profile{
 		// High Resolution for Tablet
@@ -68,7 +66,7 @@ func (p Profiles) String() string {
 	return strings.Join(s, "\n")
 }
 
-// Lookup profile by code
+// Get Lookup profile by code
 func (p Profiles) Get(name string) *Profile {
 	for _, profile := range p {
 		if profile.Code == name {

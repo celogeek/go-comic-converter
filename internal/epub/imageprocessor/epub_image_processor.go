@@ -1,6 +1,4 @@
-/*
-Extract and transform image into a compressed jpeg.
-*/
+// Package epubimageprocessor extract and transform image into a compressed jpeg.
 package epubimageprocessor
 
 import (
@@ -27,7 +25,7 @@ func New(o *epuboptions.Options) *EPUBImageProcessor {
 	return &EPUBImageProcessor{o}
 }
 
-// extract and convert images
+// Load extract and convert images
 func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	images = make([]*epubimage.Image, 0)
 	imageCount, imageInput, err := e.load()
@@ -300,7 +298,7 @@ func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Ima
 	})
 }
 
-// create a title page with the cover
+// CoverTitleData create a title page with the cover
 func (e *EPUBImageProcessor) CoverTitleData(o *CoverTitleDataOptions) (*epubzip.ZipImage, error) {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))

@@ -30,7 +30,7 @@ type Converter struct {
 	startAt         time.Time
 }
 
-// Create a new parser
+// New Create a new parser
 func New() *Converter {
 	o := options.New()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
@@ -61,35 +61,35 @@ func New() *Converter {
 	return conv
 }
 
-// Load default options (config + default)
+// LoadConfig Load default options (config + default)
 func (c *Converter) LoadConfig() error {
 	return c.Options.LoadConfig()
 }
 
-// Create a new section of config
+// AddSection Create a new section of config
 func (c *Converter) AddSection(section string) {
 	c.order = append(c.order, converterOrderSection{value: section})
 }
 
-// Add a string parameter
+// AddStringParam Add a string parameter
 func (c *Converter) AddStringParam(p *string, name string, value string, usage string) {
 	c.Cmd.StringVar(p, name, value, usage)
 	c.order = append(c.order, converterOrderName{value: name, isString: true})
 }
 
-// Add an integer parameter
+// AddIntParam Add an integer parameter
 func (c *Converter) AddIntParam(p *int, name string, value int, usage string) {
 	c.Cmd.IntVar(p, name, value, usage)
 	c.order = append(c.order, converterOrderName{value: name})
 }
 
-// Add an float parameter
+// AddFloatParam Add an float parameter
 func (c *Converter) AddFloatParam(p *float64, name string, value float64, usage string) {
 	c.Cmd.Float64Var(p, name, value, usage)
 	c.order = append(c.order, converterOrderName{value: name})
 }
 
-// Add a boolean parameter
+// AddBoolParam Add a boolean parameter
 func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string) {
 	c.Cmd.BoolVar(p, name, value, usage)
 	c.order = append(c.order, converterOrderName{value: name})
@@ -159,7 +159,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Help, "help", false, "Show this help message")
 }
 
-// Customize version of FlagSet.PrintDefaults
+// Usage Customize version of FlagSet.PrintDefaults
 func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
@@ -274,7 +274,7 @@ func (c *Converter) Parse() {
 	}
 }
 
-// Check parameters
+// Validate Check parameters
 func (c *Converter) Validate() error {
 	// Check input
 	if c.Options.Input == "" {
@@ -391,7 +391,7 @@ func (c *Converter) Validate() error {
 	return nil
 }
 
-// Helper to show usage, err and exit 1
+// Fatal Helper to show usage, err and exit 1
 func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
 	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)

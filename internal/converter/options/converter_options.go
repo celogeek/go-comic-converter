@@ -1,6 +1,4 @@
-/*
-Manage options with default value from config.
-*/
+// Package options manage options with default value from config.
 package options
 
 import (
@@ -78,7 +76,7 @@ type Options struct {
 	profiles profiles.Profiles
 }
 
-// Initialize default options.
+// New Initialize default options.
 func New() *Options {
 	return &Options{
 		Profile:               "SR",
@@ -185,13 +183,13 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 	return json.Marshal(out)
 }
 
-// Config file: ~/.go-comic-converter.yaml
+// FileName Config file: ~/.go-comic-converter.yaml
 func (o *Options) FileName() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".go-comic-converter.yaml")
 }
 
-// Load config files
+// LoadConfig Load config files
 func (o *Options) LoadConfig() error {
 	f, err := os.Open(o.FileName())
 	if err != nil {
@@ -206,7 +204,7 @@ func (o *Options) LoadConfig() error {
 	return nil
 }
 
-// Get current settings for fields that can be saved
+// ShowConfig Get current settings for fields that can be saved
 func (o *Options) ShowConfig() string {
 	var profileDesc string
 	profile := o.GetProfile()
@@ -295,7 +293,7 @@ func (o *Options) ShowConfig() string {
 	return b.String()
 }
 
-// reset all settings to default value
+// ResetConfig reset all settings to default value
 func (o *Options) ResetConfig() error {
 	New().SaveConfig()
 	return o.LoadConfig()
@@ -311,12 +309,12 @@ func (o *Options) SaveConfig() error {
 	return yaml.NewEncoder(f).Encode(o)
 }
 
-// shortcut to get current profile
+// GetProfile shortcut to get current profile
 func (o *Options) GetProfile() *profiles.Profile {
 	return o.profiles.Get(o.Profile)
 }
 
-// all available profiles
+// AvailableProfiles all available profiles
 func (o *Options) AvailableProfiles() string {
 	return o.profiles.String()
 }

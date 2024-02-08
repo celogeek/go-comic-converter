@@ -1,5 +1,5 @@
 /*
-Organize a list of filename with their path into a tree of directories.
+Package epubtree Organize a list of filename with their path into a tree of directories.
 
 Example:
   - A/B/C/D.jpg
@@ -39,12 +39,12 @@ func New() *tree {
 	}}
 }
 
-// root node
+// Root root node
 func (n *tree) Root() *node {
 	return n.Nodes["."]
 }
 
-// add the filename to the tree
+// Add add the filename to the tree
 func (n *tree) Add(filename string) {
 	cn := n.Root()
 	cp := ""
@@ -58,7 +58,7 @@ func (n *tree) Add(filename string) {
 	}
 }
 
-// string version of the tree
+// WriteString string version of the tree
 func (n *node) WriteString(indent string) string {
 	r := strings.Builder{}
 	if indent != "" {

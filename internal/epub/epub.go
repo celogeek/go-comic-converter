@@ -1,6 +1,4 @@
-/*
-Tools to create EPUB from images.
-*/
+// Package epub Tools to create EPUB from images.
 package epub
 
 import (
@@ -41,7 +39,7 @@ type epubPart struct {
 	Reader *zip.ReadCloser
 }
 
-// initialize EPUB
+// New initialize EPUB
 func New(options *epuboptions.Options) *ePub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")

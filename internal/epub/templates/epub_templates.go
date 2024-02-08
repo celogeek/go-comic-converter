@@ -1,6 +1,4 @@
-/*
-Templates use to create xml files of the EPUB.
-*/
+// Package epubtemplates Templates use to create xml files of the EPUB.
 package epubtemplates
 
 import _ "embed"

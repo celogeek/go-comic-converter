@@ -17,7 +17,7 @@ type ZipImage struct {
 	Data   []byte
 }
 
-// create gzip encoded jpeg
+// CompressImage create gzip encoded jpeg
 func CompressImage(filename string, format string, img image.Image, quality int) (*ZipImage, error) {
 	var (
 		data, cdata bytes.Buffer
