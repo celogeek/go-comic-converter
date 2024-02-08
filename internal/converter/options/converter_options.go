@@ -36,7 +36,7 @@ type Options struct {
 	AutoContrast               bool    `yaml:"auto_contrast"`
 	AutoRotate                 bool    `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool    `yaml:"auto_split_double_page"`
-	KeepDoublePageIfSplitted   bool    `yaml:"keep_double_page_if_splitted"`
+	KeepDoublePageIfSplit      bool    `yaml:"keep_double_page_if_split"`
 	NoBlankImage               bool    `yaml:"no_blank_image"`
 	Manga                      bool    `yaml:"manga"`
 	HasCover                   bool    `yaml:"has_cover"`
@@ -81,23 +81,23 @@ type Options struct {
 // Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:                  "SR",
-		Quality:                  85,
-		Grayscale:                true,
-		Crop:                     true,
-		CropRatioLeft:            1,
-		CropRatioUp:              1,
-		CropRatioRight:           1,
-		CropRatioBottom:          3,
-		NoBlankImage:             true,
-		HasCover:                 true,
-		KeepDoublePageIfSplitted: true,
-		SortPathMode:             1,
-		ForegroundColor:          "000",
-		BackgroundColor:          "FFF",
-		Format:                   "jpeg",
-		TitlePage:                1,
-		profiles:                 profiles.New(),
+		Profile:               "SR",
+		Quality:               85,
+		Grayscale:             true,
+		Crop:                  true,
+		CropRatioLeft:         1,
+		CropRatioUp:           1,
+		CropRatioRight:        1,
+		CropRatioBottom:       3,
+		NoBlankImage:          true,
+		HasCover:              true,
+		KeepDoublePageIfSplit: true,
+		SortPathMode:          1,
+		ForegroundColor:       "000",
+		BackgroundColor:       "FFF",
+		Format:                "jpeg",
+		TitlePage:             1,
+		profiles:              profiles.New(),
 	}
 }
 
@@ -173,7 +173,7 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 	if o.PortraitOnly || !o.AppleBookCompatibility {
 		out["autosplitdoublepage"] = o.AutoSplitDoublePage
 		if o.AutoSplitDoublePage {
-			out["keepdoublepageifsplitted"] = o.KeepDoublePageIfSplitted
+			out["keepdoublepageifsplit"] = o.KeepDoublePageIfSplit
 		}
 	}
 	if o.LimitMb != 0 {
@@ -244,7 +244,7 @@ func (o *Options) ShowConfig() string {
 	case 1:
 		titlePage = "always"
 	case 2:
-		titlePage = "when epub is splitted"
+		titlePage = "when epub is split"
 	}
 
 	grayscaleMode := "normal"
@@ -265,28 +265,28 @@ func (o *Options) ShowConfig() string {
 		{"Format", o.Format, true},
 		{"Quality", o.Quality, o.Format == "jpeg"},
 		{"Grayscale", o.Grayscale, true},
-		{"Grayscale Mode", grayscaleMode, o.Grayscale},
+		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop Ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
+		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
-		{"Auto Contrast", o.AutoContrast, true},
-		{"Auto Rotate", o.AutoRotate, true},
-		{"Auto Split DoublePage", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
-		{"Keep DoublePage If Splitted", o.KeepDoublePageIfSplitted, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
-		{"No Blank Image", o.NoBlankImage, true},
+		{"Auto contrast", o.AutoContrast, true},
+		{"Auto rotate", o.AutoRotate, true},
+		{"Auto split double page", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
+		{"Keep double page if split", o.KeepDoublePageIfSplit, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
+		{"No blank image", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
-		{"Has Cover", o.HasCover, true},
+		{"Has cover", o.HasCover, true},
 		{"Limit", fmt.Sprintf("%d Mb", o.LimitMb), o.LimitMb != 0},
-		{"Strip First Directory From Toc", o.StripFirstDirectoryFromToc, true},
-		{"Sort Path Mode", sortpathmode, true},
-		{"Foreground Color", fmt.Sprintf("#%s", o.ForegroundColor), true},
-		{"Background Color", fmt.Sprintf("#%s", o.BackgroundColor), true},
+		{"Strip first directory from toc", o.StripFirstDirectoryFromToc, true},
+		{"Sort path mode", sortpathmode, true},
+		{"Foreground color", fmt.Sprintf("#%s", o.ForegroundColor), true},
+		{"Background color", fmt.Sprintf("#%s", o.BackgroundColor), true},
 		{"Resize", !o.NoResize, true},
-		{"Aspect Ratio", aspectRatio, true},
-		{"Portrait Only", o.PortraitOnly, true},
-		{"Title Page", titlePage, true},
-		{"Apple Book Compatibility", o.AppleBookCompatibility, !o.PortraitOnly},
+		{"Aspect ratio", aspectRatio, true},
+		{"Portrait only", o.PortraitOnly, true},
+		{"Title page", titlePage, true},
+		{"Apple book compatibility", o.AppleBookCompatibility, !o.PortraitOnly},
 	} {
 		if v.Condition {
 			b.WriteString(fmt.Sprintf("\n    %-32s: %v", v.Key, v.Value))
