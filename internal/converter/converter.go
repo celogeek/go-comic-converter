@@ -32,10 +32,10 @@ type Converter struct {
 
 // Create a new parser
 func New() *Converter {
-	options := options.New()
+	o := options.New()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
 	conv := &Converter{
-		Options: options,
+		Options: o,
 		Cmd:     cmd,
 		order:   make([]converterOrder, 0),
 		startAt: time.Now(),
