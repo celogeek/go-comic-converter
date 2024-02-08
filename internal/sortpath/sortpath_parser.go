@@ -43,8 +43,8 @@ func parsePart(p string) part {
 }
 
 // mode=0 alpha for path and file
-// mode=1 alphanum for path and alpha for file
-// mode=2 alphanum for path and file
+// mode=1 alphanumeric for path and alpha for file
+// mode=2 alphanumeric for path and file
 func parse(filename string, mode int) []part {
 	pathname, name := filepath.Split(strings.ToLower(filename))
 	pathname = strings.TrimSuffix(pathname, string(filepath.Separator))
@@ -53,13 +53,13 @@ func parse(filename string, mode int) []part {
 
 	f := []part{}
 	for _, p := range strings.Split(pathname, string(filepath.Separator)) {
-		if mode > 0 { // alphanum for path
+		if mode > 0 { // alphanumeric for path
 			f = append(f, parsePart(p))
 		} else {
 			f = append(f, part{p, p, 0})
 		}
 	}
-	if mode == 2 { // alphanum for file
+	if mode == 2 { // alphanumeric for file
 		f = append(f, parsePart(name))
 	} else {
 		f = append(f, part{name, name, 0})
@@ -67,7 +67,7 @@ func parse(filename string, mode int) []part {
 	return f
 }
 
-// compare 2 fullpath splitted into parts
+// compare 2 full path split into parts
 func compareParts(a, b []part) float64 {
 	m := len(a)
 	if m > len(b) {

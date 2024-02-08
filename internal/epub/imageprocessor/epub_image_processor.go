@@ -35,7 +35,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 		return nil, err
 	}
 
-	// dry run, skip convertion
+	// dry run, skip conversion
 	if e.Dry {
 		for img := range imageInput {
 			images = append(images, &epubimage.Image{

@@ -1,10 +1,8 @@
-/*
-Converter Helper to parse and prepare options for go-comic-converter.
-
-It use goflag with additional feature:
-  - Keep original order
-  - Support section
-*/
+// Package converter Helper to parse and prepare options for go-comic-converter.
+//
+// It uses goflag with additional feature:
+//   - Keep original order
+//   - Support section
 package converter
 
 import (
@@ -97,7 +95,7 @@ func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string)
 	c.order = append(c.order, converterOrderName{value: name})
 }
 
-// Initialize the parser with all section and parameter.
+// InitParse Initialize the parser with all section and parameter.
 func (c *Converter) InitParse() {
 	c.AddSection("Output")
 	c.AddStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
@@ -115,25 +113,25 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
 	c.AddIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
 	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
-	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustement: between -100 and 100, > 0 lighter, < 0 darker")
-	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustement: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
+	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
 	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
 	c.AddBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
-	c.AddBoolParam(&c.Options.KeepDoublePageIfSplitted, "keepdoublepageifsplitted", c.Options.KeepDoublePageIfSplitted, "Keep the double page if splitted")
+	c.AddBoolParam(&c.Options.KeepDoublePageIfSplitted, "keepdoublepageifsplitted", c.Options.KeepDoublePageIfSplitted, "Keep the double page if split")
 	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
 	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
 	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
-	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanum for path and alpha for file\n2 = alphanum for path and file")
-	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexa format RGB. Black=000, White=FFF")
-	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexa format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
+	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
+	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
+	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
 	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
 	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 	c.AddBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
-	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is splitted")
+	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -363,11 +361,11 @@ func (c *Converter) Validate() error {
 	// Color
 	colorRegex := regexp.MustCompile("^[0-9A-F]{3}$")
 	if !colorRegex.MatchString(c.Options.ForegroundColor) {
-		return errors.New("foreground color must have color format in hexa: [0-9A-F]{3}")
+		return errors.New("foreground color must have color format in hexadecimal: [0-9A-F]{3}")
 	}
 
 	if !colorRegex.MatchString(c.Options.BackgroundColor) {
-		return errors.New("background color must have color format in hexa: [0-9A-F]{3}")
+		return errors.New("background color must have color format in hexadecimal: [0-9A-F]{3}")
 	}
 
 	// Format

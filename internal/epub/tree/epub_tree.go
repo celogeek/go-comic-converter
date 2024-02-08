@@ -32,7 +32,7 @@ type node struct {
 	Children []*node
 }
 
-// initilize tree with a root node
+// New initialize tree with a root node
 func New() *tree {
 	return &tree{map[string]*node{
 		".": {".", []*node{}},

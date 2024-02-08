@@ -25,27 +25,27 @@ type Image struct {
 	Error               error
 }
 
-// key name of the blank plage after the image
+// SpaceKey key name of the blank page after the image
 func (i *Image) SpaceKey() string {
 	return fmt.Sprintf("space_%d", i.Id)
 }
 
-// path of the blank page
+// SpacePath path of the blank page
 func (i *Image) SpacePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.SpaceKey())
 }
 
-// path of the blank page into the EPUB
+// EPUBSpacePath path of the blank page into the EPUB
 func (i *Image) EPUBSpacePath() string {
 	return fmt.Sprintf("OEBPS/%s", i.SpacePath())
 }
 
-// key for page
+// PageKey key for page
 func (i *Image) PageKey() string {
 	return fmt.Sprintf("page_%d_p%d", i.Id, i.Part)
 }
 
-// page path linked to the image
+// PagePath page path linked to the image
 func (i *Image) PagePath() string {
 	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
 }
@@ -70,10 +70,10 @@ func (i *Image) EPUBImgPath() string {
 	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
 }
 
-// style to apply to the image.
+// ImgStyle style to apply to the image.
 //
 // center by default.
-// align to left or right if it's part of the splitted double page.
+// align to left or right if it's part of the split double page.
 func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2

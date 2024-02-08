@@ -30,7 +30,9 @@ type tag struct {
 	value string
 }
 
-// create the content file
+// Content create the content file
+//
+//goland:noinspection HttpUrlsUsage,HttpUrlsUsage,HttpUrlsUsage,HttpUrlsUsage
 func Content(o *ContentOptions) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
@@ -269,7 +271,7 @@ func getSpinePortrait(o *ContentOptions) []tag {
 	return spine
 }
 
-// guide part of the content
+// getGuide Section guide of the content
 func getGuide(o *ContentOptions) []tag {
 	return []tag{
 		{"reference", tagAttrs{"type": "cover", "title": "cover", "href": "Text/cover.xhtml"}, ""},

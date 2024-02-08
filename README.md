@@ -2,7 +2,7 @@
 
 Convert CBZ/CBR/Dir into EPUB for e-reader devices (Kindle Devices, ...)
 
-My goal is to make a simple, crossplatform, and fast tool to convert comics into EPUB.
+My goal is to make a simple, cross-platform, and fast tool to convert comics into EPUB.
 
 EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/sendtokindle/), by Email or by using the App. So I've made it simple to support the size limit constraint of those services.
 
@@ -16,7 +16,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Auto contrast
 - Auto rotate (if reader mainly read on portrait)
 - Auto split double page (for easy read on portrait)
-- Keep double page if splitted
+- Keep double page if split
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Support cover page or not (first page will be taken in that case)
@@ -91,7 +91,7 @@ Convert every supported image files found in the input directory:
 $ go-comic-converter -profile SR -input ~/Download/MyComic
 ```
 
-By default it will output: ~/Download/MyComic.epub
+By default, it will output: ~/Download/MyComic.epub
 
 ## Convert CBZ, ZIP, CBR, RAR, PDF
 
@@ -101,7 +101,7 @@ Convert every supported image files found in the input directory:
 $ go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
 ```
 
-By default it will output: ~/Download/MyComic.epub
+By default, it will output: ~/Download/MyComic.epub
 
 ## Convert with size limit
 
@@ -130,7 +130,7 @@ If the total is above 1, then the title of the EPUB include:
 
 ## Dry run
 
-If you want to preview what will be set during the convertion without running the conversion, then you can use the `-dry` option.
+If you want to preview what will be set during the conversion without running the conversion, then you can use the `-dry` option.
 
 ```
 $ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry
@@ -176,7 +176,7 @@ TOC:
 
 ## Dry verbose
 
-You can choose different way to sort path and files, depending of your source. You can preview the sorted result with the option `dry-verbose` associated with `dry`.
+You can choose different way to sort path and files, depending on your source. You can preview the sorted result with the option `dry-verbose` associated with `dry`.
 
 The option `sort` allow you to change the sorting order.
 
@@ -418,7 +418,7 @@ Explanation:
 - `-autocontrast`: automatically improve contrast
 - `-manga`: manga mode, read right to left
 - `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
-- `-strip`: remove first level if alone on TOC, as offen comics include a main directory with the title
+- `-strip`: remove first level if alone on TOC, as often comics include a main directory with the title
 - `aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
 # Help
 

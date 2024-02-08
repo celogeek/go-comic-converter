@@ -1,7 +1,7 @@
 /*
-sortpath support sorting of path that may include number.
+Package sortpath support sorting of path that may include number.
 
-A series of path can looks like:
+A series of path can look like:
   - Tome1/Chap1/Image1.jpg
   - Tome1/Chap2/Image1.jpg
   - Tome1/Chap10/Image2.jpg
@@ -11,8 +11,8 @@ and compare them by decomposing the string and number part.
 
 The module support 3 mode:
   - mode=0 alpha for path and file
-  - mode=1 alphanum for path and alpha for file
-  - mode=2 alphanum for path and file
+  - mode=1 alphanumeric for path and alpha for file
+  - mode=2 alphanumeric for path and file
 
 Example:
 

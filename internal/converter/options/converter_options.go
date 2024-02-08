@@ -225,9 +225,9 @@ func (o *Options) ShowConfig() string {
 	case 0:
 		sortpathmode = "path=alpha, file=alpha"
 	case 1:
-		sortpathmode = "path=alphanum, file=alpha"
+		sortpathmode = "path=alphanumeric, file=alpha"
 	case 2:
-		sortpathmode = "path=alphanum, file=alphanum"
+		sortpathmode = "path=alphanumeric, file=alphanumeric"
 	}
 
 	aspectRatio := "auto"
@@ -301,7 +301,7 @@ func (o *Options) ResetConfig() error {
 	return o.LoadConfig()
 }
 
-// save all current settings as futur default value
+// SaveConfig save all current settings as default value
 func (o *Options) SaveConfig() error {
 	f, err := os.Create(o.FileName())
 	if err != nil {

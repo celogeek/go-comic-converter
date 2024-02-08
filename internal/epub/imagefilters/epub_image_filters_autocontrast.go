@@ -78,7 +78,7 @@ func (f *autocontrast) Draw(dst draw.Image, src image.Image, options *gift.Optio
 		// compute a curve from dark and light factor applying to the color
 		c := (1 - d) + (d+l)*y
 
-		// applying the coef
+		// applying the ratio
 		return f.cap(r0 * c), f.cap(g0 * c), f.cap(b0 * c), a0
 	}).Draw(dst, src, options)
 }

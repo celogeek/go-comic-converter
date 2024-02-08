@@ -8,7 +8,9 @@ import (
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 )
 
-// create toc
+// Toc create toc
+//
+//goland:noinspection HttpUrlsUsage
 func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
