@@ -20,7 +20,7 @@ func newEpubProgressJson(o Options) EpubProgress {
 
 func (p *Json) Add(num int) error {
 	p.current += num
-	p.e.Encode(map[string]any{
+	return p.e.Encode(map[string]any{
 		"type": "progress",
 		"data": map[string]any{
 			"progress": map[string]any{
@@ -34,7 +34,6 @@ func (p *Json) Add(num int) error {
 			"description": p.o.Description,
 		},
 	})
-	return nil
 }
 
 func (p *Json) Close() error {
