@@ -331,13 +331,86 @@ func (e *ePub) computeViewPort(epubParts []*epubPart) {
 	}
 }
 
-// create the zip
-func (e *ePub) Write() error {
+func (e *ePub) writePart(path string, currentPart, totalParts int, part *epubPart, imgStorage *epubzip.StorageImageReader) error {
+	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
+
+	wz, err := epubzip.New(path)
+	if err != nil {
+		return err
+	}
+	defer wz.Close()
+
+	title := e.Title
+	if totalParts > 1 {
+		title = fmt.Sprintf("%s [%d/%d]", title, currentPart, totalParts)
+	}
+
 	type zipContent struct {
 		Name    string
 		Content string
 	}
+	content := []zipContent{
+		{"META-INF/container.xml", epubtemplates.Container},
+		{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
+		{"OEBPS/content.opf", epubtemplates.Content(&epubtemplates.ContentOptions{
+			Title:        title,
+			HasTitlePage: hasTitlePage,
+			UID:          e.UID,
+			Author:       e.Author,
+			Publisher:    e.Publisher,
+			UpdatedAt:    e.UpdatedAt,
+			ImageOptions: e.Image,
+			Cover:        part.Cover,
+			Images:       part.Images,
+			Current:      currentPart,
+			Total:        totalParts,
+		})},
+		{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
+		{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
+			"View": e.Image.View,
+		})},
+	}
 
+	if err = wz.WriteMagic(); err != nil {
+		return err
+	}
+	for _, c := range content {
+		if err := wz.WriteContent(c.Name, []byte(c.Content)); err != nil {
+			return err
+		}
+	}
+
+	if err = e.writeCoverImage(wz, part.Cover, currentPart, totalParts); err != nil {
+		return err
+	}
+
+	if hasTitlePage {
+		if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
+			return err
+		}
+	}
+
+	lastImage := part.Images[len(part.Images)-1]
+	for _, img := range part.Images {
+		if err := e.writeImage(wz, img, imgStorage.Get(img.EPUBImgPath())); err != nil {
+			return err
+		}
+
+		// Double Page or Last Image that is not a double page
+		if !e.Image.View.PortraitOnly &&
+			(img.DoublePage ||
+				(!e.Image.KeepDoublePageIfSplit && img.Part == 1) ||
+				(img.Part == 0 && img == lastImage)) {
+			if err := e.writeBlank(wz, img); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// create the zip
+func (e *ePub) Write() error {
 	epubParts, imgStorage, err := e.getParts()
 	if err != nil {
 		return err
@@ -371,7 +444,6 @@ func (e *ePub) Write() error {
 	})
 
 	e.computeViewPort(epubParts)
-	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
@@ -382,74 +454,17 @@ func (e *ePub) Write() error {
 		}
 
 		path := fmt.Sprintf("%s%s%s", e.Output[0:len(e.Output)-len(ext)], suffix, ext)
-		wz, err := epubzip.New(path)
-		if err != nil {
-			return err
-		}
-		defer wz.Close()
 
-		title := e.Title
-		if totalParts > 1 {
-			title = fmt.Sprintf("%s [%d/%d]", title, i+1, totalParts)
-		}
-
-		content := []zipContent{
-			{"META-INF/container.xml", epubtemplates.Container},
-			{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
-			{"OEBPS/content.opf", epubtemplates.Content(&epubtemplates.ContentOptions{
-				Title:        title,
-				HasTitlePage: hasTitlePage,
-				UID:          e.UID,
-				Author:       e.Author,
-				Publisher:    e.Publisher,
-				UpdatedAt:    e.UpdatedAt,
-				ImageOptions: e.Image,
-				Cover:        part.Cover,
-				Images:       part.Images,
-				Current:      i + 1,
-				Total:        totalParts,
-			})},
-			{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
-			{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
-				"View": e.Image.View,
-			})},
-		}
-
-		if err = wz.WriteMagic(); err != nil {
-			return err
-		}
-		for _, c := range content {
-			if err := wz.WriteContent(c.Name, []byte(c.Content)); err != nil {
-				return err
-			}
-		}
-
-		if err = e.writeCoverImage(wz, part.Cover, i+1, totalParts); err != nil {
+		if err := e.writePart(
+			path,
+			i+1,
+			totalParts,
+			part,
+			imgStorage,
+		); err != nil {
 			return err
 		}
 
-		if hasTitlePage {
-			if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
-				return err
-			}
-		}
-
-		lastImage := part.Images[len(part.Images)-1]
-		for _, img := range part.Images {
-			if err := e.writeImage(wz, img, imgStorage.Get(img.EPUBImgPath())); err != nil {
-				return err
-			}
-
-			// Double Page or Last Image that is not a double page
-			if !e.Image.View.PortraitOnly &&
-				(img.DoublePage ||
-					(!e.Image.KeepDoublePageIfSplit && img.Part == 1) ||
-					(img.Part == 0 && img == lastImage)) {
-				if err := e.writeBlank(wz, img); err != nil {
-					return err
-				}
-			}
-		}
 		bar.Add(1)
 	}
 	bar.Close()
