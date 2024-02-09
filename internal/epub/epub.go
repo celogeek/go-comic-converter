@@ -23,7 +23,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-type ePub struct {
+type EPub struct {
 	*epuboptions.Options
 	UID       string
 	Publisher string
@@ -40,7 +40,7 @@ type epubPart struct {
 }
 
 // New initialize EPUB
-func New(options *epuboptions.Options) *ePub {
+func New(options *epuboptions.Options) *EPub {
 	uid := uuid.Must(uuid.NewV4())
 	tmpl := template.New("parser")
 	tmpl.Funcs(template.FuncMap{
@@ -48,7 +48,7 @@ func New(options *epuboptions.Options) *ePub {
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
 	})
 
-	return &ePub{
+	return &EPub{
 		Options:           options,
 		UID:               uid.String(),
 		Publisher:         "GO Comic Converter",
@@ -59,7 +59,7 @@ func New(options *epuboptions.Options) *ePub {
 }
 
 // render templates
-func (e *ePub) render(templateString string, data map[string]any) string {
+func (e *EPub) render(templateString string, data map[string]any) string {
 	var result strings.Builder
 	tmpl := template.Must(e.templateProcessor.Parse(templateString))
 	if err := tmpl.Execute(&result, data); err != nil {
@@ -69,7 +69,7 @@ func (e *ePub) render(templateString string, data map[string]any) string {
 }
 
 // write image to the zip
-func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip.File) error {
+func (e *EPub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip.File) error {
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
@@ -87,7 +87,7 @@ func (e *ePub) writeImage(wz *epubzip.EPUBZip, img *epubimage.Image, zipImg *zip
 }
 
 // write blank page
-func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
+func (e *EPub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
 	return wz.WriteContent(
 		img.EPUBSpacePath(),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
@@ -98,7 +98,7 @@ func (e *ePub) writeBlank(wz *epubzip.EPUBZip, img *epubimage.Image) error {
 }
 
 // write title image
-func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, totalParts int) error {
+func (e *EPub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, totalParts int) error {
 	title := "Cover"
 	text := ""
 	if totalParts > 1 {
@@ -141,7 +141,7 @@ func (e *ePub) writeCoverImage(wz *epubzip.EPUBZip, img *epubimage.Image, part, 
 }
 
 // write title image
-func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title string) error {
+func (e *EPub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title string) error {
 	titleAlign := ""
 	if !e.Image.View.PortraitOnly {
 		if e.Image.Manga {
@@ -197,7 +197,7 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 }
 
 // extract image and split it into part
-func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.StorageImageReader, err error) {
+func (e *EPub) getParts() (parts []*epubPart, imgStorage *epubzip.StorageImageReader, err error) {
 	images, err := e.imageProcessor.Load()
 
 	if err != nil {
@@ -268,7 +268,7 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.StorageImageRe
 // create a tree from the directories.
 //
 // this is used to simulate the toc.
-func (e *ePub) getTree(images []*epubimage.Image, skipFiles bool) string {
+func (e *EPub) getTree(images []*epubimage.Image, skipFiles bool) string {
 	t := epubtree.New()
 	for _, img := range images {
 		if skipFiles {
@@ -278,14 +278,14 @@ func (e *ePub) getTree(images []*epubimage.Image, skipFiles bool) string {
 		}
 	}
 	c := t.Root()
-	if skipFiles && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
-		c = c.Children[0]
+	if skipFiles && e.StripFirstDirectoryFromToc && c.ChildCount() == 1 {
+		c = c.FirstChild()
 	}
 
 	return c.WriteString("")
 }
 
-func (e *ePub) computeAspectRatio(epubParts []*epubPart) float64 {
+func (e *EPub) computeAspectRatio(epubParts []*epubPart) float64 {
 	var (
 		bestAspectRatio      float64
 		bestAspectRatioCount int
@@ -312,7 +312,7 @@ func (e *ePub) computeAspectRatio(epubParts []*epubPart) float64 {
 	return bestAspectRatio
 }
 
-func (e *ePub) computeViewPort(epubParts []*epubPart) {
+func (e *EPub) computeViewPort(epubParts []*epubPart) {
 	if e.Image.View.AspectRatio == -1 {
 		return //keep device size
 	}
@@ -331,7 +331,7 @@ func (e *ePub) computeViewPort(epubParts []*epubPart) {
 	}
 }
 
-func (e *ePub) writePart(path string, currentPart, totalParts int, part *epubPart, imgStorage *epubzip.StorageImageReader) error {
+func (e *EPub) writePart(path string, currentPart, totalParts int, part *epubPart, imgStorage *epubzip.StorageImageReader) error {
 	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
 
 	wz, err := epubzip.New(path)
@@ -410,7 +410,7 @@ func (e *ePub) writePart(path string, currentPart, totalParts int, part *epubPar
 }
 
 // create the zip
-func (e *ePub) Write() error {
+func (e *EPub) Write() error {
 	epubParts, imgStorage, err := e.getParts()
 	if err != nil {
 		return err

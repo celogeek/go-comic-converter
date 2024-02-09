@@ -9,7 +9,7 @@ import (
 )
 
 // AutoContrast Automatically improve contrast
-func AutoContrast() *autocontrast {
+func AutoContrast() gift.Filter {
 	return &autocontrast{}
 }
 

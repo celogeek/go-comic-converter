@@ -26,6 +26,8 @@ Example:
 */
 package sortpath
 
+import "sort"
+
 // struct that implement interface for sort.Sort
 type by struct {
 	filenames []string
@@ -40,7 +42,7 @@ func (b by) Swap(i, j int) {
 }
 
 // By use sortpath.By with sort.Sort
-func By(filenames []string, mode int) by {
+func By(filenames []string, mode int) sort.Interface {
 	var p [][]part
 	for _, filename := range filenames {
 		p = append(p, parse(filename, mode))

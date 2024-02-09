@@ -38,7 +38,7 @@ func (e *EPUBZip) Close() error {
 //
 // This will be valid with epubcheck tools.
 func (e *EPUBZip) WriteMagic() error {
-	t := time.Now()
+	t := time.Now().UTC()
 	fh := &zip.FileHeader{
 		Name:               "mimetype",
 		Method:             zip.Store,
@@ -49,6 +49,8 @@ func (e *EPUBZip) WriteMagic() error {
 		UncompressedSize64: 20,
 		CRC32:              0x2cab616f,
 	}
+	fh.CreatorVersion = fh.CreatorVersion&0xff00 | 20 // preserve compatibility byte
+	fh.ReaderVersion = 20
 	fh.SetMode(0600)
 	m, err := e.wz.CreateRaw(fh)
 
