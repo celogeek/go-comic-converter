@@ -76,7 +76,7 @@ func (i *Image) ImgStyle(viewWidth, viewHeight int, align string) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
-	style := []string{}
+	var style []string
 
 	style = append(style, fmt.Sprintf("width:%dpx", relWidth))
 	style = append(style, fmt.Sprintf("height:%dpx", relHeight))

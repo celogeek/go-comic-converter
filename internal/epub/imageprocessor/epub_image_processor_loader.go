@@ -208,7 +208,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 		return
 	}
 
-	names := []string{}
+	var names []string
 	for _, img := range images {
 		names = append(names, img.Name)
 	}

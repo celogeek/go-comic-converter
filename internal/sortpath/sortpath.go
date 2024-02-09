@@ -41,7 +41,7 @@ func (b by) Swap(i, j int) {
 
 // By use sortpath.By with sort.Sort
 func By(filenames []string, mode int) by {
-	p := [][]part{}
+	var p [][]part
 	for _, filename := range filenames {
 		p = append(p, parse(filename, mode))
 	}

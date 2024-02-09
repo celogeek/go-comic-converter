@@ -31,7 +31,7 @@ func (p *coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 }
 
 // Draw blur the src image, and create a box with the title in the middle
-func (p *coverTitle) Draw(dst draw.Image, src image.Image, options *gift.Options) {
+func (p *coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
 	if p.title == "" {
 		return

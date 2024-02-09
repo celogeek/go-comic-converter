@@ -60,7 +60,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	})
 	wg := &sync.WaitGroup{}
 
-	imgStorage, err := epubzip.NewEPUBZipStorageImageWriter(e.ImgStorage(), e.Image.Format)
+	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
 		bar.Close()
 		return nil, err
@@ -279,22 +279,22 @@ type CoverTitleDataOptions struct {
 
 func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
 	return image.NewPaletted(bounds, color.Palette{
-		color.Gray{0x00},
-		color.Gray{0x11},
-		color.Gray{0x22},
-		color.Gray{0x33},
-		color.Gray{0x44},
-		color.Gray{0x55},
-		color.Gray{0x66},
-		color.Gray{0x77},
-		color.Gray{0x88},
-		color.Gray{0x99},
-		color.Gray{0xAA},
-		color.Gray{0xBB},
-		color.Gray{0xCC},
-		color.Gray{0xDD},
-		color.Gray{0xEE},
-		color.Gray{0xFF},
+		color.Gray{},
+		color.Gray{Y: 0x11},
+		color.Gray{Y: 0x22},
+		color.Gray{Y: 0x33},
+		color.Gray{Y: 0x44},
+		color.Gray{Y: 0x55},
+		color.Gray{Y: 0x66},
+		color.Gray{Y: 0x77},
+		color.Gray{Y: 0x88},
+		color.Gray{Y: 0x99},
+		color.Gray{Y: 0xAA},
+		color.Gray{Y: 0xBB},
+		color.Gray{Y: 0xCC},
+		color.Gray{Y: 0xDD},
+		color.Gray{Y: 0xEE},
+		color.Gray{Y: 0xFF},
 	})
 }
 

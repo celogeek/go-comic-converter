@@ -197,7 +197,7 @@ func (e *ePub) writeTitleImage(wz *epubzip.EPUBZip, img *epubimage.Image, title 
 }
 
 // extract image and split it into part
-func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorageImageReader, err error) {
+func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.StorageImageReader, err error) {
 	images, err := e.imageProcessor.Load()
 
 	if err != nil {
@@ -226,7 +226,7 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 		return parts, nil, nil
 	}
 
-	imgStorage, err = epubzip.NewEPUBZipStorageImageReader(e.ImgStorage())
+	imgStorage, err = epubzip.NewStorageImageReader(e.ImgStorage())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -268,17 +268,17 @@ func (e *ePub) getParts() (parts []*epubPart, imgStorage *epubzip.EPUBZipStorage
 // create a tree from the directories.
 //
 // this is used to simulate the toc.
-func (e *ePub) getTree(images []*epubimage.Image, skip_files bool) string {
+func (e *ePub) getTree(images []*epubimage.Image, skipFiles bool) string {
 	t := epubtree.New()
 	for _, img := range images {
-		if skip_files {
+		if skipFiles {
 			t.Add(img.Path)
 		} else {
 			t.Add(filepath.Join(img.Path, img.Name))
 		}
 	}
 	c := t.Root()
-	if skip_files && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
+	if skipFiles && e.StripFirstDirectoryFromToc && len(c.Children) == 1 {
 		c = c.Children[0]
 	}
 

@@ -5,20 +5,20 @@ import (
 	"os"
 )
 
-type EpubProgressJson struct {
+type Json struct {
 	o       Options
 	e       *json.Encoder
 	current int
 }
 
 func newEpubProgressJson(o Options) EpubProgress {
-	return &EpubProgressJson{
+	return &Json{
 		o: o,
 		e: json.NewEncoder(os.Stdout),
 	}
 }
 
-func (p *EpubProgressJson) Add(num int) error {
+func (p *Json) Add(num int) error {
 	p.current += num
 	p.e.Encode(map[string]any{
 		"type": "progress",
@@ -37,6 +37,6 @@ func (p *EpubProgressJson) Add(num int) error {
 	return nil
 }
 
-func (p *EpubProgressJson) Close() error {
+func (p *Json) Close() error {
 	return nil
 }

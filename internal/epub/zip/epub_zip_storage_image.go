@@ -7,23 +7,23 @@ import (
 	"sync"
 )
 
-type EPUBZipStorageImageWriter struct {
+type StorageImageWriter struct {
 	fh     *os.File
 	fz     *zip.Writer
 	format string
 	mut    *sync.Mutex
 }
 
-func NewEPUBZipStorageImageWriter(filename string, format string) (*EPUBZipStorageImageWriter, error) {
+func NewStorageImageWriter(filename string, format string) (*StorageImageWriter, error) {
 	fh, err := os.Create(filename)
 	if err != nil {
 		return nil, err
 	}
 	fz := zip.NewWriter(fh)
-	return &EPUBZipStorageImageWriter{fh, fz, format, &sync.Mutex{}}, nil
+	return &StorageImageWriter{fh, fz, format, &sync.Mutex{}}, nil
 }
 
-func (e *EPUBZipStorageImageWriter) Close() error {
+func (e *StorageImageWriter) Close() error {
 	if err := e.fz.Close(); err != nil {
 		e.fh.Close()
 		return err
@@ -31,7 +31,7 @@ func (e *EPUBZipStorageImageWriter) Close() error {
 	return e.fh.Close()
 }
 
-func (e *EPUBZipStorageImageWriter) Add(filename string, img image.Image, quality int) error {
+func (e *StorageImageWriter) Add(filename string, img image.Image, quality int) error {
 	zipImage, err := CompressImage(filename, e.format, img, quality)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (e *EPUBZipStorageImageWriter) Add(filename string, img image.Image, qualit
 	return nil
 }
 
-type EPUBZipStorageImageReader struct {
+type StorageImageReader struct {
 	filename string
 	fh       *os.File
 	fz       *zip.Reader
@@ -59,7 +59,7 @@ type EPUBZipStorageImageReader struct {
 	files map[string]*zip.File
 }
 
-func NewEPUBZipStorageImageReader(filename string) (*EPUBZipStorageImageReader, error) {
+func NewStorageImageReader(filename string) (*StorageImageReader, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -76,14 +76,14 @@ func NewEPUBZipStorageImageReader(filename string) (*EPUBZipStorageImageReader, 
 	for _, z := range fz.File {
 		files[z.Name] = z
 	}
-	return &EPUBZipStorageImageReader{filename, fh, fz, files}, nil
+	return &StorageImageReader{filename, fh, fz, files}, nil
 }
 
-func (e *EPUBZipStorageImageReader) Get(filename string) *zip.File {
+func (e *StorageImageReader) Get(filename string) *zip.File {
 	return e.files[filename]
 }
 
-func (e *EPUBZipStorageImageReader) Size(filename string) uint64 {
+func (e *StorageImageReader) Size(filename string) uint64 {
 	img := e.Get(filename)
 	if img != nil {
 		return img.CompressedSize64 + 30 + uint64(len(img.Name))
@@ -91,10 +91,10 @@ func (e *EPUBZipStorageImageReader) Size(filename string) uint64 {
 	return 0
 }
 
-func (e *EPUBZipStorageImageReader) Close() error {
+func (e *StorageImageReader) Close() error {
 	return e.fh.Close()
 }
 
-func (e *EPUBZipStorageImageReader) Remove() error {
+func (e *StorageImageReader) Remove() error {
 	return os.Remove(e.filename)
 }

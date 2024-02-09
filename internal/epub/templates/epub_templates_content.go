@@ -214,7 +214,7 @@ func getSpineAuto(o *ContentOptions) []tag {
 		return fmt.Sprintf("%s layout-blank", getSpread(false))
 	}
 
-	spine := []tag{}
+	var spine []tag
 	if o.HasTitlePage {
 		if !o.ImageOptions.AppleBookCompatibility {
 			spine = append(spine,
@@ -255,7 +255,7 @@ func getSpineAuto(o *ContentOptions) []tag {
 }
 
 func getSpinePortrait(o *ContentOptions) []tag {
-	spine := []tag{}
+	var spine []tag
 	if o.HasTitlePage {
 		spine = append(spine,
 			tag{"itemref", tagAttrs{"idref": "page_title"}, ""},

@@ -8,7 +8,7 @@ import (
 )
 
 // Strings follow with numbers like: s1, s1.2, s2-3, ...
-var split_path_regex = regexp.MustCompile(`^(.*?)(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?$`)
+var splitPathRegex = regexp.MustCompile(`^(.*?)(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?$`)
 
 type part struct {
 	fullname string
@@ -31,7 +31,7 @@ func (a part) compare(b part) float64 {
 
 // separate from the string the number part.
 func parsePart(p string) part {
-	r := split_path_regex.FindStringSubmatch(p)
+	r := splitPathRegex.FindStringSubmatch(p)
 	if len(r) == 0 {
 		return part{p, p, 0}
 	}
@@ -51,7 +51,7 @@ func parse(filename string, mode int) []part {
 	ext := filepath.Ext(name)
 	name = name[0 : len(name)-len(ext)]
 
-	f := []part{}
+	var f []part
 	for _, p := range strings.Split(pathname, string(filepath.Separator)) {
 		if mode > 0 { // alphanumeric for path
 			f = append(f, parsePart(p))

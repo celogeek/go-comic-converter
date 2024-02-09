@@ -43,7 +43,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "failed to fetch the latest version")
 			os.Exit(1)
 		}
-		latest_version := v.Versions[0]
+		latestVersion := v.Versions[0]
 
 		fmt.Fprintf(os.Stderr, `go-comic-converter
   Path             : %s
@@ -57,9 +57,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			bi.Main.Path,
 			bi.Main.Sum,
 			bi.Main.Version,
-			latest_version.Original(),
-			latest_version.Segments()[0],
-			latest_version.Original(),
+			latestVersion.Original(),
+			latestVersion.Segments()[0],
+			latestVersion.Original(),
 		)
 		return
 	}
