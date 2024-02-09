@@ -44,7 +44,7 @@ func (n *tree) Root() *node {
 	return n.Nodes["."]
 }
 
-// Add add the filename to the tree
+// Add the filename to the tree
 func (n *tree) Add(filename string) {
 	cn := n.Root()
 	cp := ""

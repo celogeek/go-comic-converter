@@ -26,7 +26,7 @@ func New(path string) (*EPUBZip, error) {
 	return &EPUBZip{w, wz}, nil
 }
 
-// Close close compress pipe and file.
+// Close compress pipe and file.
 func (e *EPUBZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
