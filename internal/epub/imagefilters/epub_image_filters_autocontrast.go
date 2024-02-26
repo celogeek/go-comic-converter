@@ -18,21 +18,21 @@ type autocontrast struct {
 
 // compute the color number between 0 and 1 that hold half of the pixel
 func (f *autocontrast) mean(src image.Image) float32 {
-	bucket := map[uint32]int{}
+	bucket := map[int]int{}
 	for x := src.Bounds().Min.X; x < src.Bounds().Max.X; x++ {
 		for y := src.Bounds().Min.Y; y < src.Bounds().Max.Y; y++ {
 			v, _, _, _ := color.GrayModel.Convert(src.At(x, y)).RGBA()
-			bucket[v]++
+			bucket[int(v)]++
 		}
 	}
 
 	// calculate color idx
-	var colorIdx uint32
+	var colorIdx int
 	{
 		// limit to half of the pixel
 		limit := src.Bounds().Dx() * src.Bounds().Dy() / 2
 		// loop on all color from 0 to 65536
-		for colorIdx = 0; colorIdx < 1<<16; colorIdx++ {
+		for colorIdx := range 1 << 16 {
 			if limit-bucket[colorIdx] < 0 {
 				break
 			}

@@ -73,7 +73,7 @@ func compareParts(a, b []part) float64 {
 	if m > len(b) {
 		m = len(b)
 	}
-	for i := 0; i < m; i++ {
+	for i := range m {
 		c := a[i].compare(b[i])
 		if c != 0 {
 			return c

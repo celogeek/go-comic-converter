@@ -70,7 +70,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	if e.Image.Format == "png" {
 		wr = 100
 	}
-	for i := 0; i < e.WorkersRatio(wr); i++ {
+	for range e.WorkersRatio(wr) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

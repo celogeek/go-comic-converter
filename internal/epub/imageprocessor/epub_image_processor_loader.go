@@ -141,7 +141,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err 
 	// read in parallel and get an image
 	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for range e.WorkersRatio(50) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -233,7 +233,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 
 	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for range e.WorkersRatio(50) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -352,7 +352,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 	// send file to the queue
 	output = make(chan *task, e.Workers)
 	wg := &sync.WaitGroup{}
-	for j := 0; j < e.WorkersRatio(50); j++ {
+	for range e.WorkersRatio(50) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -403,7 +403,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *task, err 
 	go func() {
 		defer close(output)
 		defer pdf.Close()
-		for i := 0; i < totalImages; i++ {
+		for i := range totalImages {
 			var img image.Image
 			var err error
 			if !e.Dry {
