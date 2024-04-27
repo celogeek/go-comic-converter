@@ -6,6 +6,7 @@ import "fmt"
 type Crop struct {
 	Enabled                 bool
 	Left, Up, Right, Bottom int
+	Limit                   int
 }
 
 type Color struct {

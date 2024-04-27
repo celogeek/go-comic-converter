@@ -13,10 +13,11 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/tcnksm/go-latest"
+
 	"github.com/celogeek/go-comic-converter/v2/internal/converter"
 	"github.com/celogeek/go-comic-converter/v2/internal/epub"
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
-	"github.com/tcnksm/go-latest"
 )
 
 func main() {
@@ -122,18 +123,34 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		Quiet:                      cmd.Options.Quiet,
 		Json:                       cmd.Options.Json,
 		Image: &epuboptions.Image{
-			Crop:                   &epuboptions.Crop{Enabled: cmd.Options.Crop, Left: cmd.Options.CropRatioLeft, Up: cmd.Options.CropRatioUp, Right: cmd.Options.CropRatioRight, Bottom: cmd.Options.CropRatioBottom},
-			Quality:                cmd.Options.Quality,
-			Brightness:             cmd.Options.Brightness,
-			Contrast:               cmd.Options.Contrast,
-			AutoContrast:           cmd.Options.AutoContrast,
-			AutoRotate:             cmd.Options.AutoRotate,
-			AutoSplitDoublePage:    cmd.Options.AutoSplitDoublePage,
-			KeepDoublePageIfSplit:  cmd.Options.KeepDoublePageIfSplit,
-			NoBlankImage:           cmd.Options.NoBlankImage,
-			Manga:                  cmd.Options.Manga,
-			HasCover:               cmd.Options.HasCover,
-			View:                   &epuboptions.View{Width: profile.Width, Height: profile.Height, AspectRatio: cmd.Options.AspectRatio, PortraitOnly: cmd.Options.PortraitOnly, Color: epuboptions.Color{Foreground: cmd.Options.ForegroundColor, Background: cmd.Options.BackgroundColor}},
+			Crop: &epuboptions.Crop{
+				Enabled: cmd.Options.Crop,
+				Left:    cmd.Options.CropRatioLeft,
+				Up:      cmd.Options.CropRatioUp,
+				Right:   cmd.Options.CropRatioRight,
+				Bottom:  cmd.Options.CropRatioBottom,
+				Limit:   cmd.Options.CropLimit,
+			},
+			Quality:               cmd.Options.Quality,
+			Brightness:            cmd.Options.Brightness,
+			Contrast:              cmd.Options.Contrast,
+			AutoContrast:          cmd.Options.AutoContrast,
+			AutoRotate:            cmd.Options.AutoRotate,
+			AutoSplitDoublePage:   cmd.Options.AutoSplitDoublePage,
+			KeepDoublePageIfSplit: cmd.Options.KeepDoublePageIfSplit,
+			NoBlankImage:          cmd.Options.NoBlankImage,
+			Manga:                 cmd.Options.Manga,
+			HasCover:              cmd.Options.HasCover,
+			View: &epuboptions.View{
+				Width:        profile.Width,
+				Height:       profile.Height,
+				AspectRatio:  cmd.Options.AspectRatio,
+				PortraitOnly: cmd.Options.PortraitOnly,
+				Color: epuboptions.Color{
+					Foreground: cmd.Options.ForegroundColor,
+					Background: cmd.Options.BackgroundColor,
+				},
+			},
 			GrayScale:              cmd.Options.Grayscale,
 			GrayScaleMode:          cmd.Options.GrayscaleMode,
 			Resize:                 !cmd.Options.NoResize,

@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 )
 
 type Options struct {
@@ -29,6 +30,7 @@ type Options struct {
 	CropRatioUp                int     `yaml:"crop_ratio_up"`
 	CropRatioRight             int     `yaml:"crop_ratio_right"`
 	CropRatioBottom            int     `yaml:"crop_ratio_bottom"`
+	CropLimit                  int     `yaml:"crop_limit"`
 	Brightness                 int     `yaml:"brightness"`
 	Contrast                   int     `yaml:"contrast"`
 	AutoContrast               bool    `yaml:"auto_contrast"`
@@ -161,6 +163,7 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 			"up":     o.CropRatioUp,
 			"bottom": o.CropRatioBottom,
 		}
+		out["crop_limit"] = o.CropLimit
 	}
 	if o.Brightness != 0 {
 		out["brightness"] = o.Brightness
@@ -265,7 +268,7 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
+		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - %d Limit", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"Auto contrast", o.AutoContrast, true},
