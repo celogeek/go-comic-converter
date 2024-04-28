@@ -339,7 +339,9 @@ func (e *EPub) writePart(path string, currentPart, totalParts int, part *epubPar
 	if err != nil {
 		return err
 	}
-	defer wz.Close()
+	defer func(wz *epubzip.EPUBZip) {
+		_ = wz.Close()
+	}(wz)
 
 	title := e.Title
 	if totalParts > 1 {
@@ -429,8 +431,8 @@ func (e *EPub) Write() error {
 		return nil
 	}
 	defer func() {
-		imgStorage.Close()
-		imgStorage.Remove()
+		_ = imgStorage.Close()
+		_ = imgStorage.Remove()
 	}()
 
 	totalParts := len(epubParts)
@@ -466,9 +468,9 @@ func (e *EPub) Write() error {
 			return err
 		}
 
-		bar.Add(1)
+		_ = bar.Add(1)
 	}
-	bar.Close()
+	_ = bar.Close()
 	if !e.Json {
 		utils.Println()
 	}

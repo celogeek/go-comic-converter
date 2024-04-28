@@ -228,7 +228,7 @@ func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error)
 
 // Parse all parameters
 func (c *Converter) Parse() {
-	c.Cmd.Parse(os.Args[1:])
+	_ = c.Cmd.Parse(os.Args[1:])
 	if c.Options.Help {
 		c.Cmd.Usage()
 		os.Exit(0)
@@ -413,7 +413,7 @@ func (c *Converter) Stats() {
 	runtime.ReadMemStats(&mem)
 
 	if c.Options.Json {
-		json.NewEncoder(os.Stdout).Encode(map[string]any{
+		_ = json.NewEncoder(os.Stdout).Encode(map[string]any{
 			"type": "stats",
 			"data": map[string]any{
 				"elapse_ms":       elapse.Milliseconds(),

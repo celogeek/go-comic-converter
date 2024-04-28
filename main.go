@@ -66,7 +66,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	}
 
 	if cmd.Options.Save {
-		cmd.Options.SaveConfig()
+		if err := cmd.Options.SaveConfig(); err != nil {
+			cmd.Fatal(err)
+		}
 		utils.Printf(
 			"%s%s\n\nSaving to %s\n",
 			cmd.Options.Header(),
@@ -82,7 +84,9 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	}
 
 	if cmd.Options.Reset {
-		cmd.Options.ResetConfig()
+		if err := cmd.Options.ResetConfig(); err != nil {
+			cmd.Fatal(err)
+		}
 		utils.Printf(
 			"%s%s\n\nReset default to %s\n",
 			cmd.Options.Header(),
@@ -97,7 +101,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 	}
 
 	if cmd.Options.Json {
-		json.NewEncoder(os.Stdout).Encode(map[string]any{
+		_ = json.NewEncoder(os.Stdout).Encode(map[string]any{
 			"type": "options", "data": cmd.Options,
 		})
 	} else {

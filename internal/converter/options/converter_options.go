@@ -202,7 +202,9 @@ func (o *Options) LoadConfig() error {
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	err = yaml.NewDecoder(f).Decode(o)
 	if err != nil && err.Error() != "EOF" {
 		return err
@@ -302,7 +304,9 @@ func (o *Options) ShowConfig() string {
 
 // ResetConfig reset all settings to default value
 func (o *Options) ResetConfig() error {
-	New().SaveConfig()
+	if err := New().SaveConfig(); err != nil {
+		return err
+	}
 	return o.LoadConfig()
 }
 
@@ -312,7 +316,9 @@ func (o *Options) SaveConfig() error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	return yaml.NewEncoder(f).Encode(o)
 }
 

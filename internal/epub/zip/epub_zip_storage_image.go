@@ -25,7 +25,7 @@ func NewStorageImageWriter(filename string, format string) (*StorageImageWriter,
 
 func (e *StorageImageWriter) Close() error {
 	if err := e.fz.Close(); err != nil {
-		e.fh.Close()
+		_ = e.fh.Close()
 		return err
 	}
 	return e.fh.Close()

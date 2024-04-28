@@ -64,7 +64,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 
 	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
-		bar.Close()
+		_ = bar.Close()
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 				if !(img.DoublePage && input.Id > 0 &&
 					e.Options.Image.AutoSplitDoublePage && !e.Options.Image.KeepDoublePageIfSplit) {
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
-						bar.Close()
+						_ = bar.Close()
 						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
@@ -105,7 +105,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 					img = e.transformImage(input, i+1, b)
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
-						bar.Close()
+						_ = bar.Close()
 						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
@@ -118,20 +118,20 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 
 	go func() {
 		wg.Wait()
-		imgStorage.Close()
+		_ = imgStorage.Close()
 		close(imageOutput)
 	}()
 
 	for img := range imageOutput {
 		if img.Part == 0 {
-			bar.Add(1)
+			_ = bar.Add(1)
 		}
 		if e.Image.NoBlankImage && img.IsBlank {
 			continue
 		}
 		images = append(images, img)
 	}
-	bar.Close()
+	_ = bar.Close()
 
 	if len(images) == 0 {
 		return nil, errNoImagesFound
