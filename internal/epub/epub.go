@@ -5,13 +5,14 @@ import (
 	"archive/zip"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimageprocessor "github.com/celogeek/go-comic-converter/v2/internal/epub/imageprocessor"
@@ -20,7 +21,7 @@ import (
 	epubtemplates "github.com/celogeek/go-comic-converter/v2/internal/epub/templates"
 	epubtree "github.com/celogeek/go-comic-converter/v2/internal/epub/tree"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
-	"github.com/gofrs/uuid"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type EPub struct {
@@ -418,12 +419,12 @@ func (e *EPub) Write() error {
 
 	if e.Dry {
 		p := epubParts[0]
-		fmt.Fprintf(os.Stderr, "TOC:\n  - %s\n%s\n", e.Title, e.getTree(p.Images, true))
+		utils.Printf("TOC:\n  - %s\n%s\n", e.Title, e.getTree(p.Images, true))
 		if e.DryVerbose {
 			if e.Image.HasCover {
-				fmt.Fprintf(os.Stderr, "Cover:\n%s\n", e.getTree([]*epubimage.Image{p.Cover}, false))
+				utils.Printf("Cover:\n%s\n", e.getTree([]*epubimage.Image{p.Cover}, false))
 			}
-			fmt.Fprintf(os.Stderr, "Files:\n%s\n", e.getTree(p.Images, false))
+			utils.Printf("Files:\n%s\n", e.getTree(p.Images, false))
 		}
 		return nil
 	}
@@ -469,7 +470,7 @@ func (e *EPub) Write() error {
 	}
 	bar.Close()
 	if !e.Json {
-		fmt.Fprintln(os.Stderr)
+		utils.Println()
 	}
 
 	// display corrupted images
@@ -477,17 +478,17 @@ func (e *EPub) Write() error {
 	for pId, part := range epubParts {
 		if pId == 0 && e.Image.HasCover && part.Cover.Error != nil {
 			hasError = true
-			fmt.Fprintf(os.Stderr, "Error on image %s: %v\n", filepath.Join(part.Cover.Path, part.Cover.Name), part.Cover.Error)
+			utils.Printf("Error on image %s: %v\n", filepath.Join(part.Cover.Path, part.Cover.Name), part.Cover.Error)
 		}
 		for _, img := range part.Images {
 			if img.Part == 0 && img.Error != nil {
 				hasError = true
-				fmt.Fprintf(os.Stderr, "Error on image %s: %v\n", filepath.Join(img.Path, img.Name), img.Error)
+				utils.Printf("Error on image %s: %v\n", filepath.Join(img.Path, img.Name), img.Error)
 			}
 		}
 	}
 	if hasError {
-		fmt.Fprintln(os.Stderr)
+		utils.Println()
 	}
 
 	return nil

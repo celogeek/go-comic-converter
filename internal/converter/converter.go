@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter/options"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type Converter struct {
@@ -44,17 +45,17 @@ func New() *Converter {
 	var cmdOutput strings.Builder
 	cmd.SetOutput(&cmdOutput)
 	cmd.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
+		utils.Printf("Usage of %s:\n", filepath.Base(os.Args[0]))
 		for _, o := range conv.order {
 			switch v := o.(type) {
 			case converterOrderSection:
-				fmt.Fprintf(os.Stderr, "\n%s:\n", o.Value())
+				utils.Printf("\n%s:\n", o.Value())
 			case converterOrderName:
-				fmt.Fprintln(os.Stderr, conv.Usage(v.isString, cmd.Lookup(v.Value())))
+				utils.Println(conv.Usage(v.isString, cmd.Lookup(v.Value())))
 			}
 		}
 		if cmdOutput.Len() > 0 {
-			fmt.Fprintf(os.Stderr, "\nError: %s", cmdOutput.String())
+			utils.Printf("\nError: %s", cmdOutput.String())
 		}
 	}
 
@@ -401,7 +402,7 @@ func (c *Converter) Validate() error {
 // Fatal Helper to show usage, err and exit 1
 func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
-	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
+	utils.Printf("\nError: %s\n", err)
 	os.Exit(1)
 }
 
@@ -420,8 +421,7 @@ func (c *Converter) Stats() {
 			},
 		})
 	} else {
-		fmt.Fprintf(
-			os.Stderr,
+		utils.Printf(
 			"Completed in %s, Memory usage %d Mb\n",
 			elapse,
 			mem.Sys/1024/1024,

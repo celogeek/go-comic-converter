@@ -16,6 +16,7 @@ import (
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type EPUBImageProcessor struct {
@@ -84,7 +85,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 					e.Options.Image.AutoSplitDoublePage && !e.Options.Image.KeepDoublePageIfSplit) {
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						bar.Close()
-						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
 					// do not keep raw image except for cover
@@ -105,7 +106,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 					img = e.transformImage(input, i+1, b)
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						bar.Close()
-						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
 					img.Raw = nil
