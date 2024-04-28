@@ -241,7 +241,11 @@ func (o *Options) ShowConfig() string {
 	if o.AspectRatio > 0 {
 		aspectRatio = fmt.Sprintf("1:%.02f", o.AspectRatio)
 	} else if o.AspectRatio < 0 {
-		aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+		if profile != nil {
+			aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+		} else {
+			aspectRatio = "1:?? (device)"
+		}
 	}
 
 	titlePage := ""
