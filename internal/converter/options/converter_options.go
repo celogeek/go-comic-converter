@@ -268,7 +268,7 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - %d Limit", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit), o.Crop},
+		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - %d%% Limit", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"Auto contrast", o.AutoContrast, true},
