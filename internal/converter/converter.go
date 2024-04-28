@@ -389,6 +389,11 @@ func (c *Converter) Validate() error {
 		return errors.New("grayscale mode should be 0, 1 or 2")
 	}
 
+	// crop
+	if c.Options.CropLimit < 0 || c.Options.CropLimit > 100 {
+		return errors.New("crop limit should be between 0 and 100")
+	}
+
 	return nil
 }
 
