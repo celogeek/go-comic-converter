@@ -191,6 +191,7 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 			e.Image.Crop.Right,
 			e.Image.Crop.Bottom,
 			e.Image.Crop.Limit,
+			e.Image.Crop.SkipIfLimitReached,
 		)
 
 		// detect if blank image

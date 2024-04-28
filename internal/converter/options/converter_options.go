@@ -31,6 +31,7 @@ type Options struct {
 	CropRatioRight             int     `yaml:"crop_ratio_right"`
 	CropRatioBottom            int     `yaml:"crop_ratio_bottom"`
 	CropLimit                  int     `yaml:"crop_limit"`
+	CropSkipIfLimitReached     bool    `yaml:"crop_skip_if_limit_reached"`
 	Brightness                 int     `yaml:"brightness"`
 	Contrast                   int     `yaml:"contrast"`
 	AutoContrast               bool    `yaml:"auto_contrast"`
@@ -81,23 +82,25 @@ type Options struct {
 // New Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:               "SR",
-		Quality:               85,
-		Grayscale:             true,
-		Crop:                  true,
-		CropRatioLeft:         1,
-		CropRatioUp:           1,
-		CropRatioRight:        1,
-		CropRatioBottom:       3,
-		NoBlankImage:          true,
-		HasCover:              true,
-		KeepDoublePageIfSplit: true,
-		SortPathMode:          1,
-		ForegroundColor:       "000",
-		BackgroundColor:       "FFF",
-		Format:                "jpeg",
-		TitlePage:             1,
-		profiles:              profiles.New(),
+		Profile:                "SR",
+		Quality:                85,
+		Grayscale:              true,
+		Crop:                   true,
+		CropRatioLeft:          1,
+		CropRatioUp:            1,
+		CropRatioRight:         1,
+		CropRatioBottom:        3,
+		CropLimit:              10,
+		CropSkipIfLimitReached: true,
+		NoBlankImage:           true,
+		HasCover:               true,
+		KeepDoublePageIfSplit:  true,
+		SortPathMode:           1,
+		ForegroundColor:        "000",
+		BackgroundColor:        "FFF",
+		Format:                 "jpeg",
+		TitlePage:              1,
+		profiles:               profiles.New(),
 	}
 }
 
@@ -164,6 +167,7 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 			"bottom": o.CropRatioBottom,
 		}
 		out["crop_limit"] = o.CropLimit
+		out["crop_skip_if_limit_reached"] = o.CropSkipIfLimitReached
 	}
 	if o.Brightness != 0 {
 		out["brightness"] = o.Brightness
@@ -268,7 +272,7 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - Limit %d%%", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit), o.Crop},
+		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - Limit %d%% - Skip %v", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit, o.CropSkipIfLimitReached), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"Auto contrast", o.AutoContrast, true},

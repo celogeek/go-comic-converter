@@ -8,9 +8,9 @@ import (
 )
 
 // AutoCrop Lookup for margin and crop
-func AutoCrop(img image.Image, bounds image.Rectangle, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int, limit int) gift.Filter {
+func AutoCrop(img image.Image, bounds image.Rectangle, cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom int, limit int, skipIfLimitReached bool) gift.Filter {
 	return gift.Crop(
-		findMargin(img, bounds, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}, limit),
+		findMargin(img, bounds, cutRatioOptions{cutRatioLeft, cutRatioUp, cutRatioRight, cutRatioBottom}, limit, skipIfLimitReached),
 	)
 }
 
@@ -25,13 +25,13 @@ type cutRatioOptions struct {
 	Left, Up, Right, Bottom int
 }
 
-func findMargin(img image.Image, bounds image.Rectangle, cutRatio cutRatioOptions, limit int) image.Rectangle {
+func findMargin(img image.Image, bounds image.Rectangle, cutRatio cutRatioOptions, limit int, skipIfLimitReached bool) image.Rectangle {
 	imgArea := bounds
 
-	maxCutX, maxCutY := imgArea.Dx()*limit/100, imgArea.Dy()*limit/100
+	maxCropX, maxCropY := imgArea.Dx()*limit/100, imgArea.Dy()*limit/100
 
 LEFT:
-	for x, maxCut := imgArea.Min.X, maxCutX; x < imgArea.Max.X && (maxCutX == 0 || maxCut > 0); x, maxCut = x+1, maxCut-1 {
+	for x, maxCrop := imgArea.Min.X, maxCropX; x < imgArea.Max.X && (limit == 0 || maxCrop > 0); x, maxCrop = x+1, maxCrop-1 {
 		allowNonBlank := imgArea.Dy() * cutRatio.Left / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -42,10 +42,13 @@ LEFT:
 			}
 		}
 		imgArea.Min.X++
+		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
+			return bounds
+		}
 	}
 
 UP:
-	for y, maxCut := imgArea.Min.Y, maxCutY; y < imgArea.Max.Y && (maxCutY == 0 || maxCut > 0); y, maxCut = y+1, maxCut-1 {
+	for y, maxCrop := imgArea.Min.Y, maxCropY; y < imgArea.Max.Y && (limit == 0 || maxCrop > 0); y, maxCrop = y+1, maxCrop-1 {
 		allowNonBlank := imgArea.Dx() * cutRatio.Up / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -56,10 +59,13 @@ UP:
 			}
 		}
 		imgArea.Min.Y++
+		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
+			return bounds
+		}
 	}
 
 RIGHT:
-	for x, maxCut := imgArea.Max.X-1, maxCutX; x >= imgArea.Min.X && (maxCutX == 0 || maxCut > 0); x, maxCut = x-1, maxCut-1 {
+	for x, maxCrop := imgArea.Max.X-1, maxCropX; x >= imgArea.Min.X && (limit == 0 || maxCrop > 0); x, maxCrop = x-1, maxCrop-1 {
 		allowNonBlank := imgArea.Dy() * cutRatio.Right / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -70,10 +76,13 @@ RIGHT:
 			}
 		}
 		imgArea.Max.X--
+		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
+			return bounds
+		}
 	}
 
 BOTTOM:
-	for y, maxCut := imgArea.Max.Y-1, maxCutY; y >= imgArea.Min.Y && (maxCutY == 0 || maxCut > 0); y, maxCut = y-1, maxCut-1 {
+	for y, maxCrop := imgArea.Max.Y-1, maxCropY; y >= imgArea.Min.Y && (limit == 0 || maxCrop > 0); y, maxCrop = y-1, maxCrop-1 {
 		allowNonBlank := imgArea.Dx() * cutRatio.Bottom / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -84,6 +93,9 @@ BOTTOM:
 			}
 		}
 		imgArea.Max.Y--
+		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
+			return bounds
+		}
 	}
 
 	return imgArea

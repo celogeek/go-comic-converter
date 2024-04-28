@@ -114,6 +114,7 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
 	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
 	c.AddIntParam(&c.Options.CropLimit, "crop-limit", c.Options.CropLimit, "Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.")
+	c.AddBoolParam(&c.Options.CropSkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.CropSkipIfLimitReached, "Crop skip if limit reached.")
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
