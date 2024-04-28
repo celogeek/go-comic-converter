@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 )
 
