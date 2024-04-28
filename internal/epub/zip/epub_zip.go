@@ -39,6 +39,7 @@ func (e *EPUBZip) Close() error {
 // This will be valid with epubcheck tools.
 func (e *EPUBZip) WriteMagic() error {
 	t := time.Now().UTC()
+	//goland:noinspection GoDeprecation
 	fh := &zip.FileHeader{
 		Name:               "mimetype",
 		Method:             zip.Store,
