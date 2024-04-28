@@ -165,7 +165,7 @@ func (c *Converter) InitParse() {
 // Usage Customize version of FlagSet.PrintDefaults
 func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
+	b.WriteString("  -" + f.Name)
 	name, usage := flag.UnquoteUsage(f)
 	if len(name) > 0 {
 		b.WriteString(" ")
@@ -177,9 +177,9 @@ func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 		c.isZeroValueErrs = append(c.isZeroValueErrs, err)
 	} else if !isZero {
 		if isString {
-			fmt.Fprintf(&b, " (default %q)", f.DefValue)
+			b.WriteString(fmt.Sprintf(" (default %q)", f.DefValue))
 		} else {
-			fmt.Fprintf(&b, " (default %v)", f.DefValue)
+			b.WriteString(fmt.Sprintf(" (default %v)", f.DefValue))
 		}
 	}
 
