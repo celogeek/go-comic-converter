@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/converter/options"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type Converter struct {
@@ -44,17 +45,17 @@ func New() *Converter {
 	var cmdOutput strings.Builder
 	cmd.SetOutput(&cmdOutput)
 	cmd.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s:\n", filepath.Base(os.Args[0]))
+		utils.Printf("Usage of %s:\n", filepath.Base(os.Args[0]))
 		for _, o := range conv.order {
 			switch v := o.(type) {
 			case converterOrderSection:
-				fmt.Fprintf(os.Stderr, "\n%s:\n", o.Value())
+				utils.Printf("\n%s:\n", o.Value())
 			case converterOrderName:
-				fmt.Fprintln(os.Stderr, conv.Usage(v.isString, cmd.Lookup(v.Value())))
+				utils.Println(conv.Usage(v.isString, cmd.Lookup(v.Value())))
 			}
 		}
 		if cmdOutput.Len() > 0 {
-			fmt.Fprintf(os.Stderr, "\nError: %s", cmdOutput.String())
+			utils.Printf("\nError: %s", cmdOutput.String())
 		}
 	}
 
@@ -113,6 +114,8 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
 	c.AddIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
 	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
+	c.AddIntParam(&c.Options.CropLimit, "crop-limit", c.Options.CropLimit, "Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.")
+	c.AddBoolParam(&c.Options.CropSkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.CropSkipIfLimitReached, "Crop skip if limit reached.")
 	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
@@ -162,7 +165,7 @@ func (c *Converter) InitParse() {
 // Usage Customize version of FlagSet.PrintDefaults
 func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "  -%s", f.Name) // Two spaces before -; see next two comments.
+	b.WriteString("  -" + f.Name)
 	name, usage := flag.UnquoteUsage(f)
 	if len(name) > 0 {
 		b.WriteString(" ")
@@ -174,9 +177,9 @@ func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 		c.isZeroValueErrs = append(c.isZeroValueErrs, err)
 	} else if !isZero {
 		if isString {
-			fmt.Fprintf(&b, " (default %q)", f.DefValue)
+			b.WriteString(fmt.Sprintf(" (default %q)", f.DefValue))
 		} else {
-			fmt.Fprintf(&b, " (default %v)", f.DefValue)
+			b.WriteString(fmt.Sprintf(" (default %v)", f.DefValue))
 		}
 	}
 
@@ -225,7 +228,7 @@ func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error)
 
 // Parse all parameters
 func (c *Converter) Parse() {
-	c.Cmd.Parse(os.Args[1:])
+	_ = c.Cmd.Parse(os.Args[1:])
 	if c.Options.Help {
 		c.Cmd.Usage()
 		os.Exit(0)
@@ -388,13 +391,18 @@ func (c *Converter) Validate() error {
 		return errors.New("grayscale mode should be 0, 1 or 2")
 	}
 
+	// crop
+	if c.Options.CropLimit < 0 || c.Options.CropLimit > 100 {
+		return errors.New("crop limit should be between 0 and 100")
+	}
+
 	return nil
 }
 
 // Fatal Helper to show usage, err and exit 1
 func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
-	fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
+	utils.Printf("\nError: %s\n", err)
 	os.Exit(1)
 }
 
@@ -405,7 +413,7 @@ func (c *Converter) Stats() {
 	runtime.ReadMemStats(&mem)
 
 	if c.Options.Json {
-		json.NewEncoder(os.Stdout).Encode(map[string]any{
+		_ = json.NewEncoder(os.Stdout).Encode(map[string]any{
 			"type": "stats",
 			"data": map[string]any{
 				"elapse_ms":       elapse.Milliseconds(),
@@ -413,8 +421,7 @@ func (c *Converter) Stats() {
 			},
 		})
 	} else {
-		fmt.Fprintf(
-			os.Stderr,
+		utils.Printf(
 			"Completed in %s, Memory usage %d Mb\n",
 			elapse,
 			mem.Sys/1024/1024,

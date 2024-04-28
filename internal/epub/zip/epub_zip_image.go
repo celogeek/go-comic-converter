@@ -52,6 +52,7 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 	}
 
 	t := time.Now()
+	//goland:noinspection GoDeprecation
 	return &ZipImage{
 		&zip.FileHeader{
 			Name:               filename,

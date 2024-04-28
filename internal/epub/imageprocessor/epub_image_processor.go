@@ -9,12 +9,14 @@ import (
 	"os"
 	"sync"
 
+	"github.com/disintegration/gift"
+
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epubimagefilters "github.com/celogeek/go-comic-converter/v2/internal/epub/imagefilters"
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 	epubprogress "github.com/celogeek/go-comic-converter/v2/internal/epub/progress"
 	epubzip "github.com/celogeek/go-comic-converter/v2/internal/epub/zip"
-	"github.com/disintegration/gift"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type EPUBImageProcessor struct {
@@ -62,7 +64,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 
 	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
-		bar.Close()
+		_ = bar.Close()
 		return nil, err
 	}
 
@@ -82,8 +84,8 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 				if !(img.DoublePage && input.Id > 0 &&
 					e.Options.Image.AutoSplitDoublePage && !e.Options.Image.KeepDoublePageIfSplit) {
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
-						bar.Close()
-						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						_ = bar.Close()
+						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
 					// do not keep raw image except for cover
@@ -103,8 +105,8 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 					img = e.transformImage(input, i+1, b)
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
-						bar.Close()
-						fmt.Fprintf(os.Stderr, "error with %s: %s", input.Name, err)
+						_ = bar.Close()
+						utils.Printf("error with %s: %s", input.Name, err)
 						os.Exit(1)
 					}
 					img.Raw = nil
@@ -116,20 +118,20 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 
 	go func() {
 		wg.Wait()
-		imgStorage.Close()
+		_ = imgStorage.Close()
 		close(imageOutput)
 	}()
 
 	for img := range imageOutput {
 		if img.Part == 0 {
-			bar.Add(1)
+			_ = bar.Add(1)
 		}
 		if e.Image.NoBlankImage && img.IsBlank {
 			continue
 		}
 		images = append(images, img)
 	}
-	bar.Close()
+	_ = bar.Close()
 
 	if len(images) == 0 {
 		return nil, errNoImagesFound
@@ -189,6 +191,8 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 			e.Image.Crop.Up,
 			e.Image.Crop.Right,
 			e.Image.Crop.Bottom,
+			e.Image.Crop.Limit,
+			e.Image.Crop.SkipIfLimitReached,
 		)
 
 		// detect if blank image

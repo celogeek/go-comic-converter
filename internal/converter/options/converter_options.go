@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 	"gopkg.in/yaml.v3"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/converter/profiles"
 )
 
 type Options struct {
@@ -29,6 +30,8 @@ type Options struct {
 	CropRatioUp                int     `yaml:"crop_ratio_up"`
 	CropRatioRight             int     `yaml:"crop_ratio_right"`
 	CropRatioBottom            int     `yaml:"crop_ratio_bottom"`
+	CropLimit                  int     `yaml:"crop_limit"`
+	CropSkipIfLimitReached     bool    `yaml:"crop_skip_if_limit_reached"`
 	Brightness                 int     `yaml:"brightness"`
 	Contrast                   int     `yaml:"contrast"`
 	AutoContrast               bool    `yaml:"auto_contrast"`
@@ -79,23 +82,25 @@ type Options struct {
 // New Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:               "SR",
-		Quality:               85,
-		Grayscale:             true,
-		Crop:                  true,
-		CropRatioLeft:         1,
-		CropRatioUp:           1,
-		CropRatioRight:        1,
-		CropRatioBottom:       3,
-		NoBlankImage:          true,
-		HasCover:              true,
-		KeepDoublePageIfSplit: true,
-		SortPathMode:          1,
-		ForegroundColor:       "000",
-		BackgroundColor:       "FFF",
-		Format:                "jpeg",
-		TitlePage:             1,
-		profiles:              profiles.New(),
+		Profile:                "SR",
+		Quality:                85,
+		Grayscale:              true,
+		Crop:                   true,
+		CropRatioLeft:          1,
+		CropRatioUp:            1,
+		CropRatioRight:         1,
+		CropRatioBottom:        3,
+		CropLimit:              10,
+		CropSkipIfLimitReached: true,
+		NoBlankImage:           true,
+		HasCover:               true,
+		KeepDoublePageIfSplit:  true,
+		SortPathMode:           1,
+		ForegroundColor:        "000",
+		BackgroundColor:        "FFF",
+		Format:                 "jpeg",
+		TitlePage:              1,
+		profiles:               profiles.New(),
 	}
 }
 
@@ -161,6 +166,8 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 			"up":     o.CropRatioUp,
 			"bottom": o.CropRatioBottom,
 		}
+		out["crop_limit"] = o.CropLimit
+		out["crop_skip_if_limit_reached"] = o.CropSkipIfLimitReached
 	}
 	if o.Brightness != 0 {
 		out["brightness"] = o.Brightness
@@ -195,7 +202,9 @@ func (o *Options) LoadConfig() error {
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	err = yaml.NewDecoder(f).Decode(o)
 	if err != nil && err.Error() != "EOF" {
 		return err
@@ -232,7 +241,11 @@ func (o *Options) ShowConfig() string {
 	if o.AspectRatio > 0 {
 		aspectRatio = fmt.Sprintf("1:%.02f", o.AspectRatio)
 	} else if o.AspectRatio < 0 {
-		aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+		if profile != nil {
+			aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+		} else {
+			aspectRatio = "1:?? (device)"
+		}
 	}
 
 	titlePage := ""
@@ -265,7 +278,7 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom), o.Crop},
+		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - Limit %d%% - Skip %v", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit, o.CropSkipIfLimitReached), o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"Auto contrast", o.AutoContrast, true},
@@ -295,7 +308,9 @@ func (o *Options) ShowConfig() string {
 
 // ResetConfig reset all settings to default value
 func (o *Options) ResetConfig() error {
-	New().SaveConfig()
+	if err := New().SaveConfig(); err != nil {
+		return err
+	}
 	return o.LoadConfig()
 }
 
@@ -305,7 +320,9 @@ func (o *Options) SaveConfig() error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	return yaml.NewEncoder(f).Encode(o)
 }
 

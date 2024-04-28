@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/beevik/etree"
+
 	epubimage "github.com/celogeek/go-comic-converter/v2/internal/epub/image"
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 )

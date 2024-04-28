@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/schollz/progressbar/v3"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type Options struct {
@@ -38,7 +40,7 @@ func New(o Options) EpubProgress {
 		progressbar.OptionSetWriter(os.Stderr),
 		progressbar.OptionThrottle(65*time.Millisecond),
 		progressbar.OptionOnCompletion(func() {
-			fmt.Fprint(os.Stderr, "\n")
+			utils.Println()
 		}),
 		progressbar.OptionSetDescription(fmt.Sprintf(fmtDesc, o.CurrentJob, o.TotalJob, o.Description)),
 		progressbar.OptionSetWidth(60),

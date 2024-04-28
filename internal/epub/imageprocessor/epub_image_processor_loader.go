@@ -20,12 +20,14 @@ import (
 	"golang.org/x/image/font/gofont/gomonobold"
 	_ "golang.org/x/image/webp"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode/v2"
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/sortpath"
+	"github.com/celogeek/go-comic-converter/v2/internal/utils"
 )
 
 type task struct {
@@ -153,7 +155,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err 
 					f, err = os.Open(job.Path)
 					if err == nil {
 						img, _, err = image.Decode(f)
-						f.Close()
+						_ = f.Close()
 					}
 				}
 
@@ -203,7 +205,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 	totalImages = len(images)
 
 	if totalImages == 0 {
-		r.Close()
+		_ = r.Close()
 		err = errNoImagesFound
 		return
 	}
@@ -246,7 +248,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 					if err == nil {
 						img, _, err = image.Decode(f)
 					}
-					f.Close()
+					_ = f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.F.Name))
@@ -267,7 +269,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 	go func() {
 		wg.Wait()
 		close(output)
-		r.Close()
+		_ = r.Close()
 	}()
 	return
 }
@@ -315,24 +317,26 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 		if isSolid && !e.Dry {
 			r, rerr := rardecode.OpenReader(e.Input)
 			if rerr != nil {
-				fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", e.Input, rerr)
+				utils.Printf("\nerror processing image %s: %s\n", e.Input, rerr)
 				os.Exit(1)
 			}
-			defer r.Close()
+			defer func(r *rardecode.ReadCloser) {
+				_ = r.Close()
+			}(r)
 			for {
 				f, rerr := r.Next()
 				if rerr != nil {
 					if rerr == io.EOF {
 						break
 					}
-					fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", f.Name, rerr)
+					utils.Printf("\nerror processing image %s: %s\n", f.Name, rerr)
 					os.Exit(1)
 				}
 				if i, ok := indexedNames[f.Name]; ok {
 					var b bytes.Buffer
 					_, rerr = io.Copy(&b, r)
 					if rerr != nil {
-						fmt.Fprintf(os.Stderr, "\nerror processing image %s: %s\n", f.Name, rerr)
+						utils.Printf("\nerror processing image %s: %s\n", f.Name, rerr)
 						os.Exit(1)
 					}
 					jobs <- &job{i, f.Name, func() (io.ReadCloser, error) {
@@ -365,7 +369,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 					if err == nil {
 						img, _, err = image.Decode(f)
 					}
-					f.Close()
+					_ = f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.Name))

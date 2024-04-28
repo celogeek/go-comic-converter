@@ -94,5 +94,5 @@ func (p *coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 		textLeft = textArea.Min.X
 	}
 	textTop := textArea.Min.Y + textArea.Dy()/2 + textHeight/4
-	c.DrawString(p.title, freetype.Pt(textLeft, textTop))
+	_, _ = c.DrawString(p.title, freetype.Pt(textLeft, textTop))
 }
