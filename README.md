@@ -77,7 +77,7 @@ $ go install github.com/celogeek/go-comic-converter/v2@v2.6.9
 
 The supported image files are jpeg and png from the sources.
 
-The extensions can be: `jpg`, `jpeg`, `png`, `webp`.
+The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`.
 
 The case for extensions doesn't matter.
 

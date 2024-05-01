@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"golang.org/x/image/font/gofont/gomonobold"
+	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
 	"github.com/fogleman/gg"
@@ -43,7 +44,7 @@ var errNoImagesFound = errors.New("no images found")
 // only accept jpg, png and webp as source file
 func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png", ".webp":
+	case ".jpg", ".jpeg", ".png", ".webp", ".tiff":
 		{
 			return true
 		}
