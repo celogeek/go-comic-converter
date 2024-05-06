@@ -207,9 +207,10 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 
 	dstBounds := g.Bounds(src.Bounds())
 	// Original && Cropped version need to landscape oriented
-	isDoublePage := srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
+	// Only part 0 can be a double page
+	isDoublePage := part == 0 && srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
 
-	if part == 0 && e.Image.AutoRotate && isDoublePage {
+	if e.Image.AutoRotate && isDoublePage {
 		g.Add(gift.Rotate90())
 	}
 
