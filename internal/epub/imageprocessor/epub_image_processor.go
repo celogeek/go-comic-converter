@@ -178,10 +178,6 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 	src := input.Image
 	srcBounds := src.Bounds()
 
-	if part > 0 {
-		g.Add(epubimagefilters.CropSplitDoublePage(right))
-	}
-
 	// Lookup for margin if crop is enable or if we want to remove blank image
 	if e.Image.Crop.Enabled || e.Image.NoBlankImage {
 		f := epubimagefilters.AutoCrop(
@@ -203,6 +199,10 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
 			g.Add(f)
 		}
+	}
+
+	if part > 0 {
+		g.Add(epubimagefilters.CropSplitDoublePage(right))
 	}
 
 	dstBounds := g.Bounds(src.Bounds())
