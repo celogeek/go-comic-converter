@@ -28,10 +28,8 @@ type cutRatioOptions struct {
 func findMargin(img image.Image, bounds image.Rectangle, cutRatio cutRatioOptions, limit int, skipIfLimitReached bool) image.Rectangle {
 	imgArea := bounds
 
-	maxCropX, maxCropY := imgArea.Dx()*limit/100, imgArea.Dy()*limit/100
-
 LEFT:
-	for x, maxCrop := imgArea.Min.X, maxCropX; x < imgArea.Max.X && (limit == 0 || maxCrop > 0); x, maxCrop = x+1, maxCrop-1 {
+	for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 		allowNonBlank := imgArea.Dy() * cutRatio.Left / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -42,13 +40,10 @@ LEFT:
 			}
 		}
 		imgArea.Min.X++
-		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
-			return bounds
-		}
 	}
 
 UP:
-	for y, maxCrop := imgArea.Min.Y, maxCropY; y < imgArea.Max.Y && (limit == 0 || maxCrop > 0); y, maxCrop = y+1, maxCrop-1 {
+	for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 		allowNonBlank := imgArea.Dx() * cutRatio.Up / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -59,13 +54,10 @@ UP:
 			}
 		}
 		imgArea.Min.Y++
-		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
-			return bounds
-		}
 	}
 
 RIGHT:
-	for x, maxCrop := imgArea.Max.X-1, maxCropX; x >= imgArea.Min.X && (limit == 0 || maxCrop > 0); x, maxCrop = x-1, maxCrop-1 {
+	for x := imgArea.Max.X - 1; x >= imgArea.Min.X; x-- {
 		allowNonBlank := imgArea.Dy() * cutRatio.Right / 100
 		for y := imgArea.Min.Y; y < imgArea.Max.Y; y++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -76,13 +68,10 @@ RIGHT:
 			}
 		}
 		imgArea.Max.X--
-		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
-			return bounds
-		}
 	}
 
 BOTTOM:
-	for y, maxCrop := imgArea.Max.Y-1, maxCropY; y >= imgArea.Min.Y && (limit == 0 || maxCrop > 0); y, maxCrop = y-1, maxCrop-1 {
+	for y := imgArea.Max.Y - 1; y >= imgArea.Min.Y; y-- {
 		allowNonBlank := imgArea.Dx() * cutRatio.Bottom / 100
 		for x := imgArea.Min.X; x < imgArea.Max.X; x++ {
 			if !colorIsBlank(img.At(x, y)) {
@@ -93,10 +82,42 @@ BOTTOM:
 			}
 		}
 		imgArea.Max.Y--
-		if limit > 0 && maxCrop == 1 && skipIfLimitReached {
-			return bounds
-		}
 	}
 
+	// no limit or blankImage
+	if limit == 0 || imgArea.Dx() == 0 || imgArea.Dy() == 0 {
+		return imgArea
+	}
+
+	exceedX, exceedY := limitExceed(bounds, imgArea, limit)
+	if skipIfLimitReached && (exceedX > 0 || exceedY > 0) {
+		return bounds
+	}
+
+	imgArea.Min.X, imgArea.Max.X = correctLine(imgArea.Min.X, imgArea.Max.X, bounds.Min.X, bounds.Max.X, exceedX)
+	imgArea.Min.Y, imgArea.Max.Y = correctLine(imgArea.Min.Y, imgArea.Max.Y, bounds.Min.Y, bounds.Max.Y, exceedY)
+
 	return imgArea
+}
+
+func limitExceed(bounds, newBounds image.Rectangle, limit int) (int, int) {
+	return bounds.Dx() - newBounds.Dx() - bounds.Dx()*limit/100, bounds.Dy() - newBounds.Dy() - bounds.Dy()*limit/100
+}
+
+func correctLine(min, max, bMin, bMax, exceed int) (int, int) {
+	if exceed <= 0 {
+		return min, max
+	}
+
+	min -= exceed / 2
+	max += exceed / 2
+	if min < bMin {
+		max += bMin - min
+		min = bMin
+	}
+	if max > bMax {
+		min -= max - bMax
+		max = bMax
+	}
+	return min, max
 }
