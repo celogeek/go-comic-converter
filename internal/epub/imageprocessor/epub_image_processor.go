@@ -180,7 +180,7 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 
 	// In portrait only, we don't need to keep aspect ratio between each split.
 	// We first cut, the crop.
-	if part > 0 && e.Image.View.PortraitOnly {
+	if part > 0 && !e.Image.KeepSplitDoublePageAspect {
 		g.Add(epubimagefilters.CropSplitDoublePage(right))
 	}
 
@@ -209,7 +209,7 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 
 	// With landscape support, we need to keep aspect ratio between each split
 	// We first crop, then cut
-	if part > 0 && !e.Image.View.PortraitOnly {
+	if part > 0 && e.Image.KeepSplitDoublePageAspect {
 		g.Add(epubimagefilters.CropSplitDoublePage(right))
 	}
 

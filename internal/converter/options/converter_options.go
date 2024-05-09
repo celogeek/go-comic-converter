@@ -38,6 +38,7 @@ type Options struct {
 	AutoRotate                 bool    `yaml:"auto_rotate"`
 	AutoSplitDoublePage        bool    `yaml:"auto_split_double_page"`
 	KeepDoublePageIfSplit      bool    `yaml:"keep_double_page_if_split"`
+	KeepSplitDoublePageAspect  bool    `yaml:"keep_split_double_page_aspect"`
 	NoBlankImage               bool    `yaml:"no_blank_image"`
 	Manga                      bool    `yaml:"manga"`
 	HasCover                   bool    `yaml:"has_cover"`
@@ -82,25 +83,24 @@ type Options struct {
 // New Initialize default options.
 func New() *Options {
 	return &Options{
-		Profile:                "SR",
-		Quality:                85,
-		Grayscale:              true,
-		Crop:                   true,
-		CropRatioLeft:          1,
-		CropRatioUp:            1,
-		CropRatioRight:         1,
-		CropRatioBottom:        3,
-		CropLimit:              10,
-		CropSkipIfLimitReached: true,
-		NoBlankImage:           true,
-		HasCover:               true,
-		KeepDoublePageIfSplit:  true,
-		SortPathMode:           1,
-		ForegroundColor:        "000",
-		BackgroundColor:        "FFF",
-		Format:                 "jpeg",
-		TitlePage:              1,
-		profiles:               profiles.New(),
+		Profile:                   "SR",
+		Quality:                   85,
+		Grayscale:                 true,
+		Crop:                      true,
+		CropRatioLeft:             1,
+		CropRatioUp:               1,
+		CropRatioRight:            1,
+		CropRatioBottom:           3,
+		NoBlankImage:              true,
+		HasCover:                  true,
+		KeepDoublePageIfSplit:     true,
+		KeepSplitDoublePageAspect: true,
+		SortPathMode:              1,
+		ForegroundColor:           "000",
+		BackgroundColor:           "FFF",
+		Format:                    "jpeg",
+		TitlePage:                 1,
+		profiles:                  profiles.New(),
 	}
 }
 
@@ -179,6 +179,7 @@ func (o *Options) MarshalJSON() ([]byte, error) {
 		out["autosplitdoublepage"] = o.AutoSplitDoublePage
 		if o.AutoSplitDoublePage {
 			out["keepdoublepageifsplit"] = o.KeepDoublePageIfSplit
+			out["keepsplitdoublepageaspect"] = o.KeepSplitDoublePageAspect
 		}
 	}
 	if o.LimitMb != 0 {
@@ -285,6 +286,7 @@ func (o *Options) ShowConfig() string {
 		{"Auto rotate", o.AutoRotate, true},
 		{"Auto split double page", o.AutoSplitDoublePage, o.PortraitOnly || !o.AppleBookCompatibility},
 		{"Keep double page if split", o.KeepDoublePageIfSplit, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
+		{"Keep split double page aspect", o.KeepSplitDoublePageAspect, (o.PortraitOnly || !o.AppleBookCompatibility) && o.AutoSplitDoublePage},
 		{"No blank image", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
 		{"Has cover", o.HasCover, true},
