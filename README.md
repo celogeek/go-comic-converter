@@ -148,7 +148,7 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : true
     Auto rotate                     : true
     Auto split double page          : true
@@ -196,7 +196,7 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : true
     Auto rotate                     : true
     Auto split double page          : true
@@ -254,7 +254,7 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : false
     Auto rotate                     : false
     Auto split double page          : false
@@ -285,11 +285,12 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : true
     Auto rotate                     : true
     Auto split double page          : true
     Keep double page if split       : true
+    Keep split double page aspect   : true
     No blank image                  : true
     Manga                           : true
     Has cover                       : true
@@ -318,15 +319,13 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
-    Auto contrast                   : true
-    Auto rotate                     : true
-    Auto split double page          : true
-    Keep double page if split       : true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
+    Auto contrast                   : false
+    Auto rotate                     : false
+    Auto split double page          : false
     No blank image                  : true
     Manga                           : false
     Has cover                       : true
-    Limit                           : 200 Mb
     Strip first directory from toc  : false
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
@@ -354,7 +353,7 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : false
     Auto rotate                     : false
     Auto split double page          : false
@@ -389,13 +388,14 @@ Options:
     Grayscale                       : true
     Grayscale mode                  : normal
     Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 10% - Skip true
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
     Auto contrast                   : false
     Auto rotate                     : false
     Auto split double page          : false
     No blank image                  : true
     Manga                           : true
     Has cover                       : true
+    Limit                           : 200 Mb
     Strip first directory from toc  : false
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
@@ -482,9 +482,9 @@ Config:
     	Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.
   -crop-ratio-bottom int (default 3)
     	Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.
-  -crop-limit int (default 10)
+  -crop-limit int
     	Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.
-  -crop-skip-if-limit-reached (default true)
+  -crop-skip-if-limit-reached
     	Crop skip if limit reached.
   -brightness int
     	Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker
@@ -498,6 +498,8 @@ Config:
     	Auto Split double page when width > height
   -keepdoublepageifsplit (default true)
     	Keep the double page if split
+  -keepsplitdoublepageaspect (default true)
+    	Keep aspect of split part of a double page (best for landscape rendering)
   -noblankimage (default true)
     	Remove blank image
   -manga
