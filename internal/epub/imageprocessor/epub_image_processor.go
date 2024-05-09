@@ -178,7 +178,9 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 	src := input.Image
 	srcBounds := src.Bounds()
 
-	if part > 0 {
+	// In portrait only, we don't need to keep aspect ratio between each split.
+	// We first cut, the crop.
+	if part > 0 && !e.Image.KeepSplitDoublePageAspect {
 		g.Add(epubimagefilters.CropSplitDoublePage(right))
 	}
 
@@ -205,11 +207,18 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 		}
 	}
 
+	// With landscape support, we need to keep aspect ratio between each split
+	// We first crop, then cut
+	if part > 0 && e.Image.KeepSplitDoublePageAspect {
+		g.Add(epubimagefilters.CropSplitDoublePage(right))
+	}
+
 	dstBounds := g.Bounds(src.Bounds())
 	// Original && Cropped version need to landscape oriented
-	isDoublePage := srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
+	// Only part 0 can be a double page
+	isDoublePage := part == 0 && srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
 
-	if part == 0 && e.Image.AutoRotate && isDoublePage {
+	if e.Image.AutoRotate && isDoublePage {
 		g.Add(gift.Rotate90())
 	}
 
