@@ -124,8 +124,8 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		DryVerbose:                 cmd.Options.DryVerbose,
 		Quiet:                      cmd.Options.Quiet,
 		Json:                       cmd.Options.Json,
-		Image: &epuboptions.Image{
-			Crop: &epuboptions.Crop{
+		Image: epuboptions.Image{
+			Crop: epuboptions.Crop{
 				Enabled:            cmd.Options.Crop,
 				Left:               cmd.Options.CropRatioLeft,
 				Up:                 cmd.Options.CropRatioUp,
@@ -145,7 +145,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankImage:              cmd.Options.NoBlankImage,
 			Manga:                     cmd.Options.Manga,
 			HasCover:                  cmd.Options.HasCover,
-			View: &epuboptions.View{
+			View: epuboptions.View{
 				Width:        profile.Width,
 				Height:       profile.Height,
 				AspectRatio:  cmd.Options.AspectRatio,

@@ -22,7 +22,7 @@ type View struct {
 }
 
 type Image struct {
-	Crop                      *Crop
+	Crop                      Crop
 	Quality                   int
 	Brightness                int
 	Contrast                  int
@@ -34,7 +34,7 @@ type Image struct {
 	NoBlankImage              bool
 	Manga                     bool
 	HasCover                  bool
-	View                      *View
+	View                      View
 	GrayScale                 bool
 	GrayScaleMode             int
 	Resize                    bool
@@ -56,10 +56,10 @@ type Options struct {
 	Quiet                      bool
 	Json                       bool
 	Workers                    int
-	Image                      *Image
+	Image                      Image
 }
 
-func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
+func (o Options) WorkersRatio(pct int) (nbWorkers int) {
 	nbWorkers = o.Workers * pct / 100
 	if nbWorkers < 1 {
 		nbWorkers = 1
@@ -67,6 +67,6 @@ func (o *Options) WorkersRatio(pct int) (nbWorkers int) {
 	return
 }
 
-func (o *Options) ImgStorage() string {
+func (o Options) ImgStorage() string {
 	return fmt.Sprintf("%s.tmp", o.Output)
 }

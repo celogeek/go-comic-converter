@@ -16,7 +16,7 @@ type ContentOptions struct {
 	Author       string
 	Publisher    string
 	UpdatedAt    string
-	ImageOptions *epuboptions.Image
+	ImageOptions epuboptions.Image
 	Cover        *epubimage.Image
 	Images       []*epubimage.Image
 	Current      int
