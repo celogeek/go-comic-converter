@@ -13,11 +13,12 @@ type Profile struct {
 	Height      int    `json:"height"`
 }
 
-type Profiles []Profile
+type Profiles map[string]*Profile
 
 // New Initialize list of all supported profiles.
 func New() Profiles {
-	return []Profile{
+	res := make(Profiles)
+	for _, r := range []Profile{
 		// High Resolution for Tablet
 		{"HR", "High Resolution", 2400, 3840},
 		{"SR", "Standard Resolution", 1200, 1920},
@@ -50,7 +51,10 @@ func New() Profiles {
 		// reMarkable
 		{"RM1", "reMarkable 1", 1404, 1872},
 		{"RM2", "reMarkable 2", 1404, 1872},
+	} {
+		res[r.Code] = &r
 	}
+	return res
 }
 
 func (p Profiles) String() string {
@@ -64,14 +68,4 @@ func (p Profiles) String() string {
 		))
 	}
 	return strings.Join(s, "\n")
-}
-
-// Get Lookup profile by code
-func (p Profiles) Get(name string) *Profile {
-	for _, profile := range p {
-		if profile.Code == name {
-			return &profile
-		}
-	}
-	return nil
 }

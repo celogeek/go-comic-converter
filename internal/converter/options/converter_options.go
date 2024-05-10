@@ -330,7 +330,7 @@ func (o *Options) SaveConfig() error {
 
 // GetProfile shortcut to get current profile
 func (o *Options) GetProfile() *profiles.Profile {
-	return o.profiles.Get(o.Profile)
+	return o.profiles[o.Profile]
 }
 
 // AvailableProfiles all available profiles
