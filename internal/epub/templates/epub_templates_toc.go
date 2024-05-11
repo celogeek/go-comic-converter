@@ -12,7 +12,7 @@ import (
 // Toc create toc
 //
 //goland:noinspection HttpUrlsUsage
-func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []*epubimage.Image) string {
+func Toc(title string, hasTitle bool, stripFirstDirectoryFromToc bool, images []epubimage.Image) string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 	doc.CreateDirective("DOCTYPE html")

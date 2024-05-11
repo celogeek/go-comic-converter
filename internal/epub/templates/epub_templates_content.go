@@ -9,7 +9,7 @@ import (
 	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
 )
 
-type ContentOptions struct {
+type Content struct {
 	Title        string
 	HasTitlePage bool
 	UID          string
@@ -17,8 +17,8 @@ type ContentOptions struct {
 	Publisher    string
 	UpdatedAt    string
 	ImageOptions epuboptions.Image
-	Cover        *epubimage.Image
-	Images       []*epubimage.Image
+	Cover        epubimage.Image
+	Images       []epubimage.Image
 	Current      int
 	Total        int
 }
@@ -31,10 +31,10 @@ type tag struct {
 	value string
 }
 
-// Content create the content file
+// Get create the content file
 //
 //goland:noinspection HttpUrlsUsage,HttpUrlsUsage,HttpUrlsUsage,HttpUrlsUsage
-func Content(o *ContentOptions) string {
+func (o Content) String() string {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
 
@@ -44,8 +44,8 @@ func Content(o *ContentOptions) string {
 	pkg.CreateAttr("version", "3.0")
 	pkg.CreateAttr("prefix", "rendition: http://www.idpf.org/vocab/rendition/#")
 
-	addToElement := func(elm *etree.Element, meth func(o *ContentOptions) []tag) {
-		for _, p := range meth(o) {
+	addToElement := func(elm *etree.Element, meth func() []tag) {
+		for _, p := range meth() {
 			meta := elm.CreateElement(p.name)
 			for k, v := range p.attrs {
 				meta.CreateAttr(k, v)
@@ -60,10 +60,10 @@ func Content(o *ContentOptions) string {
 	metadata := pkg.CreateElement("metadata")
 	metadata.CreateAttr("xmlns:dc", "http://purl.org/dc/elements/1.1/")
 	metadata.CreateAttr("xmlns:opf", "http://www.idpf.org/2007/opf")
-	addToElement(metadata, getMeta)
+	addToElement(metadata, o.getMeta)
 
 	manifest := pkg.CreateElement("manifest")
-	addToElement(manifest, getManifest)
+	addToElement(manifest, o.getManifest)
 
 	spine := pkg.CreateElement("spine")
 	if o.ImageOptions.Manga {
@@ -73,13 +73,13 @@ func Content(o *ContentOptions) string {
 	}
 
 	if o.ImageOptions.View.PortraitOnly {
-		addToElement(spine, getSpinePortrait)
+		addToElement(spine, o.getSpinePortrait)
 	} else {
-		addToElement(spine, getSpineAuto)
+		addToElement(spine, o.getSpineAuto)
 	}
 
 	guide := pkg.CreateElement("guide")
-	addToElement(guide, getGuide)
+	addToElement(guide, o.getGuide)
 
 	doc.Indent(2)
 	r, _ := doc.WriteToString()
@@ -88,7 +88,7 @@ func Content(o *ContentOptions) string {
 }
 
 // metadata part of the content
-func getMeta(o *ContentOptions) []tag {
+func (o Content) getMeta() []tag {
 	metas := []tag{
 		{"meta", tagAttrs{"property": "dcterms:modified"}, o.UpdatedAt},
 		{"meta", tagAttrs{"property": "schema:accessMode"}, "visual"},
@@ -141,9 +141,9 @@ func getMeta(o *ContentOptions) []tag {
 	return metas
 }
 
-func getManifest(o *ContentOptions) []tag {
+func (o Content) getManifest() []tag {
 	var imageTags, pageTags, spaceTags []tag
-	addTag := func(img *epubimage.Image, withSpace bool) {
+	addTag := func(img epubimage.Image, withSpace bool) {
 		imageTags = append(imageTags,
 			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
 		)
@@ -193,7 +193,7 @@ func getManifest(o *ContentOptions) []tag {
 }
 
 // spine part of the content
-func getSpineAuto(o *ContentOptions) []tag {
+func (o Content) getSpineAuto() []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	if o.ImageOptions.AppleBookCompatibility {
 		isOnTheRight = !isOnTheRight
@@ -255,7 +255,7 @@ func getSpineAuto(o *ContentOptions) []tag {
 	return spine
 }
 
-func getSpinePortrait(o *ContentOptions) []tag {
+func (o Content) getSpinePortrait() []tag {
 	var spine []tag
 	if o.HasTitlePage {
 		spine = append(spine,
@@ -273,7 +273,7 @@ func getSpinePortrait(o *ContentOptions) []tag {
 }
 
 // getGuide Section guide of the content
-func getGuide(o *ContentOptions) []tag {
+func (o Content) getGuide() []tag {
 	return []tag{
 		{"reference", tagAttrs{"type": "cover", "title": "cover", "href": "Text/cover.xhtml"}, ""},
 		{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].PagePath()}, ""},
