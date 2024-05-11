@@ -20,16 +20,16 @@ import (
 )
 
 type EPUBImageProcessor struct {
-	*epuboptions.Options
+	epuboptions.Options
 }
 
-func New(o *epuboptions.Options) *EPUBImageProcessor {
-	return &EPUBImageProcessor{o}
+func New(o epuboptions.Options) EPUBImageProcessor {
+	return EPUBImageProcessor{o}
 }
 
 // Load extract and convert images
-func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
-	images = make([]*epubimage.Image, 0)
+func (e EPUBImageProcessor) Load() (images []epubimage.Image, err error) {
+	images = make([]epubimage.Image, 0)
 	imageCount, imageInput, err := e.load()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	// dry run, skip conversion
 	if e.Dry {
 		for img := range imageInput {
-			images = append(images, &epubimage.Image{
+			images = append(images, epubimage.Image{
 				Id:     img.Id,
 				Path:   img.Path,
 				Name:   img.Name,
@@ -49,7 +49,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 		return images, nil
 	}
 
-	imageOutput := make(chan *epubimage.Image)
+	imageOutput := make(chan epubimage.Image)
 
 	// processing
 	bar := epubprogress.New(epubprogress.Options{
@@ -140,7 +140,7 @@ func (e *EPUBImageProcessor) Load() (images []*epubimage.Image, err error) {
 	return images, nil
 }
 
-func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
+func (e EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
 	if e.Options.Image.GrayScale {
 		return image.NewGray(r)
 	}
@@ -173,7 +173,7 @@ func (e *EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) dra
 
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *epubimage.Image {
+func (e EPUBImageProcessor) transformImage(input task, part int, right bool) epubimage.Image {
 	g := gift.New()
 	src := input.Image
 	srcBounds := src.Bounds()
@@ -262,7 +262,7 @@ func (e *EPUBImageProcessor) transformImage(input *task, part int, right bool) *
 	dst := e.createImage(src, g.Bounds(src.Bounds()))
 	g.Draw(dst, src)
 
-	return &epubimage.Image{
+	return epubimage.Image{
 		Id:                  input.Id,
 		Part:                part,
 		Raw:                 dst,
@@ -290,7 +290,7 @@ type CoverTitleDataOptions struct {
 	BorderSize  int
 }
 
-func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
+func (e EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
 	return image.NewPaletted(bounds, color.Palette{
 		color.Gray{},
 		color.Gray{Y: 0x11},
@@ -312,7 +312,7 @@ func (e *EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Ima
 }
 
 // CoverTitleData create a title page with the cover
-func (e *EPUBImageProcessor) CoverTitleData(o *CoverTitleDataOptions) (*epubzip.ZipImage, error) {
+func (e EPUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.ZipImage, error) {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))
 	var dst draw.Image

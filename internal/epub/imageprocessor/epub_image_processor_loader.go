@@ -42,7 +42,7 @@ type task struct {
 var errNoImagesFound = errors.New("no images found")
 
 // only accept jpg, png and webp as source file
-func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
+func (e EPUBImageProcessor) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".jpg", ".jpeg", ".png", ".webp", ".tiff":
 		{
@@ -53,7 +53,7 @@ func (e *EPUBImageProcessor) isSupportedImage(path string) bool {
 }
 
 // Load images from input
-func (e *EPUBImageProcessor) load() (totalImages int, output chan *task, err error) {
+func (e EPUBImageProcessor) load() (totalImages int, output chan task, err error) {
 	fi, err := os.Stat(e.Input)
 	if err != nil {
 		return
@@ -77,7 +77,7 @@ func (e *EPUBImageProcessor) load() (totalImages int, output chan *task, err err
 	}
 }
 
-func (e *EPUBImageProcessor) corruptedImage(path, name string) image.Image {
+func (e EPUBImageProcessor) corruptedImage(path, name string) image.Image {
 	var w, h float64 = 1200, 1920
 	f, _ := truetype.Parse(gomonobold.TTF)
 	face := truetype.NewFace(f, &truetype.Options{Size: 64, DPI: 72})
@@ -101,7 +101,7 @@ func (e *EPUBImageProcessor) corruptedImage(path, name string) image.Image {
 }
 
 // load a directory of images
-func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err error) {
+func (e EPUBImageProcessor) loadDir() (totalImages int, output chan task, err error) {
 	images := make([]string, 0)
 
 	input := filepath.Clean(e.Input)
@@ -133,16 +133,16 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err 
 		Id   int
 		Path string
 	}
-	jobs := make(chan *job)
+	jobs := make(chan job)
 	go func() {
 		defer close(jobs)
 		for i, path := range images {
-			jobs <- &job{i, path}
+			jobs <- job{i, path}
 		}
 	}()
 
 	// read in parallel and get an image
-	output = make(chan *task, e.Workers)
+	output = make(chan task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for range e.WorkersRatio(50) {
 		wg.Add(1)
@@ -169,7 +169,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err 
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &task{
+				output <- task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -190,7 +190,7 @@ func (e *EPUBImageProcessor) loadDir() (totalImages int, output chan *task, err 
 }
 
 // load a zip file that include images
-func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err error) {
+func (e EPUBImageProcessor) loadCbz() (totalImages int, output chan task, err error) {
 	r, err := zip.OpenReader(e.Input)
 	if err != nil {
 		return
@@ -226,15 +226,15 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 		Id int
 		F  *zip.File
 	}
-	jobs := make(chan *job)
+	jobs := make(chan job)
 	go func() {
 		defer close(jobs)
 		for _, img := range images {
-			jobs <- &job{indexedNames[img.Name], img}
+			jobs <- job{indexedNames[img.Name], img}
 		}
 	}()
 
-	output = make(chan *task, e.Workers)
+	output = make(chan task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for range e.WorkersRatio(50) {
 		wg.Add(1)
@@ -256,7 +256,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &task{
+				output <- task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -276,7 +276,7 @@ func (e *EPUBImageProcessor) loadCbz() (totalImages int, output chan *task, err 
 }
 
 // load a rar file that include images
-func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err error) {
+func (e EPUBImageProcessor) loadCbr() (totalImages int, output chan task, err error) {
 	var isSolid bool
 	files, err := rardecode.List(e.Input)
 	if err != nil {
@@ -312,7 +312,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 		Open func() (io.ReadCloser, error)
 	}
 
-	jobs := make(chan *job)
+	jobs := make(chan job)
 	go func() {
 		defer close(jobs)
 		if isSolid && !e.Dry {
@@ -340,7 +340,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 						utils.Printf("\nerror processing image %s: %s\n", f.Name, rerr)
 						os.Exit(1)
 					}
-					jobs <- &job{i, f.Name, func() (io.ReadCloser, error) {
+					jobs <- job{i, f.Name, func() (io.ReadCloser, error) {
 						return io.NopCloser(bytes.NewReader(b.Bytes())), nil
 					}}
 				}
@@ -348,14 +348,14 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 		} else {
 			for _, img := range files {
 				if i, ok := indexedNames[img.Name]; ok {
-					jobs <- &job{i, img.Name, img.Open}
+					jobs <- job{i, img.Name, img.Open}
 				}
 			}
 		}
 	}()
 
 	// send file to the queue
-	output = make(chan *task, e.Workers)
+	output = make(chan task, e.Workers)
 	wg := &sync.WaitGroup{}
 	for range e.WorkersRatio(50) {
 		wg.Add(1)
@@ -377,7 +377,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
-				output <- &task{
+				output <- task{
 					Id:    job.Id,
 					Image: img,
 					Path:  p,
@@ -395,7 +395,7 @@ func (e *EPUBImageProcessor) loadCbr() (totalImages int, output chan *task, err 
 }
 
 // extract image from a pdf
-func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *task, err error) {
+func (e EPUBImageProcessor) loadPdf() (totalImages int, output chan task, err error) {
 	pdf := pdfread.Load(e.Input)
 	if pdf == nil {
 		err = fmt.Errorf("can't read pdf")
@@ -404,7 +404,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *task, err 
 
 	totalImages = len(pdf.Pages())
 	pageFmt := fmt.Sprintf("page %%0%dd", len(fmt.Sprintf("%d", totalImages)))
-	output = make(chan *task)
+	output = make(chan task)
 	go func() {
 		defer close(output)
 		defer pdf.Close()
@@ -419,7 +419,7 @@ func (e *EPUBImageProcessor) loadPdf() (totalImages int, output chan *task, err 
 			if err != nil {
 				img = e.corruptedImage("", name)
 			}
-			output <- &task{
+			output <- task{
 				Id:    i,
 				Image: img,
 				Path:  "",
