@@ -18,7 +18,7 @@ type ZipImage struct {
 }
 
 // CompressImage create gzip encoded jpeg
-func CompressImage(filename string, format string, img image.Image, quality int) (*ZipImage, error) {
+func CompressImage(filename string, format string, img image.Image, quality int) (ZipImage, error) {
 	var (
 		data, cdata bytes.Buffer
 		err         error
@@ -33,27 +33,27 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 		err = fmt.Errorf("unknown format %q", format)
 	}
 	if err != nil {
-		return nil, err
+		return ZipImage{}, err
 	}
 
 	wcdata, err := flate.NewWriter(&cdata, flate.BestCompression)
 	if err != nil {
-		return nil, err
+		return ZipImage{}, err
 	}
 
 	_, err = wcdata.Write(data.Bytes())
 	if err != nil {
-		return nil, err
+		return ZipImage{}, err
 	}
 
 	err = wcdata.Close()
 	if err != nil {
-		return nil, err
+		return ZipImage{}, err
 	}
 
 	t := time.Now()
 	//goland:noinspection GoDeprecation
-	return &ZipImage{
+	return ZipImage{
 		&zip.FileHeader{
 			Name:               filename,
 			CompressedSize64:   uint64(cdata.Len()),

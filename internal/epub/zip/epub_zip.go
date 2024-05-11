@@ -17,17 +17,17 @@ type EPUBZip struct {
 }
 
 // New create a new EPUB
-func New(path string) (*EPUBZip, error) {
+func New(path string) (EPUBZip, error) {
 	w, err := os.Create(path)
 	if err != nil {
-		return nil, err
+		return EPUBZip{}, err
 	}
 	wz := zip.NewWriter(w)
-	return &EPUBZip{w, wz}, nil
+	return EPUBZip{w, wz}, nil
 }
 
 // Close compress pipe and file.
-func (e *EPUBZip) Close() error {
+func (e EPUBZip) Close() error {
 	if err := e.wz.Close(); err != nil {
 		return err
 	}
@@ -37,10 +37,10 @@ func (e *EPUBZip) Close() error {
 // WriteMagic Write mimetype, in a very specific way.
 //
 // This will be valid with epubcheck tools.
-func (e *EPUBZip) WriteMagic() error {
+func (e EPUBZip) WriteMagic() error {
 	t := time.Now().UTC()
 	//goland:noinspection GoDeprecation
-	fh := &zip.FileHeader{
+	fh := zip.FileHeader{
 		Name:               "mimetype",
 		Method:             zip.Store,
 		Modified:           t,
@@ -53,7 +53,7 @@ func (e *EPUBZip) WriteMagic() error {
 	fh.CreatorVersion = fh.CreatorVersion&0xff00 | 20 // preserve compatibility byte
 	fh.ReaderVersion = 20
 	fh.SetMode(0600)
-	m, err := e.wz.CreateRaw(fh)
+	m, err := e.wz.CreateRaw(&fh)
 
 	if err != nil {
 		return err
@@ -62,12 +62,12 @@ func (e *EPUBZip) WriteMagic() error {
 	return err
 }
 
-func (e *EPUBZip) Copy(fz *zip.File) error {
+func (e EPUBZip) Copy(fz *zip.File) error {
 	return e.wz.Copy(fz)
 }
 
 // WriteRaw Write image. They are already compressed, so we write them down directly.
-func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
+func (e EPUBZip) WriteRaw(raw ZipImage) error {
 	m, err := e.wz.CreateRaw(raw.Header)
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (e *EPUBZip) WriteRaw(raw *ZipImage) error {
 }
 
 // WriteContent Write file. Compressed it using deflate.
-func (e *EPUBZip) WriteContent(file string, content []byte) error {
+func (e EPUBZip) WriteContent(file string, content []byte) error {
 	m, err := e.wz.CreateHeader(&zip.FileHeader{
 		Name:     file,
 		Modified: time.Now(),

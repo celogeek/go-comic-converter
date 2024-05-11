@@ -14,16 +14,16 @@ type StorageImageWriter struct {
 	mut    *sync.Mutex
 }
 
-func NewStorageImageWriter(filename string, format string) (*StorageImageWriter, error) {
+func NewStorageImageWriter(filename string, format string) (StorageImageWriter, error) {
 	fh, err := os.Create(filename)
 	if err != nil {
-		return nil, err
+		return StorageImageWriter{}, err
 	}
 	fz := zip.NewWriter(fh)
-	return &StorageImageWriter{fh, fz, format, &sync.Mutex{}}, nil
+	return StorageImageWriter{fh, fz, format, &sync.Mutex{}}, nil
 }
 
-func (e *StorageImageWriter) Close() error {
+func (e StorageImageWriter) Close() error {
 	if err := e.fz.Close(); err != nil {
 		_ = e.fh.Close()
 		return err
@@ -31,7 +31,7 @@ func (e *StorageImageWriter) Close() error {
 	return e.fh.Close()
 }
 
-func (e *StorageImageWriter) Add(filename string, img image.Image, quality int) error {
+func (e StorageImageWriter) Add(filename string, img image.Image, quality int) error {
 	zipImage, err := CompressImage(filename, e.format, img, quality)
 	if err != nil {
 		return err
@@ -59,42 +59,41 @@ type StorageImageReader struct {
 	files map[string]*zip.File
 }
 
-func NewStorageImageReader(filename string) (*StorageImageReader, error) {
+func NewStorageImageReader(filename string) (StorageImageReader, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return StorageImageReader{}, err
 	}
 	s, err := fh.Stat()
 	if err != nil {
-		return nil, err
+		return StorageImageReader{}, err
 	}
 	fz, err := zip.NewReader(fh, s.Size())
 	if err != nil {
-		return nil, err
+		return StorageImageReader{}, err
 	}
 	files := map[string]*zip.File{}
 	for _, z := range fz.File {
 		files[z.Name] = z
 	}
-	return &StorageImageReader{filename, fh, fz, files}, nil
+	return StorageImageReader{filename, fh, fz, files}, nil
 }
 
-func (e *StorageImageReader) Get(filename string) *zip.File {
+func (e StorageImageReader) Get(filename string) *zip.File {
 	return e.files[filename]
 }
 
-func (e *StorageImageReader) Size(filename string) uint64 {
-	img := e.Get(filename)
-	if img != nil {
+func (e StorageImageReader) Size(filename string) uint64 {
+	if img, ok := e.files[filename]; ok {
 		return img.CompressedSize64 + 30 + uint64(len(img.Name))
 	}
 	return 0
 }
 
-func (e *StorageImageReader) Close() error {
+func (e StorageImageReader) Close() error {
 	return e.fh.Close()
 }
 
-func (e *StorageImageReader) Remove() error {
+func (e StorageImageReader) Remove() error {
 	return os.Remove(e.filename)
 }
