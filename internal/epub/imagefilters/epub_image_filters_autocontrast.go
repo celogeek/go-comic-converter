@@ -10,14 +10,14 @@ import (
 
 // AutoContrast Automatically improve contrast
 func AutoContrast() gift.Filter {
-	return &autocontrast{}
+	return autocontrast{}
 }
 
 type autocontrast struct {
 }
 
 // compute the color number between 0 and 1 that hold half of the pixel
-func (f *autocontrast) mean(src image.Image) float32 {
+func (f autocontrast) mean(src image.Image) float32 {
 	bucket := map[int]int{}
 	for x := src.Bounds().Min.X; x < src.Bounds().Max.X; x++ {
 		for y := src.Bounds().Min.Y; y < src.Bounds().Max.Y; y++ {
@@ -44,7 +44,7 @@ func (f *autocontrast) mean(src image.Image) float32 {
 }
 
 // ensure value stay into 0 to 1 bound
-func (f *autocontrast) cap(v float32) float32 {
+func (f autocontrast) cap(v float32) float32 {
 	if v < 0 {
 		return 0
 	}
@@ -55,12 +55,12 @@ func (f *autocontrast) cap(v float32) float32 {
 }
 
 // power of 2 for float32
-func (f *autocontrast) pow2(v float32) float32 {
+func (f autocontrast) pow2(v float32) float32 {
 	return v * v
 }
 
 // Draw into the dst after applying the filter
-func (f *autocontrast) Draw(dst draw.Image, src image.Image, options *gift.Options) {
+func (f autocontrast) Draw(dst draw.Image, src image.Image, options *gift.Options) {
 	// half of the pixel has this color idx
 	colorMean := f.mean(src)
 
@@ -84,7 +84,7 @@ func (f *autocontrast) Draw(dst draw.Image, src image.Image, options *gift.Optio
 }
 
 // Bounds calculates the appropriate bounds of an image after applying the filter.
-func (*autocontrast) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
+func (autocontrast) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	dstBounds = srcBounds
 	return
 }

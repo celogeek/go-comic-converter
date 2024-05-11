@@ -11,14 +11,14 @@ import (
 //
 // This will cut in the middle of the page.
 func CropSplitDoublePage(right bool) gift.Filter {
-	return &cropSplitDoublePage{right}
+	return cropSplitDoublePage{right}
 }
 
 type cropSplitDoublePage struct {
 	right bool
 }
 
-func (p *cropSplitDoublePage) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
+func (p cropSplitDoublePage) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	if p.right {
 		dstBounds = image.Rect(
 			srcBounds.Max.X/2, srcBounds.Min.Y,
@@ -33,6 +33,6 @@ func (p *cropSplitDoublePage) Bounds(srcBounds image.Rectangle) (dstBounds image
 	return
 }
 
-func (p *cropSplitDoublePage) Draw(dst draw.Image, src image.Image, options *gift.Options) {
+func (p cropSplitDoublePage) Draw(dst draw.Image, src image.Image, options *gift.Options) {
 	gift.Crop(dst.Bounds()).Draw(dst, src, options)
 }

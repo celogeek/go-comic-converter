@@ -13,7 +13,7 @@ import (
 
 // CoverTitle Create a title with the cover image
 func CoverTitle(title string, align string, pctWidth int, pctMargin int, maxFontSize int, borderSize int) gift.Filter {
-	return &coverTitle{title, align, pctWidth, pctMargin, maxFontSize, borderSize}
+	return coverTitle{title, align, pctWidth, pctMargin, maxFontSize, borderSize}
 }
 
 type coverTitle struct {
@@ -26,12 +26,12 @@ type coverTitle struct {
 }
 
 // Bounds size is the same as source
-func (p *coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
+func (p coverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	return srcBounds
 }
 
 // Draw blur the src image, and create a box with the title in the middle
-func (p *coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
+func (p coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
 	if p.title == "" {
 		return
