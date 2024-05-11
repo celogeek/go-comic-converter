@@ -14,10 +14,10 @@ import (
 
 	"github.com/tcnksm/go-latest"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/converter"
-	"github.com/celogeek/go-comic-converter/v2/internal/epub"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
-	"github.com/celogeek/go-comic-converter/v2/internal/utils"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/converter"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epub"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 func main() {
@@ -110,7 +110,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 
 	profile := cmd.Options.GetProfile()
 
-	if err := epub.New(epuboptions.Options{
+	if err := epub.New(epuboptions.EPUBOptions{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
 		LimitMb:                    cmd.Options.LimitMb,
