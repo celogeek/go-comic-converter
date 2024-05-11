@@ -13,7 +13,7 @@ type Profile struct {
 	Height      int    `json:"height"`
 }
 
-type Profiles map[string]*Profile
+type Profiles map[string]Profile
 
 // New Initialize list of all supported profiles.
 func New() Profiles {
@@ -52,7 +52,7 @@ func New() Profiles {
 		{"RM1", "reMarkable 1", 1404, 1872},
 		{"RM2", "reMarkable 2", 1404, 1872},
 	} {
-		res[r.Code] = &r
+		res[r.Code] = r
 	}
 	return res
 }
