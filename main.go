@@ -14,10 +14,10 @@ import (
 
 	"github.com/tcnksm/go-latest"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/converter"
-	"github.com/celogeek/go-comic-converter/v2/internal/epub"
-	epuboptions "github.com/celogeek/go-comic-converter/v2/internal/epub/options"
-	"github.com/celogeek/go-comic-converter/v2/internal/utils"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/converter"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epub"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 func main() {
@@ -28,25 +28,40 @@ func main() {
 	cmd.InitParse()
 	cmd.Parse()
 
-	if cmd.Options.Version {
-		bi, ok := debug.ReadBuildInfo()
-		if !ok {
-			utils.Println("failed to fetch current version")
-			os.Exit(1)
-		}
+	switch {
+	case cmd.Options.Version:
+		version()
+	case cmd.Options.Save:
+		save(cmd)
+	case cmd.Options.Show:
+		show(cmd)
+	case cmd.Options.Reset:
+		reset(cmd)
+	default:
+		generate(cmd)
+	}
 
-		githubTag := &latest.GithubTag{
-			Owner:      "celogeek",
-			Repository: "go-comic-converter",
-		}
-		v, err := githubTag.Fetch()
-		if err != nil || len(v.Versions) < 1 {
-			utils.Println("failed to fetch the latest version")
-			os.Exit(1)
-		}
-		latestVersion := v.Versions[0]
+}
 
-		utils.Printf(`go-comic-converter
+func version() {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		utils.Println("failed to fetch current version")
+		os.Exit(1)
+	}
+
+	githubTag := &latest.GithubTag{
+		Owner:      "celogeek",
+		Repository: "go-comic-converter",
+	}
+	v, err := githubTag.Fetch()
+	if err != nil || len(v.Versions) < 1 {
+		utils.Println("failed to fetch the latest version")
+		os.Exit(1)
+	}
+	latestVersion := v.Versions[0]
+
+	utils.Printf(`go-comic-converter
   Path             : %s
   Sum              : %s
   Version          : %s
@@ -55,47 +70,54 @@ func main() {
 To install the latest version:
 $ go install github.com/celogeek/go-comic-converter/v%d@%s
 `,
-			bi.Main.Path,
-			bi.Main.Sum,
-			bi.Main.Version,
-			latestVersion.Original(),
-			latestVersion.Segments()[0],
-			latestVersion.Original(),
-		)
-		return
-	}
+		bi.Main.Path,
+		bi.Main.Sum,
+		bi.Main.Version,
+		latestVersion.Original(),
+		latestVersion.Segments()[0],
+		latestVersion.Original(),
+	)
+}
 
-	if cmd.Options.Save {
-		if err := cmd.Options.SaveConfig(); err != nil {
-			cmd.Fatal(err)
-		}
-		utils.Printf(
-			"%s%s\n\nSaving to %s\n",
-			cmd.Options.Header(),
-			cmd.Options.ShowConfig(),
-			cmd.Options.FileName(),
-		)
-		return
+func save(cmd *converter.Converter) {
+	if err := cmd.Options.SaveConfig(); err != nil {
+		cmd.Fatal(err)
 	}
+	utils.Printf(
+		"%s%s\n\nSaving to %s\n",
+		cmd.Options.Header(),
+		cmd.Options.ShowConfig(),
+		cmd.Options.FileName(),
+	)
+}
 
-	if cmd.Options.Show {
-		utils.Println(cmd.Options.Header(), cmd.Options.ShowConfig())
-		return
+func show(cmd *converter.Converter) {
+	utils.Println(cmd.Options.Header(), cmd.Options.ShowConfig())
+}
+
+func reset(cmd *converter.Converter) {
+	if err := cmd.Options.ResetConfig(); err != nil {
+		cmd.Fatal(err)
 	}
-
-	if cmd.Options.Reset {
-		if err := cmd.Options.ResetConfig(); err != nil {
-			cmd.Fatal(err)
-		}
-		utils.Printf(
-			"%s%s\n\nReset default to %s\n",
-			cmd.Options.Header(),
-			cmd.Options.ShowConfig(),
-			cmd.Options.FileName(),
-		)
-		return
+	utils.Printf(
+		"%s%s\n\nReset default to %s\n",
+		cmd.Options.Header(),
+		cmd.Options.ShowConfig(),
+		cmd.Options.FileName(),
+	)
+	if err := cmd.Options.ResetConfig(); err != nil {
+		cmd.Fatal(err)
 	}
+	utils.Printf(
+		"%s%s\n\nReset default to %s\n",
+		cmd.Options.Header(),
+		cmd.Options.ShowConfig(),
+		cmd.Options.FileName(),
+	)
 
+}
+
+func generate(cmd *converter.Converter) {
 	if err := cmd.Validate(); err != nil {
 		cmd.Fatal(err)
 	}
@@ -110,7 +132,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 
 	profile := cmd.Options.GetProfile()
 
-	if err := epub.New(&epuboptions.Options{
+	if err := epub.New(epuboptions.EPUBOptions{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
 		LimitMb:                    cmd.Options.LimitMb,
@@ -124,8 +146,8 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 		DryVerbose:                 cmd.Options.DryVerbose,
 		Quiet:                      cmd.Options.Quiet,
 		Json:                       cmd.Options.Json,
-		Image: &epuboptions.Image{
-			Crop: &epuboptions.Crop{
+		Image: epuboptions.Image{
+			Crop: epuboptions.Crop{
 				Enabled:            cmd.Options.Crop,
 				Left:               cmd.Options.CropRatioLeft,
 				Up:                 cmd.Options.CropRatioUp,
@@ -145,7 +167,7 @@ $ go install github.com/celogeek/go-comic-converter/v%d@%s
 			NoBlankImage:              cmd.Options.NoBlankImage,
 			Manga:                     cmd.Options.Manga,
 			HasCover:                  cmd.Options.HasCover,
-			View: &epuboptions.View{
+			View: epuboptions.View{
 				Width:        profile.Width,
 				Height:       profile.Height,
 				AspectRatio:  cmd.Options.AspectRatio,
