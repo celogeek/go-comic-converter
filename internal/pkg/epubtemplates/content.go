@@ -1,12 +1,11 @@
 package epubtemplates
 
 import (
-	"fmt"
-
 	"github.com/beevik/etree"
 
 	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 type Content struct {
@@ -98,9 +97,9 @@ func (o Content) getMeta() []tag {
 		{"meta", tagAttrs{"property": "schema:accessibilityHazard"}, "noSoundHazard"},
 		{"meta", tagAttrs{"name": "book-type", "content": "comic"}, ""},
 		{"opf:meta", tagAttrs{"name": "fixed-layout", "content": "true"}, ""},
-		{"opf:meta", tagAttrs{"name": "original-resolution", "content": fmt.Sprintf("%dx%d", o.ImageOptions.View.Width, o.ImageOptions.View.Height)}, ""},
+		{"opf:meta", tagAttrs{"name": "original-resolution", "content": o.ImageOptions.View.Dimension()}, ""},
 		{"dc:title", tagAttrs{}, o.Title},
-		{"dc:identifier", tagAttrs{"id": "ean"}, fmt.Sprintf("urn:uuid:%s", o.UID)},
+		{"dc:identifier", tagAttrs{"id": "ean"}, "urn:uuid:" + o.UID},
 		{"dc:language", tagAttrs{}, "en"},
 		{"dc:creator", tagAttrs{}, o.Author},
 		{"dc:publisher", tagAttrs{}, o.Publisher},
@@ -134,7 +133,7 @@ func (o Content) getMeta() []tag {
 		metas = append(
 			metas,
 			tag{"meta", tagAttrs{"name": "calibre:series", "content": o.Title}, ""},
-			tag{"meta", tagAttrs{"name": "calibre:series_index", "content": fmt.Sprint(o.Current)}, ""},
+			tag{"meta", tagAttrs{"name": "calibre:series_index", "content": utils.IntToString(o.Current)}, ""},
 		)
 	}
 
@@ -145,7 +144,7 @@ func (o Content) getManifest() []tag {
 	var imageTags, pageTags, spaceTags []tag
 	addTag := func(img epubimage.EPUBImage, withSpace bool) {
 		imageTags = append(imageTags,
-			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": o.ImageOptions.MediaType()}, ""},
 		)
 		pageTags = append(pageTags,
 			tag{"item", tagAttrs{"id": img.PageKey(), "href": img.PagePath(), "media-type": "application/xhtml+xml"}, ""},
@@ -161,13 +160,13 @@ func (o Content) getManifest() []tag {
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 		{"item", tagAttrs{"id": "page_cover", "href": "Text/cover.xhtml", "media-type": "application/xhtml+xml"}, ""},
-		{"item", tagAttrs{"id": "img_cover", "href": fmt.Sprintf("Images/cover.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover." + o.ImageOptions.Format, "media-type": o.ImageOptions.MediaType()}, ""},
 	}
 
 	if o.HasTitlePage {
 		items = append(items,
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
-			tag{"item", tagAttrs{"id": "img_title", "href": fmt.Sprintf("Images/title.%s", o.ImageOptions.Format), "media-type": fmt.Sprintf("image/%s", o.ImageOptions.Format)}, ""},
+			tag{"item", tagAttrs{"id": "img_title", "href": "Images/title." + o.ImageOptions.Format, "media-type": o.ImageOptions.MediaType()}, ""},
 		)
 
 		if !o.ImageOptions.View.PortraitOnly {
@@ -212,7 +211,7 @@ func (o Content) getSpineAuto() []tag {
 		}
 	}
 	getSpreadBlank := func() string {
-		return fmt.Sprintf("%s layout-blank", getSpread(false))
+		return getSpread(false) + " layout-blank"
 	}
 
 	var spine []tag

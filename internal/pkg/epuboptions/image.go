@@ -20,3 +20,7 @@ type Image struct {
 	Format                    string
 	AppleBookCompatibility    bool
 }
+
+func (i Image) MediaType() string {
+	return "image/" + i.Format
+}

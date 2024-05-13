@@ -104,7 +104,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
 
 	c.AddSection("Config")
-	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, fmt.Sprintf("Profile to use: \n%s", c.Options.AvailableProfiles()))
+	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
 	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
 	c.AddBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
 	c.AddIntParam(&c.Options.GrayscaleMode, "grayscale-mode", c.Options.GrayscaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
@@ -298,10 +298,10 @@ func (c *Converter) Validate() error {
 	var defaultOutput string
 	inputBase := filepath.Clean(c.Options.Input)
 	if fi.IsDir() {
-		defaultOutput = fmt.Sprintf("%s.epub", inputBase)
+		defaultOutput = inputBase + ".epub"
 	} else {
 		ext := filepath.Ext(inputBase)
-		defaultOutput = fmt.Sprintf("%s.epub", inputBase[0:len(inputBase)-len(ext)])
+		defaultOutput = inputBase[0:len(inputBase)-len(ext)] + ".epub"
 	}
 
 	if c.Options.Output == "" {

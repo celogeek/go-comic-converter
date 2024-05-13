@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 type Options struct {
@@ -217,13 +219,7 @@ func (o *Options) ShowConfig() string {
 	var profileDesc string
 	profile := o.GetProfile()
 	if profile != nil {
-		profileDesc = fmt.Sprintf(
-			"%s - %s - %dx%d",
-			o.Profile,
-			profile.Description,
-			profile.Width,
-			profile.Height,
-		)
+		profileDesc = profile.String()
 	}
 
 	sortpathmode := ""
@@ -238,10 +234,10 @@ func (o *Options) ShowConfig() string {
 
 	aspectRatio := "auto"
 	if o.AspectRatio > 0 {
-		aspectRatio = fmt.Sprintf("1:%.02f", o.AspectRatio)
+		aspectRatio = "1:" + utils.FloatToString(o.AspectRatio, 2)
 	} else if o.AspectRatio < 0 {
 		if profile != nil {
-			aspectRatio = fmt.Sprintf("1:%0.2f (device)", float64(profile.Height)/float64(profile.Width))
+			aspectRatio = "1:" + utils.FloatToString(float64(profile.Height)/float64(profile.Width), 2) + " (device)"
 		} else {
 			aspectRatio = "1:?? (device)"
 		}
@@ -277,7 +273,14 @@ func (o *Options) ShowConfig() string {
 		{"Grayscale", o.Grayscale, true},
 		{"Grayscale mode", grayscaleMode, o.Grayscale},
 		{"Crop", o.Crop, true},
-		{"Crop ratio", fmt.Sprintf("%d Left - %d Up - %d Right - %d Bottom - Limit %d%% - Skip %v", o.CropRatioLeft, o.CropRatioUp, o.CropRatioRight, o.CropRatioBottom, o.CropLimit, o.CropSkipIfLimitReached), o.Crop},
+		{"Crop ratio",
+			utils.IntToString(o.CropRatioLeft) + " Left - " +
+				utils.IntToString(o.CropRatioUp) + " Up - " +
+				utils.IntToString(o.CropRatioRight) + " Right - " +
+				utils.IntToString(o.CropRatioBottom) + " Bottom - " +
+				"Limit " + utils.IntToString(o.CropLimit) + "% - " +
+				"Skip " + utils.BoolToString(o.CropSkipIfLimitReached),
+			o.Crop},
 		{"Brightness", o.Brightness, o.Brightness != 0},
 		{"Contrast", o.Contrast, o.Contrast != 0},
 		{"Auto contrast", o.AutoContrast, true},
@@ -288,11 +291,11 @@ func (o *Options) ShowConfig() string {
 		{"No blank image", o.NoBlankImage, true},
 		{"Manga", o.Manga, true},
 		{"Has cover", o.HasCover, true},
-		{"Limit", fmt.Sprintf("%d Mb", o.LimitMb), o.LimitMb != 0},
+		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},
 		{"Strip first directory from toc", o.StripFirstDirectoryFromToc, true},
 		{"Sort path mode", sortpathmode, true},
-		{"Foreground color", fmt.Sprintf("#%s", o.ForegroundColor), true},
-		{"Background color", fmt.Sprintf("#%s", o.BackgroundColor), true},
+		{"Foreground color", "#" + o.ForegroundColor, true},
+		{"Background color", "#" + o.BackgroundColor, true},
 		{"Resize", !o.NoResize, true},
 		{"Aspect ratio", aspectRatio, true},
 		{"Portrait only", o.PortraitOnly, true},

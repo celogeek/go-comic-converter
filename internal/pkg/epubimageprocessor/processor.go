@@ -2,7 +2,6 @@
 package epubimageprocessor
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -324,7 +323,7 @@ func (e EPUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Ima
 	g.Draw(dst, o.Src)
 
 	return epubzip.CompressImage(
-		fmt.Sprintf("OEBPS/Images/%s.%s", o.Name, e.Image.Format),
+		"OEBPS/Images/"+o.Name+"."+e.Image.Format,
 		e.Image.Format,
 		dst,
 		e.Image.Quality,

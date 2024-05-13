@@ -38,15 +38,19 @@ func New(o Options) EPUBProgress {
 		}
 	}
 
-	fmtJob := fmt.Sprintf("%%0%dd", len(fmt.Sprint(o.TotalJob)))
-	fmtDesc := fmt.Sprintf("[%s/%s] %%-15s", fmtJob, fmtJob)
+	fmtJob := utils.FormatNumberOfDigits(o.TotalJob)
 	return progressbar.NewOptions(o.Max,
 		progressbar.OptionSetWriter(os.Stderr),
 		progressbar.OptionThrottle(65*time.Millisecond),
 		progressbar.OptionOnCompletion(func() {
 			utils.Println()
 		}),
-		progressbar.OptionSetDescription(fmt.Sprintf(fmtDesc, o.CurrentJob, o.TotalJob, o.Description)),
+		progressbar.OptionSetDescription(fmt.Sprintf(
+			"["+fmtJob+"/"+fmtJob+"] %-15s",
+			o.CurrentJob,
+			o.TotalJob,
+			o.Description,
+		)),
 		progressbar.OptionSetWidth(60),
 		progressbar.OptionShowCount(),
 		progressbar.OptionSetRenderBlankState(true),

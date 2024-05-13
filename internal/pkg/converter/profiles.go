@@ -4,6 +4,8 @@ package converter
 import (
 	"fmt"
 	"strings"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 type Profile struct {
@@ -11,6 +13,10 @@ type Profile struct {
 	Description string `json:"description"`
 	Width       int    `json:"width"`
 	Height      int    `json:"height"`
+}
+
+func (p Profile) String() string {
+	return p.Code + " - " + p.Description + " - " + utils.IntToString(p.Width) + "x" + utils.IntToString(p.Height)
 }
 
 type Profiles map[string]Profile
@@ -61,9 +67,9 @@ func (p Profiles) String() string {
 	s := make([]string, 0)
 	for _, v := range p {
 		s = append(s, fmt.Sprintf(
-			"    - %-7s ( %9s ) - %s",
+			"    - %-7s - %4d x %-4d - %s",
 			v.Code,
-			fmt.Sprintf("%dx%d", v.Width, v.Height),
+			v.Width, v.Height,
 			v.Description,
 		))
 	}

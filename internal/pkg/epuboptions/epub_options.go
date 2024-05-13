@@ -1,8 +1,6 @@
 // Package epuboptions EPUBOptions for EPUB creation.
 package epuboptions
 
-import "fmt"
-
 type EPUBOptions struct {
 	Input                      string
 	Output                     string
@@ -29,5 +27,5 @@ func (o EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {
 }
 
 func (o EPUBOptions) ImgStorage() string {
-	return fmt.Sprintf("%s.tmp", o.Output)
+	return o.Output + ".tmp"
 }

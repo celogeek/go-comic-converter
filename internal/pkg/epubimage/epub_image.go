@@ -2,9 +2,10 @@
 package epubimage
 
 import (
-	"fmt"
 	"image"
 	"strings"
+
+	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
 )
 
 type EPUBImage struct {
@@ -25,47 +26,51 @@ type EPUBImage struct {
 
 // SpaceKey key name of the blank page after the image
 func (i EPUBImage) SpaceKey() string {
-	return fmt.Sprintf("space_%d", i.Id)
+	return "space_" + utils.IntToString(i.Id)
 }
 
 // SpacePath path of the blank page
 func (i EPUBImage) SpacePath() string {
-	return fmt.Sprintf("Text/%s.xhtml", i.SpaceKey())
+	return "Text/" + i.SpaceKey() + ".xhtml"
 }
 
 // EPUBSpacePath path of the blank page into the EPUB
 func (i EPUBImage) EPUBSpacePath() string {
-	return fmt.Sprintf("OEBPS/%s", i.SpacePath())
+	return "OEBPS/" + i.SpacePath()
+}
+
+func (i EPUBImage) PartKey() string {
+	return utils.IntToString(i.Id) + "_p" + utils.IntToString(i.Part)
 }
 
 // PageKey key for page
 func (i EPUBImage) PageKey() string {
-	return fmt.Sprintf("page_%d_p%d", i.Id, i.Part)
+	return "page_" + i.PartKey()
 }
 
 // PagePath page path linked to the image
 func (i EPUBImage) PagePath() string {
-	return fmt.Sprintf("Text/%s.xhtml", i.PageKey())
+	return "Text/" + i.PageKey() + ".xhtml"
 }
 
 // EPUBPagePath page path into the EPUB
 func (i EPUBImage) EPUBPagePath() string {
-	return fmt.Sprintf("OEBPS/%s", i.PagePath())
+	return "OEBPS/" + i.PagePath()
 }
 
 // ImgKey key for image
 func (i EPUBImage) ImgKey() string {
-	return fmt.Sprintf("img_%d_p%d", i.Id, i.Part)
+	return "img_" + i.PartKey()
 }
 
 // ImgPath image path
 func (i EPUBImage) ImgPath() string {
-	return fmt.Sprintf("Images/%s.%s", i.ImgKey(), i.Format)
+	return "Images/" + i.ImgKey() + "." + i.Format
 }
 
 // EPUBImgPath image path into the EPUB
 func (i EPUBImage) EPUBImgPath() string {
-	return fmt.Sprintf("OEBPS/%s", i.ImgPath())
+	return "OEBPS/" + i.ImgPath()
 }
 
 // ImgStyle style to apply to the image.
@@ -76,11 +81,11 @@ func (i EPUBImage) ImgStyle(viewWidth, viewHeight int, align string) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
-	var style []string
+	style := make([]string, 0, 4)
 
-	style = append(style, fmt.Sprintf("width:%dpx", relWidth))
-	style = append(style, fmt.Sprintf("height:%dpx", relHeight))
-	style = append(style, fmt.Sprintf("top:%.2f%%", marginH*100/float64(viewHeight)))
+	style = append(style, "width:"+utils.IntToString(relWidth)+"px")
+	style = append(style, "height:"+utils.IntToString(relHeight)+"px")
+	style = append(style, "top:"+utils.FloatToString(marginH*100/float64(viewHeight), 2)+"%")
 	if align == "" {
 		switch i.Position {
 		case "rendition:page-spread-left":
@@ -88,7 +93,7 @@ func (i EPUBImage) ImgStyle(viewWidth, viewHeight int, align string) string {
 		case "rendition:page-spread-right":
 			style = append(style, "left:0")
 		default:
-			style = append(style, fmt.Sprintf("left:%.2f%%", marginW*100/float64(viewWidth)))
+			style = append(style, "left:"+utils.FloatToString(marginW*100/float64(viewWidth), 2)+"%")
 		}
 	} else {
 		style = append(style, align)

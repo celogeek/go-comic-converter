@@ -73,8 +73,8 @@ func (e EPUB) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, zipImg *zi
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":      fmt.Sprintf("Image %d Part %d", img.Id, img.Part),
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"Title":      "Image " + utils.IntToString(img.Id) + " Part " + utils.IntToString(img.Part),
+			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  img.ImgPath(),
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
 		})),
@@ -91,8 +91,8 @@ func (e EPUB) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
 	return wz.WriteContent(
 		img.EPUBSpacePath(),
 		[]byte(e.render(epubtemplates.Blank, map[string]any{
-			"Title":    fmt.Sprintf("Blank Page %d", img.Id),
-			"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+			"Title":    "Blank Page " + utils.IntToString(img.Id),
+			"ViewPort": e.Image.View.Port(),
 		})),
 	)
 }
@@ -102,16 +102,16 @@ func (e EPUB) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part,
 	title := "Cover"
 	text := ""
 	if totalParts > 1 {
-		text = fmt.Sprintf("%d / %d", part, totalParts)
-		title = fmt.Sprintf("%s %s", title, text)
+		text = utils.IntToString(part) + " / " + utils.IntToString(totalParts)
+		title = title + " " + text
 	}
 
 	if err := wz.WriteContent(
 		"OEBPS/Text/cover.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/cover.%s", e.Image.Format),
+			"ViewPort":   e.Image.View.Port(),
+			"ImagePath":  "Images/cover." + e.Image.Format,
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
 		})),
 	); err != nil {
@@ -156,7 +156,7 @@ func (e EPUB) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 			"OEBPS/Text/space_title.xhtml",
 			[]byte(e.render(epubtemplates.Blank, map[string]any{
 				"Title":    "Blank Page Title",
-				"ViewPort": fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
+				"ViewPort": e.Image.View.Port(),
 			})),
 		); err != nil {
 			return err
@@ -167,8 +167,8 @@ func (e EPUB) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 		"OEBPS/Text/title.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
-			"ViewPort":   fmt.Sprintf("width=%d,height=%d", e.Image.View.Width, e.Image.View.Height),
-			"ImagePath":  fmt.Sprintf("Images/title.%s", e.Image.Format),
+			"ViewPort":   e.Image.View.Port(),
+			"ImagePath":  "Images/title." + e.Image.Format,
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 		})),
 	); err != nil {
@@ -344,7 +344,7 @@ func (e EPUB) writePart(path string, currentPart, totalParts int, part epubPart,
 
 	title := e.Title
 	if totalParts > 1 {
-		title = fmt.Sprintf("%s [%d/%d]", title, currentPart, totalParts)
+		title = title + " [" + utils.IntToString(currentPart) + "/" + utils.IntToString(totalParts) + "]"
 	}
 
 	type zipContent struct {
@@ -450,12 +450,12 @@ func (e EPUB) Write() error {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
 		if totalParts > 1 {
-			fmtLen := len(fmt.Sprint(totalParts))
-			fmtPart := fmt.Sprintf(" Part %%0%dd of %%0%dd", fmtLen, fmtLen)
+			fmtLen := utils.FormatNumberOfDigits(totalParts)
+			fmtPart := "Part " + fmtLen + " of " + fmtLen
 			suffix = fmt.Sprintf(fmtPart, i+1, totalParts)
 		}
 
-		path := fmt.Sprintf("%s%s%s", e.Output[0:len(e.Output)-len(ext)], suffix, ext)
+		path := e.Output[0:len(e.Output)-len(ext)] + suffix + ext
 
 		if err := e.writePart(
 			path,

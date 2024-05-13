@@ -404,7 +404,7 @@ func (e EPUBImageProcessor) loadPdf() (totalImages int, output chan task, err er
 	}
 
 	totalImages = len(pdf.Pages())
-	pageFmt := fmt.Sprintf("page %%0%dd", len(fmt.Sprintf("%d", totalImages)))
+	pageFmt := "page " + utils.FormatNumberOfDigits(totalImages)
 	output = make(chan task)
 	go func() {
 		defer close(output)
