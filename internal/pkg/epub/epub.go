@@ -214,7 +214,7 @@ func (e EPUB) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReade
 
 	parts = make([]epubPart, 0)
 	cover := images[0]
-	if e.Image.HasCover {
+	if e.Image.HasCover || (cover.DoublePage && !e.Image.KeepDoublePageIfSplit) {
 		images = images[1:]
 	}
 
