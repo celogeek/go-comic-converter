@@ -407,8 +407,7 @@ func (c *Converter) Validate() error {
 // Fatal Helper to show usage, err and exit 1
 func (c *Converter) Fatal(err error) {
 	c.Cmd.Usage()
-	utils.Printf("\nError: %s\n", err)
-	os.Exit(1)
+	utils.Fatalf("\nError: %s\n", err)
 }
 
 func (c *Converter) Stats() {

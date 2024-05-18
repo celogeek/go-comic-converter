@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"os"
 	"sync"
 
 	"github.com/disintegration/gift"
@@ -84,8 +83,7 @@ func (e EPUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 					e.EPUBOptions.Image.AutoSplitDoublePage && !e.EPUBOptions.Image.KeepDoublePageIfSplit) {
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						_ = bar.Close()
-						utils.Printf("error with %s: %s", input.Name, err)
-						os.Exit(1)
+						utils.Fatalln("error with %s: %s", input.Name, err)
 					}
 					// do not keep raw image except for cover
 					if img.Id > 0 {
@@ -105,8 +103,7 @@ func (e EPUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 					img = e.transformImage(input, i+1, b)
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						_ = bar.Close()
-						utils.Printf("error with %s: %s", input.Name, err)
-						os.Exit(1)
+						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
 					img.Raw = nil
 					imageOutput <- img

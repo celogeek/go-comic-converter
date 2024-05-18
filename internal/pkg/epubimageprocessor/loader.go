@@ -319,8 +319,7 @@ func (e EPUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 		if isSolid && !e.Dry {
 			r, rerr := rardecode.OpenReader(e.Input)
 			if rerr != nil {
-				utils.Printf("\nerror processing image %s: %s\n", e.Input, rerr)
-				os.Exit(1)
+				utils.Fatalf("\nerror processing image %s: %s\n", e.Input, rerr)
 			}
 			defer func(r *rardecode.ReadCloser) {
 				_ = r.Close()
@@ -331,15 +330,13 @@ func (e EPUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 					if rerr == io.EOF {
 						break
 					}
-					utils.Printf("\nerror processing image %s: %s\n", f.Name, rerr)
-					os.Exit(1)
+					utils.Fatalf("\nerror processing image %s: %s\n", f.Name, rerr)
 				}
 				if i, ok := indexedNames[f.Name]; ok {
 					var b bytes.Buffer
 					_, rerr = io.Copy(&b, r)
 					if rerr != nil {
-						utils.Printf("\nerror processing image %s: %s\n", f.Name, rerr)
-						os.Exit(1)
+						utils.Fatalf("\nerror processing image %s: %s\n", f.Name, rerr)
 					}
 					jobs <- job{i, f.Name, func() (io.ReadCloser, error) {
 						return io.NopCloser(bytes.NewReader(b.Bytes())), nil

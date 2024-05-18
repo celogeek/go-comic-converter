@@ -46,8 +46,7 @@ func main() {
 func version() {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
-		utils.Println("failed to fetch current version")
-		os.Exit(1)
+		utils.Fatalln("failed to fetch current version")
 	}
 
 	githubTag := &latest.GithubTag{
@@ -56,8 +55,7 @@ func version() {
 	}
 	v, err := githubTag.Fetch()
 	if err != nil || len(v.Versions) < 1 {
-		utils.Println("failed to fetch the latest version")
-		os.Exit(1)
+		utils.Fatalln("failed to fetch the latest version")
 	}
 	latestVersion := v.Versions[0]
 
@@ -184,8 +182,7 @@ func generate(cmd *converter.Converter) {
 			AppleBookCompatibility: cmd.Options.AppleBookCompatibility,
 		},
 	}).Write(); err != nil {
-		utils.Printf("Error: %v\n", err)
-		os.Exit(1)
+		utils.Fatalf("Error: %v\n", err)
 	}
 	if !cmd.Options.Dry {
 		cmd.Stats()

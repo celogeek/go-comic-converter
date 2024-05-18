@@ -10,8 +10,18 @@ func Printf(format string, a ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, format, a...)
 }
 
+func Fatalf(format string, args ...interface{}) {
+	Printf(format, args...)
+	os.Exit(1)
+}
+
 func Println(a ...interface{}) {
 	_, _ = fmt.Fprintln(os.Stderr, a...)
+}
+
+func Fatalln(a ...interface{}) {
+	Println(a...)
+	os.Exit(1)
 }
 
 func IntToString(i int) string {
