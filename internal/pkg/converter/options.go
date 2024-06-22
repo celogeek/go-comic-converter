@@ -1,4 +1,4 @@
-// Package options manage options with default value from config.
+// Package converter options manage options with default value from config.
 package converter
 
 import (

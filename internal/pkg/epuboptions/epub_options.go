@@ -1,4 +1,4 @@
-// Package epuboptions EPUBOptions for EPUB creation.
+// Package epuboptions for EPUB creation.
 package epuboptions
 
 type EPUBOptions struct {

@@ -1,4 +1,4 @@
-// Package profiles manage supported profiles for go-comic-converter.
+// Package converter profiles manage supported profiles for go-comic-converter.
 package converter
 
 import (
