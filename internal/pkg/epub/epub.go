@@ -312,9 +312,10 @@ func (e EPUB) computeAspectRatio(epubParts []epubPart) float64 {
 	return bestAspectRatio
 }
 
-func (e EPUB) computeViewPort(epubParts []epubPart) {
+func (e EPUB) computeViewPort(epubParts []epubPart) (int, int) {
 	if e.Image.View.AspectRatio == -1 {
-		return //keep device size
+		//keep device size
+		return e.Image.View.Width, e.Image.View.Height
 	}
 
 	// readjusting view port
@@ -325,9 +326,9 @@ func (e EPUB) computeViewPort(epubParts []epubPart) {
 
 	viewWidth, viewHeight := int(float64(e.Image.View.Height)/bestAspectRatio), int(float64(e.Image.View.Width)*bestAspectRatio)
 	if viewWidth > e.Image.View.Width {
-		e.Image.View.Height = viewHeight
+		return e.Image.View.Width, viewHeight
 	} else {
-		e.Image.View.Width = viewWidth
+		return viewWidth, e.Image.View.Height
 	}
 }
 
@@ -445,7 +446,7 @@ func (e EPUB) Write() error {
 		Json:        e.Json,
 	})
 
-	e.computeViewPort(epubParts)
+	e.Image.View.Width, e.Image.View.Height = e.computeViewPort(epubParts)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
