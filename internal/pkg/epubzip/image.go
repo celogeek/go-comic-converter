@@ -10,6 +10,8 @@ import (
 	"image/jpeg"
 	"image/png"
 	"time"
+
+	mozJpeg "github.com/viam-labs/go-libjpeg/jpeg"
 )
 
 type Image struct {
@@ -28,7 +30,15 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 	case "png":
 		err = png.Encode(&data, img)
 	case "jpeg":
-		err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+		err = mozJpeg.Encode(&data, img, &mozJpeg.EncoderOptions{
+			Quality:         quality,
+			OptimizeCoding:  true,
+			ProgressiveMode: true,
+			DCTMethod:       mozJpeg.DCTFloat,
+		})
+		if err != nil && err.Error() == "unsupported image type" {
+			err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+		}
 	default:
 		err = fmt.Errorf("unknown format %q", format)
 	}
