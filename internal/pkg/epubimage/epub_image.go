@@ -106,6 +106,10 @@ func (i EPUBImage) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) 
 	w, h := viewWidth, viewHeight
 	srcw, srch := i.Width, i.Height
 
+	if srcw < w && srch < h {
+		return srcw, srch
+	}
+
 	if w <= 0 || h <= 0 || srcw <= 0 || srch <= 0 {
 		return
 	}
