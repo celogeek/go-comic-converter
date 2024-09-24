@@ -6,7 +6,7 @@ import (
 
 	"github.com/beevik/etree"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubimage"
 )
 
 // Toc create toc

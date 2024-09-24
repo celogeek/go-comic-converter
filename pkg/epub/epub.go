@@ -14,14 +14,14 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubimage"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubimageprocessor"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubprogress"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubtemplates"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubtree"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubzip"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubimageprocessor"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubprogress"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubtemplates"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubtree"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epubzip"
+	"github.com/celogeek/go-comic-converter/v2/pkg/utils"
 )
 
 type EPUB struct {
