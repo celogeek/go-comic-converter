@@ -585,3 +585,7 @@ This project is largely inspired from KCC (Kindle Comic Converter). Thanks:
  - [ciromattia](https://github.com/ciromattia/kcc)
  - [darodi fork](https://github.com/darodi/kcc)
 
+# UI
+
+Thanks for UI contribution:
+ - [manueldidonna / Comic2Books](https://github.com/manueldidonna/comic2books)
