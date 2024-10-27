@@ -130,6 +130,15 @@ func generate(cmd *converter.Converter) {
 
 	profile := cmd.Options.GetProfile()
 
+	if err := epub.New(cmd.Options.EPUBOptions).Write(); err != nil {
+		utils.Fatalf("Error: %v\n", err)
+	}
+	if !cmd.Options.Dry {
+		cmd.Stats()
+	}
+
+	return
+
 	if err := epub.New(epuboptions.EPUBOptions{
 		Input:                      cmd.Options.Input,
 		Output:                     cmd.Options.Output,
@@ -145,38 +154,12 @@ func generate(cmd *converter.Converter) {
 		Quiet:                      cmd.Options.Quiet,
 		Json:                       cmd.Options.Json,
 		Image: epuboptions.Image{
-			Crop: epuboptions.Crop{
-				Enabled:            cmd.Options.Crop,
-				Left:               cmd.Options.CropRatioLeft,
-				Up:                 cmd.Options.CropRatioUp,
-				Right:              cmd.Options.CropRatioRight,
-				Bottom:             cmd.Options.CropRatioBottom,
-				Limit:              cmd.Options.CropLimit,
-				SkipIfLimitReached: cmd.Options.CropSkipIfLimitReached,
-			},
-			Quality:                   cmd.Options.Quality,
-			Brightness:                cmd.Options.Brightness,
-			Contrast:                  cmd.Options.Contrast,
-			AutoContrast:              cmd.Options.AutoContrast,
-			AutoRotate:                cmd.Options.AutoRotate,
-			AutoSplitDoublePage:       cmd.Options.AutoSplitDoublePage,
-			KeepDoublePageIfSplit:     cmd.Options.KeepDoublePageIfSplit,
-			KeepSplitDoublePageAspect: cmd.Options.KeepSplitDoublePageAspect,
-			NoBlankImage:              cmd.Options.NoBlankImage,
-			Manga:                     cmd.Options.Manga,
-			HasCover:                  cmd.Options.HasCover,
 			View: epuboptions.View{
 				Width:        profile.Width,
 				Height:       profile.Height,
 				AspectRatio:  cmd.Options.AspectRatio,
 				PortraitOnly: cmd.Options.PortraitOnly,
-				Color: epuboptions.Color{
-					Foreground: cmd.Options.ForegroundColor,
-					Background: cmd.Options.BackgroundColor,
-				},
 			},
-			GrayScale:              cmd.Options.Grayscale,
-			GrayScaleMode:          cmd.Options.GrayscaleMode,
 			Resize:                 !cmd.Options.NoResize,
 			Format:                 cmd.Options.Format,
 			AppleBookCompatibility: cmd.Options.AppleBookCompatibility,

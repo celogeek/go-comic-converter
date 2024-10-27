@@ -2,20 +2,25 @@
 package epuboptions
 
 type EPUBOptions struct {
-	Input                      string
-	Output                     string
-	Title                      string
-	TitlePage                  int
-	Author                     string
-	LimitMb                    int
-	StripFirstDirectoryFromToc bool
-	Dry                        bool
-	DryVerbose                 bool
-	SortPathMode               int
-	Quiet                      bool
-	Json                       bool
-	Workers                    int
-	Image                      Image
+	// Output
+	Input  string `yaml:"-"`
+	Output string `yaml:"-"`
+	Author string `yaml:"-"`
+	Title  string `yaml:"-"`
+
+	//Config
+	TitlePage                  int   `yaml:"title_page"`
+	LimitMb                    int   `yaml:"limit_mb"`
+	StripFirstDirectoryFromToc bool  `yaml:"strip_first_directory"`
+	SortPathMode               int   `yaml:"sort_path_mode"`
+	Image                      Image `yaml:"image"`
+
+	// Other
+	Dry        bool `yaml:"-"`
+	DryVerbose bool `yaml:"-"`
+	Quiet      bool `yaml:"-"`
+	Json       bool `yaml:"-"`
+	Workers    int  `yaml:"-"`
 }
 
 func (o EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {
