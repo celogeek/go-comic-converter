@@ -14,10 +14,10 @@ import (
 
 	"github.com/tcnksm/go-latest"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/converter"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epub"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v2/pkg/converter"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epub"
+	"github.com/celogeek/go-comic-converter/v2/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v2/pkg/utils"
 )
 
 func main() {
