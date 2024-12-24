@@ -228,7 +228,9 @@ func (c *Converter) isZeroValue(f *flag.Flag, value string) (ok bool, err error)
 
 // Parse all parameters
 func (c *Converter) Parse() {
-	_ = c.Cmd.Parse(os.Args[1:])
+	if err := c.Cmd.Parse(os.Args[1:]); err != nil {
+		utils.Fatalf("cannot parse command line options: %v", err)
+	}
 	if c.Options.Help {
 		c.Cmd.Usage()
 		os.Exit(0)
