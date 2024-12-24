@@ -1,5 +1,6 @@
 package epuboptions
 
 type Color struct {
-	Foreground, Background string
+	Foreground string `yaml:"foreground" json:"foreground"`
+	Background string `yaml:"background" json:"background"`
 }

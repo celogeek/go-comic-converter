@@ -5,10 +5,11 @@ import (
 )
 
 type View struct {
-	Width, Height int
-	AspectRatio   float64
-	PortraitOnly  bool
-	Color         Color
+	Width        int     `yaml:"-" json:"width"`
+	Height       int     `yaml:"-" json:"height"`
+	AspectRatio  float64 `yaml:"aspect_ratio" json:"aspect_ratio"`
+	PortraitOnly bool    `yaml:"portrait_only" json:"portrait_only"`
+	Color        Color   `yaml:"color" json:"color"`
 }
 
 func (v View) Dimension() string {
