@@ -105,35 +105,35 @@ func (c *Converter) InitParse() {
 
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
-	c.AddIntParam(&c.Options.Quality, "quality", c.Options.Quality, "Quality of the image")
-	c.AddBoolParam(&c.Options.Grayscale, "grayscale", c.Options.Grayscale, "Grayscale image. Ideal for eInk devices.")
-	c.AddIntParam(&c.Options.GrayscaleMode, "grayscale-mode", c.Options.GrayscaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
-	c.AddBoolParam(&c.Options.Crop, "crop", c.Options.Crop, "Crop images")
-	c.AddIntParam(&c.Options.CropRatioLeft, "crop-ratio-left", c.Options.CropRatioLeft, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
-	c.AddIntParam(&c.Options.CropRatioUp, "crop-ratio-up", c.Options.CropRatioUp, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
-	c.AddIntParam(&c.Options.CropRatioRight, "crop-ratio-right", c.Options.CropRatioRight, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
-	c.AddIntParam(&c.Options.CropRatioBottom, "crop-ratio-bottom", c.Options.CropRatioBottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
-	c.AddIntParam(&c.Options.CropLimit, "crop-limit", c.Options.CropLimit, "Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.")
-	c.AddBoolParam(&c.Options.CropSkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.CropSkipIfLimitReached, "Crop skip if limit reached.")
-	c.AddIntParam(&c.Options.Brightness, "brightness", c.Options.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
-	c.AddIntParam(&c.Options.Contrast, "contrast", c.Options.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
-	c.AddBoolParam(&c.Options.AutoContrast, "autocontrast", c.Options.AutoContrast, "Improve contrast automatically")
-	c.AddBoolParam(&c.Options.AutoRotate, "autorotate", c.Options.AutoRotate, "Auto Rotate page when width > height")
-	c.AddBoolParam(&c.Options.AutoSplitDoublePage, "autosplitdoublepage", c.Options.AutoSplitDoublePage, "Auto Split double page when width > height")
-	c.AddBoolParam(&c.Options.KeepDoublePageIfSplit, "keepdoublepageifsplit", c.Options.KeepDoublePageIfSplit, "Keep the double page if split")
-	c.AddBoolParam(&c.Options.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
-	c.AddBoolParam(&c.Options.NoBlankImage, "noblankimage", c.Options.NoBlankImage, "Remove blank image")
-	c.AddBoolParam(&c.Options.Manga, "manga", c.Options.Manga, "Manga mode (right to left)")
-	c.AddBoolParam(&c.Options.HasCover, "hascover", c.Options.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
+	c.AddIntParam(&c.Options.Image.Quality, "quality", c.Options.Image.Quality, "Quality of the image")
+	c.AddBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")
+	c.AddIntParam(&c.Options.Image.GrayScaleMode, "grayscale-mode", c.Options.Image.GrayScaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
+	c.AddBoolParam(&c.Options.Image.Crop.Enabled, "crop", c.Options.Image.Crop.Enabled, "Crop images")
+	c.AddIntParam(&c.Options.Image.Crop.Left, "crop-ratio-left", c.Options.Image.Crop.Left, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
+	c.AddIntParam(&c.Options.Image.Crop.Up, "crop-ratio-up", c.Options.Image.Crop.Up, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
+	c.AddIntParam(&c.Options.Image.Crop.Right, "crop-ratio-right", c.Options.Image.Crop.Right, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
+	c.AddIntParam(&c.Options.Image.Crop.Bottom, "crop-ratio-bottom", c.Options.Image.Crop.Bottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
+	c.AddIntParam(&c.Options.Image.Crop.Limit, "crop-limit", c.Options.Image.Crop.Limit, "Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.")
+	c.AddBoolParam(&c.Options.Image.Crop.SkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.Image.Crop.SkipIfLimitReached, "Crop skip if limit reached.")
+	c.AddIntParam(&c.Options.Image.Brightness, "brightness", c.Options.Image.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
+	c.AddIntParam(&c.Options.Image.Contrast, "contrast", c.Options.Image.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
+	c.AddBoolParam(&c.Options.Image.AutoContrast, "autocontrast", c.Options.Image.AutoContrast, "Improve contrast automatically")
+	c.AddBoolParam(&c.Options.Image.AutoRotate, "autorotate", c.Options.Image.AutoRotate, "Auto Rotate page when width > height")
+	c.AddBoolParam(&c.Options.Image.AutoSplitDoublePage, "autosplitdoublepage", c.Options.Image.AutoSplitDoublePage, "Auto Split double page when width > height")
+	c.AddBoolParam(&c.Options.Image.KeepDoublePageIfSplit, "keepdoublepageifsplit", c.Options.Image.KeepDoublePageIfSplit, "Keep the double page if split")
+	c.AddBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
+	c.AddBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
+	c.AddBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
+	c.AddBoolParam(&c.Options.Image.HasCover, "hascover", c.Options.Image.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
 	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
-	c.AddStringParam(&c.Options.ForegroundColor, "foreground-color", c.Options.ForegroundColor, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
-	c.AddStringParam(&c.Options.BackgroundColor, "background-color", c.Options.BackgroundColor, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
-	c.AddBoolParam(&c.Options.NoResize, "noresize", c.Options.NoResize, "Do not reduce image size if exceed device size")
-	c.AddStringParam(&c.Options.Format, "format", c.Options.Format, "Format of output images: jpeg (lossy), png (lossless)")
-	c.AddFloatParam(&c.Options.AspectRatio, "aspect-ratio", c.Options.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
-	c.AddBoolParam(&c.Options.PortraitOnly, "portrait-only", c.Options.PortraitOnly, "Portrait only: force orientation to portrait only.")
+	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
+	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
+	c.AddBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
+	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless)")
+	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
+	c.AddBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 
 	c.AddSection("Default config")
@@ -150,7 +150,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
 	c.AddSection("Compatibility")
-	c.AddBoolParam(&c.Options.AppleBookCompatibility, "applebookcompatibility", c.Options.AppleBookCompatibility, "Apple book compatibility")
+	c.AddBoolParam(&c.Options.Image.AppleBookCompatibility, "applebookcompatibility", c.Options.Image.AppleBookCompatibility, "Apple book compatibility")
 
 	c.AddSection("Other")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
@@ -237,50 +237,50 @@ func (c *Converter) Parse() {
 	}
 
 	if c.Options.Auto {
-		c.Options.AutoContrast = true
-		c.Options.AutoRotate = true
-		c.Options.AutoSplitDoublePage = true
+		c.Options.Image.AutoContrast = true
+		c.Options.Image.AutoRotate = true
+		c.Options.Image.AutoSplitDoublePage = true
 	}
 
 	if c.Options.MaxQuality {
-		c.Options.Format = "png"
-		c.Options.Grayscale = false
-		c.Options.NoResize = true
+		c.Options.Image.Format = "png"
+		c.Options.Image.GrayScale = false
+		c.Options.Image.Resize = false
 	} else if c.Options.BestQuality {
-		c.Options.Format = "jpeg"
-		c.Options.Quality = 100
-		c.Options.Grayscale = false
-		c.Options.NoResize = true
+		c.Options.Image.Format = "jpeg"
+		c.Options.Image.Quality = 100
+		c.Options.Image.GrayScale = false
+		c.Options.Image.Resize = false
 	} else if c.Options.GreatQuality {
-		c.Options.Format = "jpeg"
-		c.Options.Quality = 90
-		c.Options.Grayscale = true
-		c.Options.NoResize = true
+		c.Options.Image.Format = "jpeg"
+		c.Options.Image.Quality = 90
+		c.Options.Image.GrayScale = true
+		c.Options.Image.Resize = false
 	} else if c.Options.GoodQuality {
-		c.Options.Format = "jpeg"
-		c.Options.Quality = 90
-		c.Options.Grayscale = true
-		c.Options.NoResize = false
+		c.Options.Image.Format = "jpeg"
+		c.Options.Image.Quality = 90
+		c.Options.Image.GrayScale = true
+		c.Options.Image.Resize = true
 	}
 
 	if c.Options.NoFilter {
-		c.Options.Crop = false
-		c.Options.Brightness = 0
-		c.Options.Contrast = 0
-		c.Options.AutoContrast = false
-		c.Options.AutoRotate = false
-		c.Options.NoBlankImage = false
-		c.Options.NoResize = true
+		c.Options.Image.Crop.Enabled = false
+		c.Options.Image.Brightness = 0
+		c.Options.Image.Contrast = 0
+		c.Options.Image.AutoContrast = false
+		c.Options.Image.AutoRotate = false
+		c.Options.Image.NoBlankImage = false
+		c.Options.Image.Resize = false
 	}
 
-	if c.Options.AppleBookCompatibility {
-		c.Options.AutoSplitDoublePage = true
-		c.Options.KeepDoublePageIfSplit = false
-		c.Options.KeepSplitDoublePageAspect = true
+	if c.Options.Image.AppleBookCompatibility {
+		c.Options.Image.AutoSplitDoublePage = true
+		c.Options.Image.KeepDoublePageIfSplit = false
+		c.Options.Image.KeepSplitDoublePageAspect = true
 	}
 
-	if c.Options.PortraitOnly {
-		c.Options.KeepSplitDoublePageAspect = false
+	if c.Options.Image.View.PortraitOnly {
+		c.Options.Image.KeepSplitDoublePageAspect = false
 	}
 }
 
@@ -354,12 +354,12 @@ func (c *Converter) Validate() error {
 	}
 
 	// Brightness
-	if c.Options.Brightness < -100 || c.Options.Brightness > 100 {
+	if c.Options.Image.Brightness < -100 || c.Options.Image.Brightness > 100 {
 		return errors.New("brightness should be between -100 and 100")
 	}
 
 	// Contrast
-	if c.Options.Contrast < -100 || c.Options.Contrast > 100 {
+	if c.Options.Image.Contrast < -100 || c.Options.Image.Contrast > 100 {
 		return errors.New("contrast should be between -100 and 100")
 	}
 
@@ -370,21 +370,21 @@ func (c *Converter) Validate() error {
 
 	// Color
 	colorRegex := regexp.MustCompile("^[0-9A-F]{3}$")
-	if !colorRegex.MatchString(c.Options.ForegroundColor) {
+	if !colorRegex.MatchString(c.Options.Image.View.Color.Foreground) {
 		return errors.New("foreground color must have color format in hexadecimal: [0-9A-F]{3}")
 	}
 
-	if !colorRegex.MatchString(c.Options.BackgroundColor) {
+	if !colorRegex.MatchString(c.Options.Image.View.Color.Background) {
 		return errors.New("background color must have color format in hexadecimal: [0-9A-F]{3}")
 	}
 
 	// Format
-	if !(c.Options.Format == "jpeg" || c.Options.Format == "png") {
+	if !(c.Options.Image.Format == "jpeg" || c.Options.Image.Format == "png") {
 		return errors.New("format should be jpeg or png")
 	}
 
 	// Aspect Ratio
-	if c.Options.AspectRatio < 0 && c.Options.AspectRatio != -1 {
+	if c.Options.Image.View.AspectRatio < 0 && c.Options.Image.View.AspectRatio != -1 {
 		return errors.New("aspect ratio should be -1, 0 or > 0")
 	}
 
@@ -394,12 +394,12 @@ func (c *Converter) Validate() error {
 	}
 
 	// Grayscale Mode
-	if c.Options.GrayscaleMode < 0 || c.Options.GrayscaleMode > 2 {
+	if c.Options.Image.GrayScaleMode < 0 || c.Options.Image.GrayScaleMode > 2 {
 		return errors.New("grayscale mode should be 0, 1 or 2")
 	}
 
 	// crop
-	if c.Options.CropLimit < 0 || c.Options.CropLimit > 100 {
+	if c.Options.Image.Crop.Limit < 0 || c.Options.Image.Crop.Limit > 100 {
 		return errors.New("crop limit should be between 0 and 100")
 	}
 
