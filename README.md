@@ -58,6 +58,14 @@ Add GOPATH to your PATH
 $ export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
+# Upgrade from V2
+
+The configuration file structure changes in the v3 compare to v2.
+
+You need to recreate your config and save it again.
+
+Use the `show`, `reset` and `save` option.
+
 # Check last version
 
 You can check if a new version is available with:
