@@ -27,9 +27,9 @@ import (
 	pdfimage "github.com/raff/pdfreader/image"
 	"github.com/raff/pdfreader/pdfread"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/sortpath"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 type task struct {

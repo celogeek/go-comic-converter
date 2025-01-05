@@ -14,9 +14,9 @@ import (
 
 	"github.com/tcnksm/go-latest"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/converter"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epub"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/converter"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epub"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 func main() {

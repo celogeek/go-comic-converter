@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 type Profile struct {

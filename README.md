@@ -38,19 +38,19 @@ First ensure to have a working version of GO: [Installation](https://go.dev/doc/
 
 Then install the last version of the tool:
 ```
-$ go install github.com/celogeek/go-comic-converter/v2
+$ go install github.com/celogeek/go-comic-converter/v3
 ```
 
 To force install a specific version:
 ```
 # specific version
-$ go install github.com/celogeek/go-comic-converter/v2@v2.6.9
+$ go install github.com/celogeek/go-comic-converter/v3@v3.0.0
 
 # main branch
-$ go install github.com/celogeek/go-comic-converter/v2@main
+$ go install github.com/celogeek/go-comic-converter/v3@main
 
 # specific commit
-$ go install github.com/celogeek/go-comic-converter/v2@141aeae
+$ go install github.com/celogeek/go-comic-converter/v3@COMMIT_HASH
 ```
 
 Add GOPATH to your PATH
@@ -64,13 +64,13 @@ You can check if a new version is available with:
 ```
 $ go-comic-converter -version
 go-comic-converter
-  Path             : github.com/celogeek/go-comic-converter/v2
+  Path             : github.com/celogeek/go-comic-converter/v3
   Sum              : h1:tUFF2m/fGlOJOwC0/PlTopMfcBMprKvgr6TiQHQxEeo=
-  Version          : v2.6.9
-  Available Version: v2.6.9
+  Version          : v3.0.0
+  Available Version: v3.0.0
 
 To install the latest version:
-$ go install github.com/celogeek/go-comic-converter/v2@v2.6.9
+$ go install github.com/celogeek/go-comic-converter/v3@v3.0.0
 ```
 
 # Supported image files

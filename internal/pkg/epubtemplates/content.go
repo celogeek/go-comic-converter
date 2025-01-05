@@ -3,9 +3,9 @@ package epubtemplates
 import (
 	"github.com/beevik/etree"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epubimage"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 type Content struct {

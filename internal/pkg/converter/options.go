@@ -9,8 +9,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/epuboptions"
-	"github.com/celogeek/go-comic-converter/v2/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epuboptions"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 type Options struct {
