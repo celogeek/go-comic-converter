@@ -47,7 +47,7 @@ func (e EPUBImageProcessor) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".jpg", ".jpeg", ".png", ".webp", ".tiff":
 		{
-			return true
+			return !strings.HasPrefix(filepath.Base(path), ".")
 		}
 	}
 	return false
