@@ -53,7 +53,7 @@ func (e EPUBImageProcessor) isSupportedImage(path string) bool {
 	return false
 }
 
-// Load images from input
+// load images from input
 func (e EPUBImageProcessor) load() (totalImages int, output chan task, err error) {
 	fi, err := os.Stat(e.Input)
 	if err != nil {

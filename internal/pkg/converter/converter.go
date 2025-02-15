@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -131,7 +132,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
 	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
 	c.AddBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
-	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless)")
+	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 	c.AddBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
@@ -379,8 +380,8 @@ func (c *Converter) Validate() error {
 	}
 
 	// Format
-	if !(c.Options.Image.Format == "jpeg" || c.Options.Image.Format == "png") {
-		return errors.New("format should be jpeg or png")
+	if !slices.Contains([]string{"jpeg", "png", "copy"}, c.Options.Image.Format) {
+		return errors.New("format should be jpeg, png or copy")
 	}
 
 	// Aspect Ratio

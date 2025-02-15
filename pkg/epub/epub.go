@@ -3,6 +3,7 @@ package epub
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"math"
 	"path/filepath"
@@ -202,9 +203,20 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 
 // extract image and split it into part
 func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReader, err error) {
-	images, err := e.imageProcessor.Load()
+	images, err := func() ([]epubimage.EPUBImage, error) {
+		if e.EPUBOptions.Image.Format == "copy" {
+			return e.imageProcessor.PassThrough()
+		} else {
+			return e.imageProcessor.Load()
+		}
+	}()
 
 	if err != nil {
+		return
+	}
+
+	if len(images) == 0 {
+		err = errors.New("no image found")
 		return
 	}
 
