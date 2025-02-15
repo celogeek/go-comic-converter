@@ -320,8 +320,8 @@ func (e EPUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Ima
 	g.Draw(dst, o.Src)
 
 	return epubzip.CompressImage(
-		"OEBPS/Images/"+o.Name+"."+e.Image.Format,
-		e.Image.Format,
+		"OEBPS/Images/"+o.Name+".jpeg",
+		"jpeg",
 		dst,
 		e.Image.Quality,
 	)

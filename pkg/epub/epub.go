@@ -115,7 +115,7 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part,
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
-			"ImagePath":  "Images/cover." + e.Image.Format,
+			"ImagePath":  "Images/cover.jpeg",
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
 		})),
 	); err != nil {
@@ -172,7 +172,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
-			"ImagePath":  "Images/title." + e.Image.Format,
+			"ImagePath":  "Images/title.jpeg",
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 		})),
 	); err != nil {
