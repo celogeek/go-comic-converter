@@ -144,7 +144,7 @@ func (o Content) getManifest() []tag {
 	var imageTags, pageTags, spaceTags []tag
 	addTag := func(img epubimage.EPUBImage, withSpace bool) {
 		imageTags = append(imageTags,
-			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": o.ImageOptions.MediaType()}, ""},
+			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": img.MediaType()}, ""},
 		)
 		pageTags = append(pageTags,
 			tag{"item", tagAttrs{"id": img.PageKey(), "href": img.PagePath(), "media-type": "application/xhtml+xml"}, ""},

@@ -73,6 +73,11 @@ func (i EPUBImage) EPUBImgPath() string {
 	return "OEBPS/" + i.ImgPath()
 }
 
+// MediaType of the epub image
+func (i EPUBImage) MediaType() string {
+	return "image/" + i.Format
+}
+
 // ImgStyle style to apply to the image.
 //
 // center by default.
