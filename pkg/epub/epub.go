@@ -3,7 +3,6 @@ package epub
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"math"
 	"path/filepath"
@@ -212,11 +211,6 @@ func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReade
 	}()
 
 	if err != nil {
-		return
-	}
-
-	if len(images) == 0 {
-		err = errors.New("no image found")
 		return
 	}
 
