@@ -15,6 +15,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/nwaples/rardecode/v2"
+
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
@@ -94,10 +96,17 @@ func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err 
 			return
 		}
 
+		var uncompressedData []byte
+		uncompressedData, err = io.ReadAll(f)
+		if err != nil {
+			return
+		}
+		f.Close()
+
 		var img epubimage.EPUBImage
 		img, err = copyRawDataToStorage(
 			imgStorage,
-			f,
+			uncompressedData,
 			i,
 			input,
 			imgPath,
@@ -171,16 +180,27 @@ func (e EPUBImageProcessor) passThroughCbz() (images []epubimage.EPUBImage, err 
 	defer bar.Close()
 
 	for _, imgZip := range imagesZip {
+		if _, ok := indexedNames[imgZip.Name]; !ok {
+			continue
+		}
+
 		var f io.ReadCloser
 		f, err = imgZip.Open()
 		if err != nil {
 			return
 		}
 
+		var uncompressedData []byte
+		uncompressedData, err = io.ReadAll(f)
+		if err != nil {
+			return
+		}
+		f.Close()
+
 		var img epubimage.EPUBImage
 		img, err = copyRawDataToStorage(
 			imgStorage,
-			f,
+			uncompressedData,
 			indexedNames[imgZip.Name],
 			"",
 			imgZip.Name,
@@ -203,7 +223,136 @@ func (e EPUBImageProcessor) passThroughCbz() (images []epubimage.EPUBImage, err 
 
 func (e EPUBImageProcessor) passThroughCbr() (images []epubimage.EPUBImage, err error) {
 	images = make([]epubimage.EPUBImage, 0)
-	err = errNoImagesFound
+
+	var isSolid bool
+	files, err := rardecode.List(e.Input)
+	if err != nil {
+		return
+	}
+
+	names := make([]string, 0)
+	for _, f := range files {
+		if filterCopyPath(f.IsDir, f.Name) {
+			if f.Solid {
+				isSolid = true
+			}
+			names = append(names, f.Name)
+		}
+	}
+
+	if len(names) == 0 {
+		err = errNoImagesFound
+		return
+	}
+
+	sort.Sort(sortpath.By(names, e.SortPathMode))
+
+	indexedNames := make(map[string]int)
+	for i, name := range names {
+		indexedNames[name] = i
+	}
+
+	var imgStorage epubzip.StorageImageWriter
+	imgStorage, err = epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
+	if err != nil {
+		return
+	}
+	defer imgStorage.Close()
+
+	// processing
+	bar := epubprogress.New(epubprogress.Options{
+		Quiet:       e.Quiet,
+		Json:        e.Json,
+		Max:         len(names),
+		Description: "Copying",
+		CurrentJob:  1,
+		TotalJob:    2,
+	})
+	defer bar.Close()
+
+	if isSolid {
+		var r *rardecode.ReadCloser
+		r, err = rardecode.OpenReader(e.Input)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		for {
+			f, rerr := r.Next()
+			if rerr != nil {
+				if rerr == io.EOF {
+					break
+				}
+				err = rerr
+				return
+			}
+
+			if _, ok := indexedNames[f.Name]; !ok {
+				continue
+			}
+
+			var uncompressedData []byte
+			uncompressedData, err = io.ReadAll(r)
+			if err != nil {
+				return
+			}
+
+			var img epubimage.EPUBImage
+			img, err = copyRawDataToStorage(
+				imgStorage,
+				uncompressedData,
+				indexedNames[f.Name],
+				"",
+				f.Name,
+			)
+
+			if err != nil {
+				return
+			}
+
+			images = append(images, img)
+			_ = bar.Add(1)
+		}
+	} else {
+		for _, file := range files {
+			if i, ok := indexedNames[file.Name]; ok {
+				var f io.ReadCloser
+				f, err = file.Open()
+				if err != nil {
+					return
+				}
+
+				var uncompressedData []byte
+				uncompressedData, err = io.ReadAll(f)
+				if err != nil {
+					return
+				}
+				f.Close()
+
+				var img epubimage.EPUBImage
+				img, err = copyRawDataToStorage(
+					imgStorage,
+					uncompressedData,
+					i,
+					"",
+					file.Name,
+				)
+
+				if err != nil {
+					return
+				}
+
+				images = append(images, img)
+				_ = bar.Add(1)
+			}
+		}
+	}
+
+	if len(images) == 0 {
+		err = errNoImagesFound
+	}
+
 	return
 }
 
@@ -215,22 +364,11 @@ func filterCopyPath(isDir bool, filename string) bool {
 
 func copyRawDataToStorage(
 	imgStorage epubzip.StorageImageWriter,
-	f io.ReadCloser,
+	uncompressedData []byte,
 	id int,
 	dirname string,
 	filename string,
 ) (img epubimage.EPUBImage, err error) {
-	var uncompressedData []byte
-	uncompressedData, err = io.ReadAll(f)
-	if err != nil {
-		return
-	}
-
-	err = f.Close()
-	if err != nil {
-		return
-	}
-
 	p, fn := filepath.Split(filepath.Clean(filename))
 	if p == dirname {
 		p = ""
