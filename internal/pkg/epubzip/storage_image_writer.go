@@ -50,3 +50,24 @@ func (e StorageImageWriter) Add(filename string, img image.Image, quality int) e
 
 	return nil
 }
+
+func (e StorageImageWriter) AddRaw(filename string, uncompressedData []byte) error {
+	zipImage, err := CompressRaw(filename, uncompressedData)
+
+	if err != nil {
+		return err
+	}
+
+	e.mut.Lock()
+	defer e.mut.Unlock()
+	fh, err := e.fz.CreateRaw(zipImage.Header)
+	if err != nil {
+		return err
+	}
+	_, err = fh.Write(zipImage.Data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
