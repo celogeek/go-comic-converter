@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	"image/png"
 	"io"
 	"io/fs"
 	"os"
@@ -56,7 +57,7 @@ func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err 
 			return nil
 		}
 
-		if slices.Contains([]string{".jpeg", ".jpg"}, strings.ToLower(filepath.Ext(path))) {
+		if slices.Contains([]string{".jpeg", ".jpg", ".png"}, strings.ToLower(filepath.Ext(path))) {
 			imagesPath = append(imagesPath, path)
 		}
 		return nil
@@ -105,25 +106,42 @@ func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err 
 			return
 		}
 
+		p, fn := filepath.Split(imgPath)
+		if p == input {
+			p = ""
+		} else {
+			p = p[len(input)+1:]
+		}
+
+		var (
+			format       string
+			decodeConfig func(r io.Reader) (image.Config, error)
+			decode       func(r io.Reader) (image.Image, error)
+		)
+
+		switch filepath.Ext(fn) {
+		case ".png":
+			format = "png"
+			decodeConfig = png.DecodeConfig
+			decode = png.Decode
+		case ".jpg", ".jpeg":
+			format = "jpeg"
+			decodeConfig = jpeg.DecodeConfig
+			decode = jpeg.Decode
+		}
+
 		var config image.Config
-		config, err = jpeg.DecodeConfig(bytes.NewReader(uncompressedData))
+		config, err = decodeConfig(bytes.NewReader(uncompressedData))
 		if err != nil {
 			return
 		}
 
 		var rawImage image.Image
 		if i == 0 {
-			rawImage, err = jpeg.Decode(bytes.NewReader(uncompressedData))
+			rawImage, err = decode(bytes.NewReader(uncompressedData))
 			if err != nil {
 				return
 			}
-		}
-
-		p, fn := filepath.Split(imgPath)
-		if p == input {
-			p = ""
-		} else {
-			p = p[len(input)+1:]
 		}
 
 		img := epubimage.EPUBImage{
@@ -136,7 +154,7 @@ func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err 
 			DoublePage:          config.Width > config.Height,
 			Path:                p,
 			Name:                fn,
-			Format:              "jpeg",
+			Format:              format,
 			OriginalAspectRatio: float64(config.Height) / float64(config.Width),
 		}
 
