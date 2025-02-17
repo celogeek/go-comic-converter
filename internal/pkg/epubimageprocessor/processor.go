@@ -17,16 +17,21 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
-type EPUBImageProcessor struct {
+type EPUBImageProcessor interface {
+	Load() (images []epubimage.EPUBImage, err error)
+	CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error)
+}
+
+type ePUBImageProcessor struct {
 	epuboptions.EPUBOptions
 }
 
 func New(o epuboptions.EPUBOptions) EPUBImageProcessor {
-	return EPUBImageProcessor{o}
+	return ePUBImageProcessor{o}
 }
 
 // Load extract and convert images
-func (e EPUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
+func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	images = make([]epubimage.EPUBImage, 0)
 	imageCount, imageInput, err := e.load()
 	if err != nil {
@@ -136,7 +141,7 @@ func (e EPUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	return images, nil
 }
 
-func (e EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
+func (e ePUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
 	if e.EPUBOptions.Image.GrayScale {
 		return image.NewGray(r)
 	}
@@ -169,7 +174,7 @@ func (e EPUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw
 
 // transform image into 1 or 3 images
 // only doublepage with autosplit has 3 versions
-func (e EPUBImageProcessor) transformImage(input task, part int, right bool) epubimage.EPUBImage {
+func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epubimage.EPUBImage {
 	g := gift.New()
 	src := input.Image
 	srcBounds := src.Bounds()
@@ -286,7 +291,7 @@ type CoverTitleDataOptions struct {
 	BorderSize  int
 }
 
-func (e EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Image {
+func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Image {
 	return image.NewPaletted(bounds, color.Palette{
 		color.Gray{},
 		color.Gray{Y: 0x11},
@@ -308,12 +313,12 @@ func (e EPUBImageProcessor) Cover16LevelOfGray(bounds image.Rectangle) draw.Imag
 }
 
 // CoverTitleData create a title page with the cover
-func (e EPUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error) {
+func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error) {
 	// Create a blur version of the cover
 	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))
 	var dst draw.Image
 	if o.Name == "cover" && e.Image.GrayScale {
-		dst = e.Cover16LevelOfGray(o.Src.Bounds())
+		dst = e.cover16LevelOfGray(o.Src.Bounds())
 	} else {
 		dst = e.createImage(o.Src, g.Bounds(o.Src.Bounds()))
 	}

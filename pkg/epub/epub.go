@@ -15,6 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagepassthrough"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtemplates"
@@ -52,13 +53,20 @@ func New(options epuboptions.EPUBOptions) EPUB {
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
 	})
 
+	var imageProcessor epubimageprocessor.EPUBImageProcessor
+	if options.Image.Format == "copy" {
+		imageProcessor = epubimagepassthrough.New(options)
+	} else {
+		imageProcessor = epubimageprocessor.New(options)
+	}
+
 	return epub{
 		EPUBOptions:       options,
 		UID:               uid.String(),
 		Publisher:         "GO Comic Converter",
 		UpdatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		templateProcessor: tmpl,
-		imageProcessor:    epubimageprocessor.New(options),
+		imageProcessor:    imageProcessor,
 	}
 }
 
@@ -202,13 +210,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 
 // extract image and split it into part
 func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReader, err error) {
-	images, err := func() ([]epubimage.EPUBImage, error) {
-		if e.EPUBOptions.Image.Format == "copy" {
-			return e.imageProcessor.PassThrough()
-		} else {
-			return e.imageProcessor.Load()
-		}
-	}()
+	images, err := e.imageProcessor.Load()
 
 	if err != nil {
 		return

@@ -1,8 +1,9 @@
-package epubimageprocessor
+package epubimagepassthrough
 
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -18,33 +19,48 @@ import (
 	"github.com/nwaples/rardecode/v2"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
+	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
-func (e EPUBImageProcessor) PassThrough() (images []epubimage.EPUBImage, err error) {
+type ePUBImagePassthrough struct {
+	epuboptions.EPUBOptions
+}
+
+func (e ePUBImagePassthrough) Load() (images []epubimage.EPUBImage, err error) {
 	fi, err := os.Stat(e.Input)
 	if err != nil {
 		return
 	}
 
 	if fi.IsDir() {
-		return e.passThroughDir()
+		return e.loadDir()
 	} else {
 		switch ext := strings.ToLower(filepath.Ext(e.Input)); ext {
 		case ".cbz", ".zip":
-			return e.passThroughCbz()
+			return e.loadCbz()
 		case ".cbr", ".rar":
-			return e.passThroughCbr()
+			return e.loadCbr()
 		default:
 			return nil, fmt.Errorf("unknown file format (%s): support .cbz, .zip, .cbr, .rar", ext)
 		}
 	}
-
 }
 
-func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err error) {
+func (e ePUBImagePassthrough) CoverTitleData(o epubimageprocessor.CoverTitleDataOptions) (epubzip.Image, error) {
+	return epubimageprocessor.New(e.EPUBOptions).CoverTitleData(o)
+}
+
+var errNoImagesFound = errors.New("no images found")
+
+func New(o epuboptions.EPUBOptions) epubimageprocessor.EPUBImageProcessor {
+	return ePUBImagePassthrough{o}
+}
+
+func (e ePUBImagePassthrough) loadDir() (images []epubimage.EPUBImage, err error) {
 	imagesPath := make([]string, 0)
 
 	input := filepath.Clean(e.Input)
@@ -127,7 +143,7 @@ func (e EPUBImageProcessor) passThroughDir() (images []epubimage.EPUBImage, err 
 
 }
 
-func (e EPUBImageProcessor) passThroughCbz() (images []epubimage.EPUBImage, err error) {
+func (e ePUBImagePassthrough) loadCbz() (images []epubimage.EPUBImage, err error) {
 	images = make([]epubimage.EPUBImage, 0)
 
 	input := filepath.Clean(e.Input)
@@ -221,7 +237,7 @@ func (e EPUBImageProcessor) passThroughCbz() (images []epubimage.EPUBImage, err 
 	return
 }
 
-func (e EPUBImageProcessor) passThroughCbr() (images []epubimage.EPUBImage, err error) {
+func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error) {
 	images = make([]epubimage.EPUBImage, 0)
 
 	var isSolid bool
