@@ -89,6 +89,8 @@ The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`.
 
 The case for extensions doesn't matter.
 
+For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`
+
 # Usage
 
 ## Convert directory
@@ -443,34 +445,34 @@ Output:
 Config:
   -profile string (default "SR")
     	Profile to use: 
-    	    - HR      ( 2400x3840 ) - High Resolution
-    	    - SR      ( 1200x1920 ) - Standard Resolution
-    	    - K1      (   600x670 ) - Kindle 1
-    	    - K11     ( 1072x1448 ) - Kindle 11
-    	    - K2      (   600x670 ) - Kindle 2
-    	    - K34     (   600x800 ) - Kindle Keyboard/Touch
-    	    - K578    (   600x800 ) - Kindle
-    	    - KDX     (  824x1000 ) - Kindle DX/DXG
-    	    - KPW     (  758x1024 ) - Kindle Paperwhite 1/2
-    	    - KV      ( 1072x1448 ) - Kindle Paperwhite 3/4/Voyage/Oasis
-    	    - KPW5    ( 1236x1648 ) - Kindle Paperwhite 5/Signature Edition
-    	    - KO      ( 1264x1680 ) - Kindle Oasis 2/3
-    	    - KS      ( 1860x2480 ) - Kindle Scribe
-    	    - KoMT    (   600x800 ) - Kobo Mini/Touch
-    	    - KoG     (  768x1024 ) - Kobo Glo
-    	    - KoGHD   ( 1072x1448 ) - Kobo Glo HD
-    	    - KoA     (  758x1024 ) - Kobo Aura
-    	    - KoAHD   ( 1080x1440 ) - Kobo Aura HD
-    	    - KoAH2O  ( 1080x1430 ) - Kobo Aura H2O
-    	    - KoAO    ( 1404x1872 ) - Kobo Aura ONE
-    	    - KoN     (  758x1024 ) - Kobo Nia
-    	    - KoC     ( 1072x1448 ) - Kobo Clara HD/Kobo Clara 2E
-    	    - KoL     ( 1264x1680 ) - Kobo Libra H2O/Kobo Libra 2
-    	    - KoF     ( 1440x1920 ) - Kobo Forma
-    	    - KoS     ( 1440x1920 ) - Kobo Sage
-    	    - KoE     ( 1404x1872 ) - Kobo Elipsa
-    	    - RM1     ( 1404x1872 ) - reMarkable 1
-    	    - RM2     ( 1404x1872 ) - reMarkable 2
+    	    - KoAO    - 1404 x 1872 - Kobo Aura ONE
+    	    - KoF     - 1440 x 1920 - Kobo Forma
+    	    - KoE     - 1404 x 1872 - Kobo Elipsa
+    	    - KV      - 1072 x 1448 - Kindle Paperwhite 3/4/Voyage/Oasis
+    	    - KoG     -  768 x 1024 - Kobo Glo
+    	    - KoA     -  758 x 1024 - Kobo Aura
+    	    - RM1     - 1404 x 1872 - reMarkable 1
+    	    - RM2     - 1404 x 1872 - reMarkable 2
+    	    - K1      -  600 x 670  - Kindle 1
+    	    - K11     - 1072 x 1448 - Kindle 11
+    	    - K2      -  600 x 670  - Kindle 2
+    	    - K34     -  600 x 800  - Kindle Keyboard/Touch
+    	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
+    	    - KoAH2O  - 1080 x 1430 - Kobo Aura H2O
+    	    - KoN     -  758 x 1024 - Kobo Nia
+    	    - KoL     - 1264 x 1680 - Kobo Libra H2O/Kobo Libra 2
+    	    - HR      - 2400 x 3840 - High Resolution
+    	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
+    	    - KS      - 1860 x 2480 - Kindle Scribe
+    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
+    	    - KoAHD   - 1080 x 1440 - Kobo Aura HD
+    	    - KoC     - 1072 x 1448 - Kobo Clara HD/Kobo Clara 2E
+    	    - KoS     - 1440 x 1920 - Kobo Sage
+    	    - SR      - 1200 x 1920 - Standard Resolution
+    	    - K578    -  600 x 800  - Kindle
+    	    - KDX     -  824 x 1000 - Kindle DX/DXG
+    	    - KPW     -  758 x 1024 - Kindle Paperwhite 1/2
+    	    - KoGHD   - 1072 x 1448 - Kobo Glo HD
   -quality int (default 85)
     	Quality of the image
   -grayscale (default true)
@@ -527,10 +529,10 @@ Config:
     	Foreground color in hexadecimal format RGB. Black=000, White=FFF
   -background-color string (default "FFF")
     	Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777
-  -noresize
-    	Do not reduce image size if exceed device size
+  -resize (default true)
+    	Reduce image size if exceed device size
   -format string (default "jpeg")
-    	Format of output images: jpeg (lossy), png (lossless)
+    	Format of output images: jpeg (lossy), png (lossless), copy (no processing)
   -aspect-ratio float
     	Aspect ratio (height/width) of the output
     	 -1 = same as device
