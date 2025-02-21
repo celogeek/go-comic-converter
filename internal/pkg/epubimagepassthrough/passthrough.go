@@ -12,7 +12,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 
@@ -69,7 +68,7 @@ func (e ePUBImagePassthrough) loadDir() (images []epubimage.EPUBImage, err error
 			return err
 		}
 
-		if filterCopyPath(d.IsDir(), path) {
+		if !d.IsDir() && e.isSupportedImage(path) {
 			imagesPath = append(imagesPath, path)
 		}
 
@@ -106,23 +105,18 @@ func (e ePUBImagePassthrough) loadDir() (images []epubimage.EPUBImage, err error
 	defer bar.Close()
 
 	for i, imgPath := range imagesPath {
-		var f *os.File
-		f, err = os.Open(imgPath)
-		if err != nil {
-			return
-		}
-
-		var uncompressedData []byte
-		uncompressedData, err = io.ReadAll(f)
-		if err != nil {
-			return
-		}
-		f.Close()
 
 		var img epubimage.EPUBImage
-		img, err = copyRawDataToStorage(
+		img, err = e.copyRawDataToStorage(
 			imgStorage,
-			uncompressedData,
+			func() ([]byte, error) {
+				f, err := os.Open(imgPath)
+				if err != nil {
+					return nil, err
+				}
+				defer f.Close()
+				return io.ReadAll(f)
+			},
 			i,
 			input,
 			imgPath,
@@ -155,7 +149,7 @@ func (e ePUBImagePassthrough) loadCbz() (images []epubimage.EPUBImage, err error
 
 	imagesZip := make([]*zip.File, 0)
 	for _, f := range r.File {
-		if filterCopyPath(f.FileInfo().IsDir(), f.Name) {
+		if !f.FileInfo().IsDir() && e.isSupportedImage(f.Name) {
 			imagesZip = append(imagesZip, f)
 		}
 	}
@@ -200,23 +194,18 @@ func (e ePUBImagePassthrough) loadCbz() (images []epubimage.EPUBImage, err error
 			continue
 		}
 
-		var f io.ReadCloser
-		f, err = imgZip.Open()
-		if err != nil {
-			return
-		}
-
-		var uncompressedData []byte
-		uncompressedData, err = io.ReadAll(f)
-		if err != nil {
-			return
-		}
-		f.Close()
-
 		var img epubimage.EPUBImage
-		img, err = copyRawDataToStorage(
+		img, err = e.copyRawDataToStorage(
 			imgStorage,
-			uncompressedData,
+			func() ([]byte, error) {
+				f, err := imgZip.Open()
+				if err != nil {
+					return nil, err
+				}
+				defer f.Close()
+
+				return io.ReadAll(f)
+			},
 			indexedNames[imgZip.Name],
 			"",
 			imgZip.Name,
@@ -248,7 +237,7 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 
 	names := make([]string, 0)
 	for _, f := range files {
-		if filterCopyPath(f.IsDir, f.Name) {
+		if !f.IsDir && e.isSupportedImage(f.Name) {
 			if f.Solid {
 				isSolid = true
 			}
@@ -308,16 +297,12 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 				continue
 			}
 
-			var uncompressedData []byte
-			uncompressedData, err = io.ReadAll(r)
-			if err != nil {
-				return
-			}
-
 			var img epubimage.EPUBImage
-			img, err = copyRawDataToStorage(
+			img, err = e.copyRawDataToStorage(
 				imgStorage,
-				uncompressedData,
+				func() ([]byte, error) {
+					return io.ReadAll(r)
+				},
 				indexedNames[f.Name],
 				"",
 				f.Name,
@@ -333,23 +318,17 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 	} else {
 		for _, file := range files {
 			if i, ok := indexedNames[file.Name]; ok {
-				var f io.ReadCloser
-				f, err = file.Open()
-				if err != nil {
-					return
-				}
-
-				var uncompressedData []byte
-				uncompressedData, err = io.ReadAll(f)
-				if err != nil {
-					return
-				}
-				f.Close()
-
 				var img epubimage.EPUBImage
-				img, err = copyRawDataToStorage(
+				img, err = e.copyRawDataToStorage(
 					imgStorage,
-					uncompressedData,
+					func() ([]byte, error) {
+						f, err := file.Open()
+						if err != nil {
+							return nil, err
+						}
+						defer f.Close()
+						return io.ReadAll(f)
+					},
 					i,
 					"",
 					file.Name,
@@ -372,19 +351,29 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 	return
 }
 
-func filterCopyPath(isDir bool, filename string) bool {
-	return !isDir &&
-		!strings.HasPrefix(filepath.Base(filename), ".") &&
-		slices.Contains([]string{".jpeg", ".jpg", ".png"}, strings.ToLower(filepath.Ext(filename)))
+func (e ePUBImagePassthrough) isSupportedImage(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".jpg", ".jpeg", ".png":
+		{
+			return !strings.HasPrefix(filepath.Base(path), ".")
+		}
+	}
+	return false
 }
 
-func copyRawDataToStorage(
+func (e ePUBImagePassthrough) copyRawDataToStorage(
 	imgStorage epubzip.StorageImageWriter,
-	uncompressedData []byte,
+	getData func() ([]byte, error),
 	id int,
 	dirname string,
 	filename string,
 ) (img epubimage.EPUBImage, err error) {
+	var uncompressedData []byte
+	uncompressedData, err = getData()
+	if err != nil {
+		return
+	}
+
 	p, fn := filepath.Split(filepath.Clean(filename))
 	if p == dirname {
 		p = ""
