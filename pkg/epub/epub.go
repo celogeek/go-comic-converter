@@ -15,6 +15,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagepassthrough"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtemplates"
@@ -52,13 +53,20 @@ func New(options epuboptions.EPUBOptions) EPUB {
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
 	})
 
+	var imageProcessor epubimageprocessor.EPUBImageProcessor
+	if options.Image.Format == "copy" {
+		imageProcessor = epubimagepassthrough.New(options)
+	} else {
+		imageProcessor = epubimageprocessor.New(options)
+	}
+
 	return epub{
 		EPUBOptions:       options,
 		UID:               uid.String(),
 		Publisher:         "GO Comic Converter",
 		UpdatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		templateProcessor: tmpl,
-		imageProcessor:    epubimageprocessor.New(options),
+		imageProcessor:    imageProcessor,
 	}
 }
 
@@ -115,7 +123,7 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part,
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
-			"ImagePath":  "Images/cover." + e.Image.Format,
+			"ImagePath":  "Images/cover.jpeg",
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
 		})),
 	); err != nil {
@@ -172,7 +180,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
-			"ImagePath":  "Images/title." + e.Image.Format,
+			"ImagePath":  "Images/title.jpeg",
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
 		})),
 	); err != nil {

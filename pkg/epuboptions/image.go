@@ -20,7 +20,3 @@ type Image struct {
 	Format                    string `yaml:"format" json:"format"`
 	AppleBookCompatibility    bool   `yaml:"apple_book_compatibility" json:"apple_book_compatibility"`
 }
-
-func (i Image) MediaType() string {
-	return "image/" + i.Format
-}
