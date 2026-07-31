@@ -34,9 +34,21 @@ func FloatToString(f float64, precision int) string {
 
 func BoolToString(b bool) string {
 	if b {
-		return "true"
+		return "enabled"
 	}
-	return "false"
+	return "disabled"
+}
+
+func BoolToInt(b bool) int {
+	if b {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func BoolStringToInt(s string) int {
+	return BoolToInt(s == "true" || s == "1")
 }
 
 func NumberOfDigits(i int) int {

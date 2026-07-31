@@ -211,7 +211,13 @@ func (o *Options) ShowConfig() string {
 		{"Apple book compatibility", o.Image.AppleBookCompatibility, !o.Image.View.PortraitOnly},
 	} {
 		if v.Condition {
-			b.WriteString(fmt.Sprintf("\n    %-32s: %v", v.Key, v.Value))
+			if bv, ok := v.Value.(bool); ok {
+				if bv {
+					b.WriteString(fmt.Sprintf("\n    %-32s: %d", v.Key, utils.BoolToInt(bv)))
+				}
+			} else {
+				b.WriteString(fmt.Sprintf("\n    %-32s: %v", v.Key, v.Value))
+			}
 		}
 	}
 	return b.String()

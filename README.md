@@ -155,27 +155,27 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : true
-    Auto rotate                     : true
-    Auto split double page          : true
-    Keep double page if split       : true
-    No blank image                  : true
-    Manga                           : true
-    Has cover                       : true
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 1
+    Auto rotate                     : 1
+    Auto split double page          : 1
+    Keep double page if split       : 1
+    No blank image                  : 1
+    Manga                           : 1
+    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : false
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 TOC:
   - mymanga
@@ -203,27 +203,27 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : true
-    Auto rotate                     : true
-    Auto split double page          : true
-    Keep double page if split       : true
-    No blank image                  : true
-    Manga                           : true
-    Has cover                       : true
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 1
+    Auto rotate                     : 1
+    Auto split double page          : 1
+    Keep double page if split       : 1
+    No blank image                  : 1
+    Manga                           : 1
+    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : false
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 TOC:
   - mymanga
@@ -261,25 +261,25 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : false
-    Auto rotate                     : false
-    Auto split double page          : false
-    No blank image                  : true
-    Manga                           : false
-    Has cover                       : true
-    Strip first directory from toc  : false
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 0
+    Auto rotate                     : 0
+    Auto split double page          : 0
+    No blank image                  : 1
+    Manga                           : 0
+    Has cover                       : 1
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 ```
 
 ### Change default settings
@@ -292,28 +292,28 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : true
-    Auto rotate                     : true
-    Auto split double page          : true
-    Keep double page if split       : true
-    Keep split double page aspect   : true
-    No blank image                  : true
-    Manga                           : true
-    Has cover                       : true
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 1
+    Auto rotate                     : 1
+    Auto split double page          : 1
+    Keep double page if split       : 1
+    Keep split double page aspect   : 1
+    No blank image                  : 1
+    Manga                           : 1
+    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : false
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -326,25 +326,25 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : false
-    Auto rotate                     : false
-    Auto split double page          : false
-    No blank image                  : true
-    Manga                           : false
-    Has cover                       : true
-    Strip first directory from toc  : false
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 0
+    Auto rotate                     : 0
+    Auto split double page          : 0
+    No blank image                  : 1
+    Manga                           : 0
+    Has cover                       : 1
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -360,25 +360,25 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : false
-    Auto rotate                     : false
-    Auto split double page          : false
-    No blank image                  : true
-    Manga                           : false
-    Has cover                       : true
-    Strip first directory from toc  : false
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 0
+    Auto rotate                     : 0
+    Auto split double page          : 0
+    No blank image                  : 1
+    Manga                           : 0
+    Has cover                       : 1
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 Reset default to ~/.go-comic-converter.yaml
 ```
@@ -395,26 +395,26 @@ Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 90
-    Grayscale                       : true
+    Grayscale                       : 1
     Grayscale mode                  : normal
-    Crop                            : true
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip false
-    Auto contrast                   : false
-    Auto rotate                     : false
-    Auto split double page          : false
-    No blank image                  : true
-    Manga                           : true
-    Has cover                       : true
+    Crop                            : 1
+    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Auto contrast                   : 0
+    Auto rotate                     : 0
+    Auto split double page          : 0
+    No blank image                  : 1
+    Manga                           : 1
+    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : false
+    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000
     Background color                : #FFF
-    Resize                          : true
+    Resize                          : 1
     Aspect ratio                    : 1:1.60
-    Portrait only                   : false
+    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : false
+    Apple book compatibility        : 0
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -433,114 +433,114 @@ $ go-comic-converter -h
 Usage of go-comic-converter:
 
 Output:
-  -input string
+  -input=string
     	Source of comic to convert: directory, cbz, zip, cbr, rar, pdf
-  -output string
+  -output=string
     	Output of the EPUB (directory or EPUB): (default [INPUT].epub)
-  -author string (default "GO Comic Converter")
+  -author=string (default "GO Comic Converter")
     	Author of the EPUB
-  -title string
+  -title=string
     	Title of the EPUB
 
 Config:
-  -profile string (default "SR")
+  -profile=string (default "SR")
     	Profile to use: 
-    	    - KoAO    - 1404 x 1872 - Kobo Aura ONE
-    	    - KoF     - 1440 x 1920 - Kobo Forma
-    	    - KoE     - 1404 x 1872 - Kobo Elipsa
-    	    - KV      - 1072 x 1448 - Kindle Paperwhite 3/4/Voyage/Oasis
-    	    - KoG     -  768 x 1024 - Kobo Glo
     	    - KoA     -  758 x 1024 - Kobo Aura
-    	    - RM1     - 1404 x 1872 - reMarkable 1
-    	    - RM2     - 1404 x 1872 - reMarkable 2
-    	    - K1      -  600 x 670  - Kindle 1
-    	    - K11     - 1072 x 1448 - Kindle 11
-    	    - K2      -  600 x 670  - Kindle 2
-    	    - K34     -  600 x 800  - Kindle Keyboard/Touch
-    	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
+    	    - KoAHD   - 1080 x 1440 - Kobo Aura HD
     	    - KoAH2O  - 1080 x 1430 - Kobo Aura H2O
+    	    - KoAO    - 1404 x 1872 - Kobo Aura ONE
+    	    - RM2     - 1404 x 1872 - reMarkable 2
+    	    - SR      - 1200 x 1920 - Standard Resolution
+    	    - K11     - 1072 x 1448 - Kindle 11
+    	    - K578    -  600 x 800  - Kindle
+    	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
     	    - KoN     -  758 x 1024 - Kobo Nia
     	    - KoL     - 1264 x 1680 - Kobo Libra H2O/Kobo Libra 2
     	    - HR      - 2400 x 3840 - High Resolution
-    	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
+    	    - K1      -  600 x 670  - Kindle 1
+    	    - KV      - 1072 x 1448 - Kindle Paperwhite 3/4/Voyage/Oasis
+    	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
     	    - KS      - 1860 x 2480 - Kindle Scribe
-    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
-    	    - KoAHD   - 1080 x 1440 - Kobo Aura HD
     	    - KoC     - 1072 x 1448 - Kobo Clara HD/Kobo Clara 2E
-    	    - KoS     - 1440 x 1920 - Kobo Sage
-    	    - SR      - 1200 x 1920 - Standard Resolution
-    	    - K578    -  600 x 800  - Kindle
+    	    - KoE     - 1404 x 1872 - Kobo Elipsa
+    	    - K2      -  600 x 670  - Kindle 2
     	    - KDX     -  824 x 1000 - Kindle DX/DXG
+    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
+    	    - KoG     -  768 x 1024 - Kobo Glo
+    	    - KoF     - 1440 x 1920 - Kobo Forma
+    	    - KoS     - 1440 x 1920 - Kobo Sage
+    	    - RM1     - 1404 x 1872 - reMarkable 1
+    	    - K34     -  600 x 800  - Kindle Keyboard/Touch
     	    - KPW     -  758 x 1024 - Kindle Paperwhite 1/2
     	    - KoGHD   - 1072 x 1448 - Kobo Glo HD
-  -quality int (default 85)
+  -quality=int (default 85)
     	Quality of the image
-  -grayscale (default true)
+  -grayscale or -grayscale=1 (to enabled), -grayscale=0 (to disabled) (default 1)
     	Grayscale image. Ideal for eInk devices.
-  -grayscale-mode int
+  -grayscale-mode=int
     	Grayscale Mode
     	0 = normal
     	1 = average
     	2 = luminance
-  -crop (default true)
+  -crop or -crop=1 (to enabled), -crop=0 (to disabled) (default 1)
     	Crop images
-  -crop-ratio-left int (default 1)
+  -crop-ratio-left=int (default 1)
     	Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.
-  -crop-ratio-up int (default 1)
+  -crop-ratio-up=int (default 1)
     	Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.
-  -crop-ratio-right int (default 1)
+  -crop-ratio-right=int (default 1)
     	Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.
-  -crop-ratio-bottom int (default 3)
+  -crop-ratio-bottom=int (default 3)
     	Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.
-  -crop-limit int
+  -crop-limit=int
     	Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.
-  -crop-skip-if-limit-reached
+  -crop-skip-if-limit-reached or -crop-skip-if-limit-reached=1 (to enabled), -crop-skip-if-limit-reached=0 (to disabled)
     	Crop skip if limit reached.
-  -brightness int
+  -brightness=int
     	Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker
-  -contrast int
+  -contrast=int
     	Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast
-  -autocontrast
+  -autocontrast or -autocontrast=1 (to enabled), -autocontrast=0 (to disabled)
     	Improve contrast automatically
-  -autorotate
+  -autorotate or -autorotate=1 (to enabled), -autorotate=0 (to disabled)
     	Auto Rotate page when width > height
-  -autosplitdoublepage
+  -autosplitdoublepage or -autosplitdoublepage=1 (to enabled), -autosplitdoublepage=0 (to disabled)
     	Auto Split double page when width > height
-  -keepdoublepageifsplit (default true)
+  -keepdoublepageifsplit or -keepdoublepageifsplit=1 (to enabled), -keepdoublepageifsplit=0 (to disabled) (default 1)
     	Keep the double page if split
-  -keepsplitdoublepageaspect (default true)
+  -keepsplitdoublepageaspect or -keepsplitdoublepageaspect=1 (to enabled), -keepsplitdoublepageaspect=0 (to disabled) (default 1)
     	Keep aspect of split part of a double page (best for landscape rendering)
-  -noblankimage (default true)
+  -noblankimage or -noblankimage=1 (to enabled), -noblankimage=0 (to disabled) (default 1)
     	Remove blank image
-  -manga
+  -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
-  -hascover (default true)
+  -hascover or -hascover=1 (to enabled), -hascover=0 (to disabled) (default 1)
     	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.
-  -limitmb int
+  -limitmb=int
     	Limit size of the EPUB: Default nolimit (0), Minimum 20
-  -strip
+  -strip or -strip=1 (to enabled), -strip=0 (to disabled)
     	Strip first directory from the TOC if only 1
-  -sort int (default 1)
+  -sort=int (default 1)
     	Sort path mode
     	0 = alpha for path and file
     	1 = alphanumeric for path and alpha for file
     	2 = alphanumeric for path and file
-  -foreground-color string (default "000")
+  -foreground-color=string (default "000")
     	Foreground color in hexadecimal format RGB. Black=000, White=FFF
-  -background-color string (default "FFF")
+  -background-color=string (default "FFF")
     	Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777
-  -resize (default true)
+  -resize or -resize=1 (to enabled), -resize=0 (to disabled) (default 1)
     	Reduce image size if exceed device size
-  -format string (default "jpeg")
+  -format=string (default "jpeg")
     	Format of output images: jpeg (lossy), png (lossless), copy (no processing)
-  -aspect-ratio float
+  -aspect-ratio=float
     	Aspect ratio (height/width) of the output
     	 -1 = same as device
     	  0 = same as source
     	1.6 = amazon advice for kindle
-  -portrait-only
+  -portrait-only or -portrait-only=1 (to enabled), -portrait-only=0 (to disabled)
     	Portrait only: force orientation to portrait only.
-  -titlepage int (default 1)
+  -titlepage=int (default 1)
     	Title page
     	0 = never
     	1 = always
@@ -569,11 +569,11 @@ Shortcut:
     	Max quality: grayscale jpg q90
 
 Compatibility:
-  -applebookcompatibility
+  -applebookcompatibility or -applebookcompatibility=1 (to enabled), -applebookcompatibility=0 (to disabled)
     	Apple book compatibility
 
 Other:
-  -workers int (default number of CPUs)
+  -workers=int (default 15)
     	Number of workers
   -dry
     	Dry run to show all options
