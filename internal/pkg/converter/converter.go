@@ -27,6 +27,7 @@ type Converter struct {
 	Cmd     *flag.FlagSet
 
 	order           []order
+	reversibleBool  map[string]struct{}
 	isZeroValueErrs []error
 	startAt         time.Time
 }
@@ -36,10 +37,11 @@ func New() *Converter {
 	o := NewOptions()
 	cmd := flag.NewFlagSet("go-comic-converter", flag.ExitOnError)
 	conv := &Converter{
-		Options: o,
-		Cmd:     cmd,
-		order:   make([]order, 0),
-		startAt: time.Now(),
+		Options:        o,
+		Cmd:            cmd,
+		order:          make([]order, 0),
+		reversibleBool: make(map[string]struct{}),
+		startAt:        time.Now(),
 	}
 
 	var cmdOutput strings.Builder
@@ -96,6 +98,12 @@ func (c *Converter) AddBoolParam(p *bool, name string, value bool, usage string)
 	c.order = append(c.order, orderName{value: name})
 }
 
+// AddReversibleBoolParam Add a boolean parameter
+func (c *Converter) AddReversibleBoolParam(p *bool, name string, value bool, usage string) {
+	c.AddBoolParam(p, name, value, usage)
+	c.reversibleBool[name] = struct{}{}
+}
+
 // InitParse Initialize the parser with all section and parameter.
 func (c *Converter) InitParse() {
 	c.AddSection("Output")
@@ -107,34 +115,34 @@ func (c *Converter) InitParse() {
 	c.AddSection("Config")
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
 	c.AddIntParam(&c.Options.Image.Quality, "quality", c.Options.Image.Quality, "Quality of the image")
-	c.AddBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")
+	c.AddReversibleBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")
 	c.AddIntParam(&c.Options.Image.GrayScaleMode, "grayscale-mode", c.Options.Image.GrayScaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
-	c.AddBoolParam(&c.Options.Image.Crop.Enabled, "crop", c.Options.Image.Crop.Enabled, "Crop images")
+	c.AddReversibleBoolParam(&c.Options.Image.Crop.Enabled, "crop", c.Options.Image.Crop.Enabled, "Crop images")
 	c.AddIntParam(&c.Options.Image.Crop.Left, "crop-ratio-left", c.Options.Image.Crop.Left, "Crop ratio left: ratio of pixels allow to be non blank while cutting on the left.")
 	c.AddIntParam(&c.Options.Image.Crop.Up, "crop-ratio-up", c.Options.Image.Crop.Up, "Crop ratio up: ratio of pixels allow to be non blank while cutting on the top.")
 	c.AddIntParam(&c.Options.Image.Crop.Right, "crop-ratio-right", c.Options.Image.Crop.Right, "Crop ratio right: ratio of pixels allow to be non blank while cutting on the right.")
 	c.AddIntParam(&c.Options.Image.Crop.Bottom, "crop-ratio-bottom", c.Options.Image.Crop.Bottom, "Crop ratio bottom: ratio of pixels allow to be non blank while cutting on the bottom.")
 	c.AddIntParam(&c.Options.Image.Crop.Limit, "crop-limit", c.Options.Image.Crop.Limit, "Crop limit: maximum number of cropping in percentage allowed. 0 mean unlimited.")
-	c.AddBoolParam(&c.Options.Image.Crop.SkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.Image.Crop.SkipIfLimitReached, "Crop skip if limit reached.")
+	c.AddReversibleBoolParam(&c.Options.Image.Crop.SkipIfLimitReached, "crop-skip-if-limit-reached", c.Options.Image.Crop.SkipIfLimitReached, "Crop skip if limit reached.")
 	c.AddIntParam(&c.Options.Image.Brightness, "brightness", c.Options.Image.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Image.Contrast, "contrast", c.Options.Image.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
-	c.AddBoolParam(&c.Options.Image.AutoContrast, "autocontrast", c.Options.Image.AutoContrast, "Improve contrast automatically")
-	c.AddBoolParam(&c.Options.Image.AutoRotate, "autorotate", c.Options.Image.AutoRotate, "Auto Rotate page when width > height")
-	c.AddBoolParam(&c.Options.Image.AutoSplitDoublePage, "autosplitdoublepage", c.Options.Image.AutoSplitDoublePage, "Auto Split double page when width > height")
-	c.AddBoolParam(&c.Options.Image.KeepDoublePageIfSplit, "keepdoublepageifsplit", c.Options.Image.KeepDoublePageIfSplit, "Keep the double page if split")
-	c.AddBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
-	c.AddBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
-	c.AddBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
-	c.AddBoolParam(&c.Options.Image.HasCover, "hascover", c.Options.Image.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
+	c.AddReversibleBoolParam(&c.Options.Image.AutoContrast, "autocontrast", c.Options.Image.AutoContrast, "Improve contrast automatically")
+	c.AddReversibleBoolParam(&c.Options.Image.AutoRotate, "autorotate", c.Options.Image.AutoRotate, "Auto Rotate page when width > height")
+	c.AddReversibleBoolParam(&c.Options.Image.AutoSplitDoublePage, "autosplitdoublepage", c.Options.Image.AutoSplitDoublePage, "Auto Split double page when width > height")
+	c.AddReversibleBoolParam(&c.Options.Image.KeepDoublePageIfSplit, "keepdoublepageifsplit", c.Options.Image.KeepDoublePageIfSplit, "Keep the double page if split")
+	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
+	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
+	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
+	c.AddReversibleBoolParam(&c.Options.Image.HasCover, "hascover", c.Options.Image.HasCover, "Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
-	c.AddBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
+	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
 	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
 	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
-	c.AddBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
+	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
-	c.AddBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
+	c.AddReversibleBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 
 	c.AddSection("Default config")
@@ -151,7 +159,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
 	c.AddSection("Compatibility")
-	c.AddBoolParam(&c.Options.Image.AppleBookCompatibility, "applebookcompatibility", c.Options.Image.AppleBookCompatibility, "Apple book compatibility")
+	c.AddReversibleBoolParam(&c.Options.Image.AppleBookCompatibility, "applebookcompatibility", c.Options.Image.AppleBookCompatibility, "Apple book compatibility")
 
 	c.AddSection("Other")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
@@ -169,8 +177,12 @@ func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	b.WriteString("  -" + f.Name)
 	name, usage := flag.UnquoteUsage(f)
 	if len(name) > 0 {
-		b.WriteString(" ")
+		b.WriteString("=")
 		b.WriteString(name)
+	} else {
+		if _, ok := c.reversibleBool[f.Name]; ok {
+			b.WriteString(" or -" + f.Name + "=1 (to enabled), -" + f.Name + "=0 (to disabled)")
+		}
 	}
 	// Print the default value only if it differs to the zero value
 	// for this flag type.
@@ -180,7 +192,11 @@ func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 		if isString {
 			b.WriteString(fmt.Sprintf(" (default %q)", f.DefValue))
 		} else {
-			b.WriteString(fmt.Sprintf(" (default %v)", f.DefValue))
+			if name == "" {
+				b.WriteString(fmt.Sprintf(" (default %d)", utils.BoolStringToInt(f.DefValue)))
+			} else {
+				b.WriteString(fmt.Sprintf(" (default %v)", f.DefValue))
+			}
 		}
 	}
 
@@ -232,6 +248,22 @@ func (c *Converter) Parse() {
 	if err := c.Cmd.Parse(os.Args[1:]); err != nil {
 		utils.Fatalf("cannot parse command line options: %v", err)
 	}
+
+	if len(c.Cmd.Args()) > 0 {
+		arg := c.Cmd.Args()[0]
+		fmt.Printf("After parsing command-line options, some of them are left unknown: %q\n", arg)
+		fmt.Println("")
+		if arg == "0" || arg == "1" || arg == "true" || arg == "false" {
+			fmt.Println("It looks like you're trying to set a boolean flag. The right syntax is:")
+			fmt.Println("  -boolean_option=0    (to disable)")
+			fmt.Println("  -boolean_option=1    (to enable)")
+			fmt.Println("")
+			fmt.Println("Do NOT use: -boolean_option 0")
+			fmt.Println("")
+		}
+		os.Exit(1)
+	}
+
 	if c.Options.Help {
 		c.Cmd.Usage()
 		os.Exit(0)
