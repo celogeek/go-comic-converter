@@ -17,19 +17,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gen2brain/go-fitz"
 	"golang.org/x/image/font/gofont/gomonobold"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode/v2"
-	pdfimage "github.com/raff/pdfreader/image"
-	"github.com/raff/pdfreader/pdfread"
-
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
-
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 type task struct {
@@ -394,13 +391,12 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 
 // extract image from a pdf
 func (e ePUBImageProcessor) loadPdf() (totalImages int, output chan task, err error) {
-	pdf := pdfread.Load(e.Input)
-	if pdf == nil {
-		err = fmt.Errorf("can't read pdf")
+	pdf, err := fitz.New(e.Input)
+	if err != nil {
 		return
 	}
 
-	totalImages = len(pdf.Pages())
+	totalImages = pdf.NumPage()
 	pageFmt := "page " + utils.FormatNumberOfDigits(totalImages)
 	output = make(chan task)
 	go func() {
@@ -410,7 +406,7 @@ func (e ePUBImageProcessor) loadPdf() (totalImages int, output chan task, err er
 			var img image.Image
 			var err error
 			if !e.Dry {
-				img, err = pdfimage.Extract(pdf, i+1)
+				img, err = pdf.Image(i)
 			}
 
 			name := fmt.Sprintf(pageFmt, i+1)
