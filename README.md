@@ -58,6 +58,23 @@ Add GOPATH to your PATH
 $ export PATH=$(go env GOPATH)/bin:$PATH
 ```
 
+# Installation on Alpine
+
+For Alpine user, you will need extra steps:
+```
+# install the external library
+apk add mupdf-dev
+
+# use it when you build it
+go install -tags extlib github.com/celogeek/go-comic-converter/v3
+```
+If you prefer a pure go version:
+
+```
+# use it when you build it
+go install -tags nocgo github.com/celogeek/go-comic-converter/v3
+```
+
 # Upgrade from V2
 
 The configuration file structure changes in the v3 compare to v2.
