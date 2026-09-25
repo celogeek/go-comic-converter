@@ -460,7 +460,7 @@ func (e epub) Write() error {
 		suffix := ""
 		if totalParts > 1 {
 			fmtLen := utils.FormatNumberOfDigits(totalParts)
-			fmtPart := "Part " + fmtLen + " of " + fmtLen
+			fmtPart := " - Part " + fmtLen + " of " + fmtLen
 			suffix = fmt.Sprintf(fmtPart, i+1, totalParts)
 		}
 
