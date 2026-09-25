@@ -203,12 +203,12 @@ TOC:
 
 ## Dry verbose
 
-You can choose different way to sort path and files, depending on your source. You can preview the sorted result with the option `dry-verbose` associated with `dry`.
+You can choose different way to sort path and files, depending on your source. You can preview the sorted result with the option `dry`.
 
 The option `sort` allow you to change the sorting order.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry -dry-verbose -sort 2
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry -sort 2
 Go Comic Converter
 
 Options:
@@ -531,8 +531,6 @@ Config:
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
-  -hascover or -hascover=1 (to enabled), -hascover=0 (to disabled) (default 1)
-    	Has cover. Indicate if your comic have a cover. The first page will be used as a cover and include after the title.
   -limitmb=int
     	Limit size of the EPUB: Default nolimit (0), Minimum 20
   -strip or -strip=1 (to enabled), -strip=0 (to disabled)
@@ -594,8 +592,6 @@ Other:
     	Number of workers
   -dry
     	Dry run to show all options
-  -dry-verbose
-    	Display also sorted files after the TOC
   -quiet
     	Disable progress bar
   -json

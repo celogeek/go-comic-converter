@@ -226,7 +226,7 @@ func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReade
 
 	parts = make([]epubPart, 0)
 	cover := images[0]
-	if e.Image.HasCover || (cover.DoublePage && !e.Image.KeepDoublePageIfSplit) {
+	if cover.DoublePage && !e.Image.KeepDoublePageIfSplit {
 		images = images[1:]
 	}
 
@@ -434,12 +434,8 @@ func (e epub) Write() error {
 	if e.Dry {
 		p := epubParts[0]
 		utils.Printf("TOC:\n  - %s\n%s\n", e.Title, e.getTree(p.Images, true))
-		if e.DryVerbose {
-			if e.Image.HasCover {
-				utils.Printf("Cover:\n%s\n", e.getTree([]epubimage.EPUBImage{p.Cover}, false))
-			}
-			utils.Printf("Files:\n%s\n", e.getTree(p.Images, false))
-		}
+		utils.Printf("Cover:\n%s\n", e.getTree([]epubimage.EPUBImage{p.Cover}, false))
+		utils.Printf("Files:\n%s\n", e.getTree(p.Images, false))
 		return nil
 	}
 	defer func() {
@@ -489,11 +485,7 @@ func (e epub) Write() error {
 
 	// display corrupted images
 	hasError := false
-	for pId, part := range epubParts {
-		if pId == 0 && e.Image.HasCover && part.Cover.Error != nil {
-			hasError = true
-			utils.Printf("Error on image %s: %v\n", filepath.Join(part.Cover.Path, part.Cover.Name), part.Cover.Error)
-		}
+	for _, part := range epubParts {
 		for _, img := range part.Images {
 			if img.Part == 0 && img.Error != nil {
 				hasError = true

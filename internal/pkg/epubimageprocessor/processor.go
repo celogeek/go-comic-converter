@@ -99,8 +99,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 				// DOUBLE PAGE
 				if !e.Image.AutoSplitDoublePage || // No split required
-					!img.DoublePage || // Not a double page
-					(e.Image.HasCover && img.Id == 0) { // Cover
+					!img.DoublePage { // Not a double page
 					continue
 				}
 

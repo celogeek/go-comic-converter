@@ -16,11 +16,10 @@ type EPUBOptions struct {
 	Image                      Image `yaml:"image" json:"image"`
 
 	// Other
-	Dry        bool `yaml:"-" json:"dry"`
-	DryVerbose bool `yaml:"-" json:"dry_verbose"`
-	Quiet      bool `yaml:"-" json:"-"`
-	Json       bool `yaml:"-" json:"-"`
-	Workers    int  `yaml:"-" json:"workers"`
+	Dry     bool `yaml:"-" json:"dry"`
+	Quiet   bool `yaml:"-" json:"-"`
+	Json    bool `yaml:"-" json:"-"`
+	Workers int  `yaml:"-" json:"workers"`
 }
 
 func (o EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {
