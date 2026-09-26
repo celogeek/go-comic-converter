@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/draw"
 
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/disintegration/gift"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
@@ -12,8 +13,8 @@ import (
 )
 
 // CoverTitle Create a title with the cover image
-func CoverTitle(title string, align string, pctWidth int, pctMargin int, maxFontSize int, borderSize int) gift.Filter {
-	return coverTitle{title, align, pctWidth, pctMargin, maxFontSize, borderSize}
+func CoverTitle(title string, align string, pctWidth int, pctMargin int, maxFontSize int, borderSize int, foreground string, background string) gift.Filter {
+	return coverTitle{title, align, pctWidth, pctMargin, maxFontSize, borderSize, foreground, background}
 }
 
 type coverTitle struct {
@@ -23,6 +24,8 @@ type coverTitle struct {
 	pctMargin   int
 	maxFontSize int
 	borderSize  int
+	foreground  string
+	background  string
 }
 
 // Bounds size is the same as source
@@ -64,10 +67,13 @@ func (p coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 	borderArea := image.Rect((srcWidth-(srcWidth*p.pctWidth/100))/2, textPosStart-p.borderSize-marginSize, (srcWidth+(srcWidth*p.pctWidth/100))/2, textPosEnd+p.borderSize+marginSize)
 	textArea := image.Rect(borderArea.Bounds().Min.X+p.borderSize, textPosStart-marginSize, borderArea.Bounds().Max.X-p.borderSize, textPosEnd+marginSize)
 
+	foreground := image.NewUniform(utils.HexToColor(p.foreground))
+	background := image.NewUniform(utils.HexToColor(p.background))
+
 	draw.Draw(
 		dst,
 		borderArea,
-		image.Black,
+		foreground,
 		borderArea.Min,
 		draw.Src,
 	)
@@ -75,7 +81,7 @@ func (p coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 	draw.Draw(
 		dst,
 		textArea,
-		image.White,
+		background,
 		textArea.Min,
 		draw.Src,
 	)
@@ -87,7 +93,7 @@ func (p coverTitle) Draw(dst draw.Image, src image.Image, _ *gift.Options) {
 	c.SetFont(f)
 	c.SetClip(textArea)
 	c.SetDst(dst)
-	c.SetSrc(image.Black)
+	c.SetSrc(foreground)
 
 	textLeft := textArea.Min.X + textArea.Dx()/2 - textWidth/2
 	if textLeft < textArea.Min.X {

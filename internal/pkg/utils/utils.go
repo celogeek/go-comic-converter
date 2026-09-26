@@ -2,8 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"image/color"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func Printf(format string, a ...interface{}) {
@@ -65,4 +67,50 @@ func NumberOfDigits(i int) int {
 
 func FormatNumberOfDigits(i int) string {
 	return "%0" + IntToString(NumberOfDigits(i)) + "d"
+}
+
+func HexToColor(s string) color.Color {
+	c := color.RGBA{G: 0, B: 0, A: 255}
+	c.R = colorHexToUint8(s[0:1])
+	c.G = colorHexToUint8(s[1:2])
+	c.B = colorHexToUint8(s[2:3])
+	return c
+}
+
+func StyleColor(grayScale bool, grayScaleMode int, s string) string {
+	if grayScale {
+		return HexToGrayHex(grayScaleMode, s)
+	}
+	return s
+}
+
+func HexToGrayHex(mode int, s string) string {
+	r := colorHexToUint8(s[0:1])
+	g := colorHexToUint8(s[1:2])
+	b := colorHexToUint8(s[2:3])
+	return strings.Repeat(
+		strings.ToUpper(
+			strconv.FormatUint(
+				uint64(RGBToGray(mode, float32(r), float32(g), float32(b)))%16,
+				16,
+			),
+		),
+		3,
+	)
+}
+
+func colorHexToUint8(s string) uint8 {
+	d, _ := strconv.ParseUint(strings.Repeat(s, 2), 16, 64)
+	return uint8(d)
+}
+
+func RGBToGray(mode int, r, g, b float32) float32 {
+	switch mode {
+	case 1: // average
+		return (r + b + g) / 3
+	case 2: // luminance
+		return 0.2126*r + 0.7152*g + 0.0722*b
+	default:
+		return 0.299*r + 0.587*g + 0.114*b
+	}
 }
