@@ -27,6 +27,8 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Multi tasks for fast conversion
 - Apple Book Compatibility Mode
 - JSON output for programmatic usage
+- Support cover caption with the part number when the EPUB is split
+- Support for own font for the title page and the cover caption
 
 When you read the comic on a Kindle, you can customize how you read it with the `Aa` button:
 - Landscape / Portrait
@@ -137,23 +139,30 @@ If you send your ePub through Amazon service, you have some size limitation:
   - App    : 50Mb
   - Website: 200Mb
 
-You can split your file using the "-limitmb MB" option:
+By default, the EPUB is split every 200Mb (SendToKindle website limit).
+
+You can change it using the "-limitmb MB" option, or disable it with "-limitmb 0":
 
 ```
-go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -limitmb 200
+go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF] -limitmb 50
 ```
 
 If you have more than 1 file the output will be:
-  - ~/Download/MyComic Part 01 of 03.epub
-  - ~/Download/MyComic Part 02 of 03.epub
+  - ~/Download/MyComic - Part 01 of 10.epub
+  - ~/Download/MyComic - Part 02 of 10.epub
   - ...
 
-The ePub include as a first page:
-  - Title
-  - Part NUM / TOTAL
+NUM is zero-padded to the number of digits of TOTAL (Part 01 of 10), in the file name, the title page, the EPUB title and the cover caption, so the parts sort in order.
 
-If the total is above 1, then the title of the EPUB include:
-  - Title [part/total]
+The ePub include as a first page (see `-titlepage`):
+  - Title
+  - Part NUM of TOTAL
+
+If the total is above 1:
+  - the title of the EPUB becomes: Title - Part NUM of TOTAL
+  - the cover shows a "Part NUM of TOTAL" caption (disable it with `-covercaption=0`)
+
+The cover caption and the title page use the embedded [Literata](https://github.com/googlefonts/literata) font (SIL Open Font License). You can use your own TrueType font with `-font /path/to/font.ttf` (save it as default with `-save`).
 
 ## Dry run
 
@@ -168,7 +177,7 @@ Options:
     Output                          : ~/Downloads/mymanga.epub
     Author                          : GO Comic Converter
     Title                           : mymanga
-    Workers                         : 20
+    Workers                         : numcpus
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
@@ -180,30 +189,44 @@ Options:
     Auto rotate                     : 1
     Auto split double page          : 1
     Keep double page if split       : 1
+    Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
-    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 
 TOC:
   - mymanga
   - Chapter 1
   - Chapter 2
   - Chapter 3
+
+Cover:
+  - Chapter 1
+    - img1.jpg
+
+Files:
+  - Chapter 1
+    - img2.jpg
+    - img10.jpg
+  - Chapter 2
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+  - Chapter 3
+    - img1.jpg
+    - img2-3.jpg
+    - img4.jpg
 ```
 
-## Dry verbose
-
-You can choose different way to sort path and files, depending on your source. You can preview the sorted result with the option `dry`.
+You can choose different way to sort path and files, depending on your source.
 
 The option `sort` allow you to change the sorting order.
 
@@ -215,32 +238,9 @@ Options:
     Input                           : ~/Downloads/mymanga.cbr
     Output                          : ~/Downloads/mymanga.epub
     Author                          : GO Comic Converter
-    Title                           : mymanga
-    Workers                         : 20
-    Profile                         : SR - Standard Resolution - 1200x1920
-    Format                          : jpeg
-    Quality                         : 85
-    Grayscale                       : 1
-    Grayscale mode                  : normal
-    Crop                            : 1
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 1
-    Auto rotate                     : 1
-    Auto split double page          : 1
-    Keep double page if split       : 1
-    No blank image                  : 1
-    Manga                           : 1
-    Has cover                       : 1
-    Limit                           : 200 Mb
-    Strip first directory from toc  : 0
-    Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
-    Resize                          : 1
-    Aspect ratio                    : auto
-    Portrait only                   : 0
-    Title page                      : always
-    Apple book compatibility        : 0
+...
+    Sort path mode                  : path=alphanumeric, file=alphanumeric
+...
 
 TOC:
   - mymanga
@@ -282,21 +282,16 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 0
-    Auto rotate                     : 0
-    Auto split double page          : 0
     No blank image                  : 1
-    Manga                           : 0
-    Has cover                       : 1
-    Strip first directory from toc  : 0
+    Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 ```
 
 ### Change default settings
@@ -320,17 +315,15 @@ Options:
     Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
-    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -347,21 +340,21 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 0
-    Auto rotate                     : 0
-    Auto split double page          : 0
+    Auto contrast                   : 1
+    Auto rotate                     : 1
+    Auto split double page          : 1
+    Keep double page if split       : 1
+    Keep split double page aspect   : 1
     No blank image                  : 1
-    Manga                           : 0
-    Has cover                       : 1
-    Strip first directory from toc  : 0
+    Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -381,21 +374,16 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 0
-    Auto rotate                     : 0
-    Auto split double page          : 0
     No blank image                  : 1
-    Manga                           : 0
-    Has cover                       : 1
-    Strip first directory from toc  : 0
+    Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
-    Portrait only                   : 0
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 
 Reset default to ~/.go-comic-converter.yaml
 ```
@@ -406,32 +394,26 @@ After playing around with the options, I have my perfect settings for all my dev
 
 ```
 $ go-comic-converter -reset
-$ go-comic-converter -profile SR -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -save
+$ go-comic-converter -profile SR -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -portrait-only=1 -grayscale=1 -grayscale-mode=2 -save
 
 Options:
     Profile                         : SR - Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 90
     Grayscale                       : 1
-    Grayscale mode                  : normal
-    Crop                            : 1
-    Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 0
-    Auto rotate                     : 0
-    Auto split double page          : 0
+    Grayscale mode                  : luminance
     No blank image                  : 1
     Manga                           : 1
-    Has cover                       : 1
     Limit                           : 200 Mb
-    Strip first directory from toc  : 0
     Sort path mode                  : path=alphanumeric, file=alpha
-    Foreground color                : #000
-    Background color                : #FFF
+    Foreground color                : #000000
+    Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : 1:1.60
-    Portrait only                   : 0
+    Portrait only                   : 1
     Title page                      : always
-    Apple book compatibility        : 0
+    Cover caption                   : 1
+    Font                            : Literata (embedded)
 
 Saving to ~/.go-comic-converter.yaml
 ```
@@ -440,8 +422,12 @@ Explanation:
 - `-profile SR`: standard resolution (fast conversion from Amazon as images do not need to be resized)
 - `-quality 90`: JPEG output quality of images
 - `-manga`: manga mode, read right to left
-- `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
 - `-aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
+- `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
+- `-crop=0`: do not remove anything
+- `-portrait-only=1`: disable landscape support. rendering is centered and works on all kindles
+- `-grayscale=1 -grayscale-mode=2`: use luminance mode of grayscale color
+
 # Help
 
 ```
@@ -462,34 +448,34 @@ Output:
 Config:
   -profile=string (default "SR")
     	Profile to use: 
+    	    - HR      - 2400 x 3840 - High Resolution
+    	    - SR      - 1200 x 1920 - Standard Resolution
+    	    - K1      -  600 x 670  - Kindle 1
+    	    - K11     - 1072 x 1448 - Kindle 11
+    	    - K2      -  600 x 670  - Kindle 2
+    	    - K34     -  600 x 800  - Kindle Keyboard/Touch
+    	    - K578    -  600 x 800  - Kindle
+    	    - KDX     -  824 x 1000 - Kindle DX/DXG
+    	    - KPW     -  758 x 1024 - Kindle Paperwhite 1/2
+    	    - KV      - 1072 x 1448 - Kindle Paperwhite 3/4/Voyage/Oasis
+    	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
+    	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
+    	    - KS      - 1860 x 2480 - Kindle Scribe
+    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
+    	    - KoG     -  768 x 1024 - Kobo Glo
+    	    - KoGHD   - 1072 x 1448 - Kobo Glo HD
     	    - KoA     -  758 x 1024 - Kobo Aura
     	    - KoAHD   - 1080 x 1440 - Kobo Aura HD
     	    - KoAH2O  - 1080 x 1430 - Kobo Aura H2O
     	    - KoAO    - 1404 x 1872 - Kobo Aura ONE
-    	    - RM2     - 1404 x 1872 - reMarkable 2
-    	    - SR      - 1200 x 1920 - Standard Resolution
-    	    - K11     - 1072 x 1448 - Kindle 11
-    	    - K578    -  600 x 800  - Kindle
-    	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
     	    - KoN     -  758 x 1024 - Kobo Nia
-    	    - KoL     - 1264 x 1680 - Kobo Libra H2O/Kobo Libra 2
-    	    - HR      - 2400 x 3840 - High Resolution
-    	    - K1      -  600 x 670  - Kindle 1
-    	    - KV      - 1072 x 1448 - Kindle Paperwhite 3/4/Voyage/Oasis
-    	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
-    	    - KS      - 1860 x 2480 - Kindle Scribe
     	    - KoC     - 1072 x 1448 - Kobo Clara HD/Kobo Clara 2E
-    	    - KoE     - 1404 x 1872 - Kobo Elipsa
-    	    - K2      -  600 x 670  - Kindle 2
-    	    - KDX     -  824 x 1000 - Kindle DX/DXG
-    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
-    	    - KoG     -  768 x 1024 - Kobo Glo
+    	    - KoL     - 1264 x 1680 - Kobo Libra H2O/Kobo Libra 2
     	    - KoF     - 1440 x 1920 - Kobo Forma
     	    - KoS     - 1440 x 1920 - Kobo Sage
+    	    - KoE     - 1404 x 1872 - Kobo Elipsa
     	    - RM1     - 1404 x 1872 - reMarkable 1
-    	    - K34     -  600 x 800  - Kindle Keyboard/Touch
-    	    - KPW     -  758 x 1024 - Kindle Paperwhite 1/2
-    	    - KoGHD   - 1072 x 1448 - Kobo Glo HD
+    	    - RM2     - 1404 x 1872 - reMarkable 2
   -quality=int (default 85)
     	Quality of the image
   -grayscale or -grayscale=1 (to enabled), -grayscale=0 (to disabled) (default 1)
@@ -531,8 +517,8 @@ Config:
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
-  -limitmb=int
-    	Limit size of the EPUB: Default nolimit (0), Minimum 20
+  -limitmb=int (default 200)
+    	Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited
   -strip or -strip=1 (to enabled), -strip=0 (to disabled)
     	Strip first directory from the TOC if only 1
   -sort=int (default 1)
@@ -540,10 +526,10 @@ Config:
     	0 = alpha for path and file
     	1 = alphanumeric for path and alpha for file
     	2 = alphanumeric for path and file
-  -foreground-color=string (default "000")
-    	Foreground color in hexadecimal format RGB. Black=000, White=FFF
-  -background-color=string (default "FFF")
-    	Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777
+  -foreground-color=string (default "000000")
+    	Foreground color in hexadecimal format RGB. Black=000000, White=FFFFFF
+  -background-color=string (default "FFFFFF")
+    	Background color in hexadecimal format RGB. Black=000000, White=FFFFFF, Light Gray=DDDDDD, Dark Gray=777777
   -resize or -resize=1 (to enabled), -resize=0 (to disabled) (default 1)
     	Reduce image size if exceed device size
   -format=string (default "jpeg")
@@ -560,6 +546,10 @@ Config:
     	0 = never
     	1 = always
     	2 = only if epub is split
+  -covercaption or -covercaption=1 (to enabled), -covercaption=0 (to disabled) (default 1)
+    	Set cover caption when the epub is split
+  -font=string
+    	Path to a TrueType font (.ttf) for the cover caption and title page. Default: embedded Literata
 
 Default config:
   -show
@@ -588,7 +578,7 @@ Compatibility:
     	Apple book compatibility
 
 Other:
-  -workers=int (default 15)
+  -workers=int (default 12)
     	Number of workers
   -dry
     	Dry run to show all options
@@ -600,6 +590,7 @@ Other:
     	Show current and available version
   -help
     	Show this help message
+
 ```
 
 # Credit

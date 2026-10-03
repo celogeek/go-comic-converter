@@ -60,3 +60,16 @@ func ExampleFormatNumberOfDigits() {
 	// %03d
 	// %03d
 }
+
+func ExamplePartLabel() {
+	fmt.Println(PartLabel(1, 1))
+	fmt.Println(PartLabel(2, 9))
+	fmt.Println(PartLabel(1, 10))
+	fmt.Println(PartLabel(10, 12))
+	fmt.Println(PartLabel(7, 100))
+	// Output: Part 1 of 1
+	// Part 2 of 9
+	// Part 01 of 10
+	// Part 10 of 12
+	// Part 007 of 100
+}

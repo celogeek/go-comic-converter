@@ -19,3 +19,7 @@ func (v View) Dimension() string {
 func (v View) Port() string {
 	return "width=" + utils.IntToString(v.Width) + ",height=" + utils.IntToString(v.Height)
 }
+
+func (v View) Style() string {
+	return "width:" + utils.IntToString(v.Width) + "px;height:" + utils.IntToString(v.Height) + "px;"
+}

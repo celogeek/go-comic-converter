@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	"github.com/gen2brain/go-fitz"
-	"golang.org/x/image/font/gofont/gomonobold"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
@@ -77,8 +76,7 @@ func (e ePUBImageProcessor) load() (totalImages int, output chan task, err error
 
 func (e ePUBImageProcessor) corruptedImage(path, name string) image.Image {
 	var w, h float64 = 1200, 1920
-	f, _ := truetype.Parse(gomonobold.TTF)
-	face := truetype.NewFace(f, &truetype.Options{Size: 64, DPI: 72})
+	face := truetype.NewFace(e.TrueTypeFont, &truetype.Options{Size: 64, DPI: 72})
 	txt := name
 	if path != "" {
 		txt += "\nin " + filepath.Clean(path)
