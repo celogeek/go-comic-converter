@@ -204,10 +204,11 @@ func (o Content) getSpineAuto() []tag {
 			isOnTheRight = !o.ImageOptions.Manga
 			return "rendition:page-spread-center"
 		}
+		// Kindle needs the EPUB 3 core values, it ignores the spread with the rendition: alias.
 		if isOnTheRight {
-			return "rendition:page-spread-right"
+			return "page-spread-right"
 		} else {
-			return "rendition:page-spread-left"
+			return "page-spread-left"
 		}
 	}
 	getSpreadBlank := func() string {
