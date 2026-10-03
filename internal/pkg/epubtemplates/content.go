@@ -227,7 +227,7 @@ func (o Content) getSpineAuto() []tag {
 			)
 		}
 	}
-	for i, img := range o.Images {
+	for _, img := range o.Images {
 		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
@@ -235,15 +235,11 @@ func (o Content) getSpineAuto() []tag {
 				"",
 			})
 		}
-		// register position for style adjustment
-		img.Position = getSpread(img.DoublePage)
 		spine = append(spine, tag{
 			"itemref",
-			tagAttrs{"idref": img.PageKey(), "properties": img.Position},
+			tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)},
 			"",
 		})
-		// save position, img is a value type
-		o.Images[i] = img
 	}
 	if o.ImageOptions.Manga == isOnTheRight {
 		spine = append(spine, tag{

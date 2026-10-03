@@ -94,7 +94,7 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, zipImg *zi
 			"Title":      "Image " + utils.IntToString(img.Id) + " Part " + utils.IntToString(img.Part),
 			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  img.ImgPath(),
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height),
 		})),
 	)
 	if err == nil {
@@ -129,7 +129,7 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 			"Title":      "Cover",
 			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  "Images/cover.jpeg",
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
+			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height),
 		})),
 	); err != nil {
 		return err
@@ -163,13 +163,6 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 
 // write title image
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
-	// The title image is as wide as the view, so left:0 centers it.
-	// In landscape manga, it sits on the right of the spread next to the blank page.
-	titleAlign := "left:0"
-	if !e.Image.View.PortraitOnly && e.Image.Manga {
-		titleAlign = "right:0"
-	}
-
 	if !e.Image.View.PortraitOnly {
 		if err := wz.WriteContent(
 			"OEBPS/Text/space_title.xhtml",
@@ -182,13 +175,14 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		}
 	}
 
+	// The title image has the view size, so it fills the page.
 	if err := wz.WriteContent(
 		"OEBPS/Text/title.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  "Images/title.jpeg",
-			"ImageStyle": e.Image.View.Style() + "top:0;" + titleAlign,
+			"ImageStyle": e.Image.View.Style() + "top:0;left:0",
 		})),
 	); err != nil {
 		return err
