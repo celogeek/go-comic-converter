@@ -133,16 +133,18 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
-	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default nolimit (0), Minimum 20")
+	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
-	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000, White=FFF")
-	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000, White=FFF, Light Gray=DDD, Dark Gray=777")
+	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000000, White=FFFFFF")
+	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000000, White=FFFFFF, Light Gray=DDDDDD, Dark Gray=777777")
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 	c.AddReversibleBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
+	c.AddReversibleBoolParam(&c.Options.CoverCaption, "covercaption", c.Options.CoverCaption, "Set cover caption when the epub is split")
+	c.AddStringParam(&c.Options.Font, "font", c.Options.Font, "Path to a TrueType font (.ttf) for the cover caption and title page. Default: embedded Literata")
 
 	c.AddSection("Default config")
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
@@ -172,14 +174,19 @@ func (c *Converter) InitParse() {
 // Usage Customize version of FlagSet.PrintDefaults
 func (c *Converter) Usage(isString bool, f *flag.Flag) string {
 	var b strings.Builder
-	b.WriteString("  -" + f.Name)
+	b.WriteString("  -")
+	b.WriteString(f.Name)
 	name, usage := flag.UnquoteUsage(f)
 	if len(name) > 0 {
 		b.WriteString("=")
 		b.WriteString(name)
 	} else {
 		if _, ok := c.reversibleBool[f.Name]; ok {
-			b.WriteString(" or -" + f.Name + "=1 (to enabled), -" + f.Name + "=0 (to disabled)")
+			b.WriteString(" or -")
+			b.WriteString(f.Name)
+			b.WriteString("=1 (to enabled), -")
+			b.WriteString(f.Name)
+			b.WriteString("=0 (to disabled)")
 		}
 	}
 	// Print the default value only if it differs to the zero value
@@ -400,13 +407,13 @@ func (c *Converter) Validate() error {
 	}
 
 	// Color
-	colorRegex := regexp.MustCompile("^[0-9A-F]{3}$")
+	colorRegex := regexp.MustCompile("^([0-9a-fA-F]{3}){1,2}$")
 	if !colorRegex.MatchString(c.Options.Image.View.Color.Foreground) {
-		return errors.New("foreground color must have color format in hexadecimal: [0-9A-F]{3}")
+		return errors.New("foreground color must have color format in hexadecimal on 3 or 6 characters: example: 000, FFF, 000000, FFFFFF, A000FF")
 	}
 
 	if !colorRegex.MatchString(c.Options.Image.View.Color.Background) {
-		return errors.New("background color must have color format in hexadecimal: [0-9A-F]{3}")
+		return errors.New("background color must have color format in hexadecimal on 3 or 6 characters: example: 000, FFF, 000000, FFFFFF, A000FF")
 	}
 
 	// Format

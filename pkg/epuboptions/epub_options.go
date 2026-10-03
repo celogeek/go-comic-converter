@@ -1,6 +1,8 @@
 // Package epuboptions for EPUB creation.
 package epuboptions
 
+import "github.com/golang/freetype/truetype"
+
 type EPUBOptions struct {
 	// Output
 	Input  string `yaml:"-" json:"input"`
@@ -9,11 +11,14 @@ type EPUBOptions struct {
 	Title  string `yaml:"-" json:"title"`
 
 	//Config
-	TitlePage                  int   `yaml:"title_page" json:"title_page"`
-	LimitMb                    int   `yaml:"limit_mb" json:"limit_mb"`
-	StripFirstDirectoryFromToc bool  `yaml:"strip_first_directory" json:"strip_first_directory"`
-	SortPathMode               int   `yaml:"sort_path_mode" json:"sort_path_mode"`
-	Image                      Image `yaml:"image" json:"image"`
+	TitlePage                  int            `yaml:"title_page" json:"title_page"`
+	CoverCaption               bool           `yaml:"cover_caption" json:"cover_caption"`
+	Font                       string         `yaml:"font" json:"font"`
+	TrueTypeFont               *truetype.Font `yaml:"-" json:"-"`
+	LimitMb                    int            `yaml:"limit_mb" json:"limit_mb"`
+	StripFirstDirectoryFromToc bool           `yaml:"strip_first_directory" json:"strip_first_directory"`
+	SortPathMode               int            `yaml:"sort_path_mode" json:"sort_path_mode"`
+	Image                      Image          `yaml:"image" json:"image"`
 
 	// Other
 	Dry     bool `yaml:"-" json:"dry"`

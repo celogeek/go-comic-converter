@@ -60,15 +60,17 @@ func NewOptions() *Options {
 				KeepSplitDoublePageAspect: true,
 				View: epuboptions.View{
 					Color: epuboptions.Color{
-						Foreground: "000",
-						Background: "FFF",
+						Foreground: "000000",
+						Background: "FFFFFF",
 					},
 				},
 				Resize: true,
 				Format: "jpeg",
 			},
 			TitlePage:    1,
+			CoverCaption: true,
 			SortPathMode: 1,
+			LimitMb:      200,
 		},
 		profiles: NewProfiles(),
 	}
@@ -160,6 +162,11 @@ func (o *Options) ShowConfig() string {
 		titlePage = "when epub is split"
 	}
 
+	font := "Literata (embedded)"
+	if o.Font != "" {
+		font = o.Font
+	}
+
 	grayscaleMode := "normal"
 	switch o.Image.GrayScaleMode {
 	case 1:
@@ -206,6 +213,8 @@ func (o *Options) ShowConfig() string {
 		{"Aspect ratio", aspectRatio, true},
 		{"Portrait only", o.Image.View.PortraitOnly, true},
 		{"Title page", titlePage, true},
+		{"Cover caption", o.CoverCaption, o.LimitMb != 0},
+		{"Font", font, true},
 		{"Apple book compatibility", o.Image.AppleBookCompatibility, !o.Image.View.PortraitOnly},
 	} {
 		if v.Condition {
@@ -243,8 +252,10 @@ func (o *Options) SaveConfig() error {
 
 // GetProfile shortcut to get current profile
 func (o *Options) GetProfile() *Profile {
-	if p, ok := o.profiles[o.Profile]; ok {
-		return &p
+	for _, p := range o.profiles {
+		if p.Code == o.Profile {
+			return &p
+		}
 	}
 	return nil
 }

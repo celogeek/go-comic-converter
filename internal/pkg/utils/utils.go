@@ -66,3 +66,9 @@ func NumberOfDigits(i int) int {
 func FormatNumberOfDigits(i int) string {
 	return "%0" + IntToString(NumberOfDigits(i)) + "d"
 }
+
+// PartLabel returns "Part X of Y", with X zero-padded to the number of digits of Y so the parts sort in order.
+func PartLabel(part, total int) string {
+	fmtLen := FormatNumberOfDigits(total)
+	return fmt.Sprintf("Part "+fmtLen+" of "+fmtLen, part, total)
+}

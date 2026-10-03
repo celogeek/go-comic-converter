@@ -239,22 +239,10 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	}
 
 	if e.Image.GrayScale {
-		var f gift.Filter
-		switch e.Image.GrayScaleMode {
-		case 1: // average
-			f = gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
-				y := (r0 + g0 + b0) / 3
-				return y, y, y, a0
-			})
-		case 2: // luminance
-			f = gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
-				y := 0.2126*r0 + 0.7152*g0 + 0.0722*b0
-				return y, y, y, a0
-			})
-		default:
-			f = gift.Grayscale()
-		}
-		g.Add(f)
+		g.Add(gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
+			y := utils.RGBToGray(e.Image.GrayScaleMode, r0, g0, b0)
+			return y, y, y, a0
+		}))
 	}
 
 	g.Add(epubimagefilters.Pixel())
@@ -280,14 +268,9 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 }
 
 type CoverTitleDataOptions struct {
-	Src         image.Image
-	Name        string
-	Text        string
-	Align       string
-	PctWidth    int
-	PctMargin   int
-	MaxFontSize int
-	BorderSize  int
+	Src   image.Image
+	Name  string
+	Title epubimagefilters.CoverTitle
 }
 
 func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Image {
@@ -311,10 +294,9 @@ func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Imag
 	})
 }
 
-// CoverTitleData create a title page with the cover
+// CoverTitleData draws the title box on the source image (the cover or the title page background) and compresses it to jpeg.
 func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error) {
-	// Create a blur version of the cover
-	g := gift.New(epubimagefilters.CoverTitle(o.Text, o.Align, o.PctWidth, o.PctMargin, o.MaxFontSize, o.BorderSize))
+	g := gift.New(o.Title)
 	var dst draw.Image
 	if o.Name == "cover" && e.Image.GrayScale {
 		dst = e.cover16LevelOfGray(o.Src.Bounds())

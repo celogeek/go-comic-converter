@@ -3,7 +3,8 @@ package epub
 
 import (
 	"archive/zip"
-	"fmt"
+	"image"
+	"image/draw"
 	"math"
 	"path/filepath"
 	"regexp"
@@ -15,12 +16,14 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagepassthrough"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtemplates"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtree"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
@@ -52,6 +55,9 @@ func New(options epuboptions.EPUBOptions) EPUB {
 		"mod":  func(i, j int) bool { return i%j == 0 },
 		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
 	})
+	if options.TrueTypeFont == nil {
+		options.TrueTypeFont = fonts.Default
+	}
 
 	var imageProcessor epubimageprocessor.EPUBImageProcessor
 	if options.Image.Format == "copy" {
@@ -109,19 +115,18 @@ func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
 	)
 }
 
-// write title image
-func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part, totalParts int) error {
-	title := "Cover"
-	text := ""
-	if totalParts > 1 {
-		text = utils.IntToString(part) + " / " + utils.IntToString(totalParts)
-		title = title + " " + text
-	}
+// titleFontSize scales the cover caption and title page text with the image width:
+// 64px on a 1200px wide image (SR profile), never below 16px.
+func titleFontSize(width int) float64 {
+	return math.Max(16, float64(width)*64/1200)
+}
 
+// write cover image
+func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, coverText string) error {
 	if err := wz.WriteContent(
 		"OEBPS/Text/cover.xhtml",
 		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":      title,
+			"Title":      "Cover",
 			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  "Images/cover.jpeg",
 			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, ""),
@@ -130,15 +135,19 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part,
 		return err
 	}
 
+	fontSize := titleFontSize(img.Raw.Bounds().Dx())
 	coverTitle, err := e.imageProcessor.CoverTitleData(epubimageprocessor.CoverTitleDataOptions{
-		Src:         img.Raw,
-		Name:        "cover",
-		Text:        text,
-		Align:       "bottom",
-		PctWidth:    50,
-		PctMargin:   50,
-		MaxFontSize: 96,
-		BorderSize:  8,
+		Src:  img.Raw,
+		Name: "cover",
+		Title: epubimagefilters.CoverTitle{
+			Title:       coverText,
+			Align:       "bottom",
+			FontSize:    fontSize,
+			BorderWidth: math.Max(1, fontSize/16),
+			Foreground:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground),
+			Background:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background),
+			Font:        e.TrueTypeFont,
+		},
 	})
 
 	if err != nil {
@@ -153,14 +162,12 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, part,
 }
 
 // write title image
-func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title string) error {
-	titleAlign := ""
-	if !e.Image.View.PortraitOnly {
-		if e.Image.Manga {
-			titleAlign = "right:0"
-		} else {
-			titleAlign = "left:0"
-		}
+func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
+	// The title image is as wide as the view, so left:0 centers it.
+	// In landscape manga, it sits on the right of the spread next to the blank page.
+	titleAlign := "left:0"
+	if !e.Image.View.PortraitOnly && e.Image.Manga {
+		titleAlign = "right:0"
 	}
 
 	if !e.Image.View.PortraitOnly {
@@ -181,21 +188,34 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, title
 			"Title":      title,
 			"ViewPort":   e.Image.View.Port(),
 			"ImagePath":  "Images/title.jpeg",
-			"ImageStyle": img.ImgStyle(e.Image.View.Width, e.Image.View.Height, titleAlign),
+			"ImageStyle": e.Image.View.Style() + "top:0;" + titleAlign,
 		})),
 	); err != nil {
 		return err
 	}
 
+	foreground := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)
+	background := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background)
+
+	var img draw.Image
+	if e.Image.GrayScale {
+		img = image.NewGray(image.Rect(0, 0, e.Image.View.Width, e.Image.View.Height))
+	} else {
+		img = image.NewRGBA(image.Rect(0, 0, e.Image.View.Width, e.Image.View.Height))
+	}
+	draw.Draw(img, img.Bounds(), image.NewUniform(background), image.Point{}, draw.Src)
+
 	coverTitle, err := e.imageProcessor.CoverTitleData(epubimageprocessor.CoverTitleDataOptions{
-		Src:         img.Raw,
-		Name:        "title",
-		Text:        title,
-		Align:       "center",
-		PctWidth:    100,
-		PctMargin:   100,
-		MaxFontSize: 64,
-		BorderSize:  4,
+		Src:  img,
+		Name: "title",
+		Title: epubimagefilters.CoverTitle{
+			Title:      titlePage,
+			Align:      "center",
+			FontSize:   titleFontSize(e.Image.View.Width),
+			Foreground: foreground,
+			Background: background,
+			Font:       e.TrueTypeFont,
+		},
 	})
 	if err != nil {
 		return err
@@ -356,8 +376,15 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 	}(wz)
 
 	title := e.Title
+	titlePage := e.Title
+	coverText := ""
 	if totalParts > 1 {
-		title = title + " [" + utils.IntToString(currentPart) + "/" + utils.IntToString(totalParts) + "]"
+		partLabel := utils.PartLabel(currentPart, totalParts)
+		title = title + " - " + partLabel
+		titlePage = titlePage + "\n" + partLabel
+		if e.CoverCaption {
+			coverText = partLabel
+		}
 	}
 
 	type zipContent struct {
@@ -382,7 +409,10 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		}.String()},
 		{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
 		{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
-			"View": e.Image.View,
+			"Width":      e.Image.View.Width,
+			"Height":     e.Image.View.Height,
+			"Foreground": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)),
+			"Background": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background)),
 		})},
 	}
 
@@ -395,12 +425,12 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		}
 	}
 
-	if err = e.writeCoverImage(wz, part.Cover, currentPart, totalParts); err != nil {
+	if err = e.writeCoverImage(wz, part.Cover, coverText); err != nil {
 		return err
 	}
 
 	if hasTitlePage {
-		if err = e.writeTitleImage(wz, part.Cover, title); err != nil {
+		if err = e.writeTitleImage(wz, title, titlePage); err != nil {
 			return err
 		}
 	}
@@ -459,9 +489,7 @@ func (e epub) Write() error {
 		ext := filepath.Ext(e.Output)
 		suffix := ""
 		if totalParts > 1 {
-			fmtLen := utils.FormatNumberOfDigits(totalParts)
-			fmtPart := " - Part " + fmtLen + " of " + fmtLen
-			suffix = fmt.Sprintf(fmtPart, i+1, totalParts)
+			suffix = " - " + utils.PartLabel(i+1, totalParts)
 		}
 
 		path := e.Output[0:len(e.Output)-len(ext)] + suffix + ext

@@ -19,12 +19,11 @@ func (p Profile) String() string {
 	return p.Code + " - " + p.Description + " - " + utils.IntToString(p.Width) + "x" + utils.IntToString(p.Height)
 }
 
-type Profiles map[string]Profile
+type Profiles []Profile
 
 // NewProfiles Initialize list of all supported profiles.
 func NewProfiles() Profiles {
-	res := make(Profiles)
-	for _, r := range []Profile{
+	return []Profile{
 		// High Resolution for Tablet
 		{"HR", "High Resolution", 2400, 3840},
 		{"SR", "Standard Resolution", 1200, 1920},
@@ -57,10 +56,7 @@ func NewProfiles() Profiles {
 		// reMarkable
 		{"RM1", "reMarkable 1", 1404, 1872},
 		{"RM2", "reMarkable 2", 1404, 1872},
-	} {
-		res[r.Code] = r
 	}
-	return res
 }
 
 func (p Profiles) String() string {

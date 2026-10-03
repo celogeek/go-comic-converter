@@ -15,6 +15,7 @@ import (
 	"github.com/tcnksm/go-latest"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/converter"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epub"
 )
@@ -111,6 +112,12 @@ func generate(cmd *converter.Converter) {
 	if err := cmd.Validate(); err != nil {
 		cmd.Fatal(err)
 	}
+
+	font, err := fonts.Load(cmd.Options.Font)
+	if err != nil {
+		cmd.Fatal(err)
+	}
+	cmd.Options.TrueTypeFont = font
 
 	if profile := cmd.Options.GetProfile(); profile != nil {
 		cmd.Options.Image.View.Width = profile.Width
