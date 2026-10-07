@@ -202,7 +202,7 @@ func (o Content) getSpineAuto() []tag {
 		if isDoublePage {
 			// Center the double page then start back to comic mode (mange/normal)
 			isOnTheRight = !o.ImageOptions.Manga
-			return "rendition:page-spread-center"
+			return "page-spread-center"
 		}
 		// Kindle needs the EPUB 3 core values, it ignores the spread with the rendition: alias.
 		if isOnTheRight {
