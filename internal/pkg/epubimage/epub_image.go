@@ -3,7 +3,6 @@ package epubimage
 
 import (
 	"image"
-	"strings"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
@@ -120,9 +119,14 @@ func (i EPUBImage) MediaType() string {
 // and Kindle devices handle only top/left reliably.
 func (i EPUBImage) ImgStyle(viewWidth, viewHeight int) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
-	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
+	marginW, marginH := margins(viewWidth, viewHeight, relWidth, relHeight)
 
-	return imgStyle(viewWidth, viewHeight, relWidth, relHeight, marginW, marginH)
+	return imgStyle(relWidth, relHeight, marginW, marginH)
+}
+
+// margins offset of an image centered into the view, in whole pixels.
+func margins(viewWidth, viewHeight, width, height int) (left, top int) {
+	return (viewWidth - width) / 2, (viewHeight - height) / 2
 }
 
 // ImgStyles style to apply to each file of the image: the top half then the bottom half
@@ -133,13 +137,14 @@ func (i EPUBImage) ImgStyles(viewWidth, viewHeight int) []string {
 	}
 
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
-	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
+	marginW, marginH := margins(viewWidth, viewHeight, relWidth, relHeight)
 
 	topHeight := int(float64(relHeight)*float64(i.TopHeight())/float64(i.Height) + 0.5)
 
+	// whole pixels, so the bottom half starts exactly where the top half ends (no seam)
 	return []string{
-		imgStyle(viewWidth, viewHeight, relWidth, topHeight, marginW, marginH),
-		imgStyle(viewWidth, viewHeight, relWidth, relHeight-topHeight, marginW, marginH+float64(topHeight)),
+		imgStyle(relWidth, topHeight, marginW, marginH),
+		imgStyle(relWidth, relHeight-topHeight, marginW, marginH+topHeight),
 	}
 }
 
@@ -165,15 +170,9 @@ func (i EPUBImage) PanelZoom(viewWidth, viewHeight int, zoom float64) (string, [
 	return box, []string{file(topHeight, 0), file(height-topHeight, topHeight)}
 }
 
-func imgStyle(viewWidth, viewHeight, width, height int, left, top float64) string {
-	style := make([]string, 0, 4)
-
-	style = append(style, "width:"+utils.IntToString(width)+"px")
-	style = append(style, "height:"+utils.IntToString(height)+"px")
-	style = append(style, "top:"+utils.FloatToString(top*100/float64(viewHeight), 2)+"%")
-	style = append(style, "left:"+utils.FloatToString(left*100/float64(viewWidth), 2)+"%")
-
-	return strings.Join(style, "; ")
+func imgStyle(width, height, left, top int) string {
+	return "width:" + utils.IntToString(width) + "px; height:" + utils.IntToString(height) +
+		"px; top:" + utils.IntToString(top) + "px; left:" + utils.IntToString(left) + "px"
 }
 
 func (i EPUBImage) RelSize(viewWidth, viewHeight int) (relWidth, relHeight int) {

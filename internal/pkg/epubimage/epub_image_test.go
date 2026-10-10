@@ -32,8 +32,8 @@ func TestImgStyles(t *testing.T) {
 	stacked := EPUBImage{Width: 2000, Height: 3001, Stacked: true}
 	got := stacked.ImgStyles(1000, 1500)
 	want := []string{
-		"width:1000px; height:750px; top:0.00%; left:0.00%",
-		"width:1000px; height:750px; top:50.00%; left:0.00%",
+		"width:1000px; height:750px; top:0px; left:0px",
+		"width:1000px; height:750px; top:750px; left:0px",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("stacked image: got %v, want %v", got, want)
