@@ -172,7 +172,7 @@ The cover caption and the title page use the embedded [Literata](https://github.
 If you want to preview what will be set during the conversion without running the conversion, then you can use the `-dry` option.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -manga -limitmb 200 -dry
 Go Comic Converter
 
 Options:
@@ -232,7 +232,7 @@ You can choose different way to sort path and files, depending on your source.
 The option `sort` allow you to change the sorting order.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -auto -manga -limitmb 200 -dry -sort 2
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -manga -limitmb 200 -dry -sort 2
 Go Comic Converter
 
 Options:
@@ -297,7 +297,7 @@ Options:
 
 ### Change default settings
 ```
-$ go-comic-converter -manga -auto -profile SR -limitmb 200 -save
+$ go-comic-converter -manga -profile SR -limitmb 200 -save
 
 Go Comic Converter
 
@@ -541,8 +541,6 @@ Default config:
     	Reset your parameters to default
 
 Shortcut:
-  -auto
-    	Activate all automatic options
   -nofilter
     	Deactivate all filters
   -maxquality

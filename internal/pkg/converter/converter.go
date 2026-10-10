@@ -151,7 +151,6 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
 
 	c.AddSection("Shortcut")
-	c.AddBoolParam(&c.Options.Auto, "auto", false, "Activate all automatic options")
 	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")
 	c.AddBoolParam(&c.Options.MaxQuality, "maxquality", false, "Max quality: color png + noresize")
 	c.AddBoolParam(&c.Options.BestQuality, "bestquality", false, "Max quality: color jpg q100 + noresize")
@@ -271,11 +270,6 @@ func (c *Converter) Parse() {
 	if c.Options.Help {
 		c.Cmd.Usage()
 		os.Exit(0)
-	}
-
-	if c.Options.Auto {
-		c.Options.Image.AutoContrast = true
-		c.Options.Image.DoublePageMode = epuboptions.DoublePageSplitRotate
 	}
 
 	if c.Options.MaxQuality {

@@ -25,7 +25,6 @@ type Options struct {
 	Reset bool `yaml:"-" json:"-"`
 
 	// Shortcut
-	Auto         bool `yaml:"-" json:"-"`
 	NoFilter     bool `yaml:"-" json:"-"`
 	MaxQuality   bool `yaml:"-" json:"-"`
 	BestQuality  bool `yaml:"-" json:"-"`
