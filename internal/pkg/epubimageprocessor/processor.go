@@ -84,8 +84,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 				img := e.transformImage(input, 0, e.Image.Manga)
 
 				// do not keep double page if requested
-				if !(img.DoublePage && input.Id > 0 &&
-					e.EPUBOptions.Image.AutoSplitDoublePage && !e.EPUBOptions.Image.KeepDoublePageIfSplit) {
+				if !(img.DoublePage && input.Id > 0 && !e.Image.KeepDoublePage()) {
 					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
@@ -98,7 +97,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 				}
 
 				// DOUBLE PAGE
-				if !e.Image.AutoSplitDoublePage || // No split required
+				if !e.Image.SplitDoublePage() || // No split required
 					!img.DoublePage { // Not a double page
 					continue
 				}
@@ -172,7 +171,7 @@ func (e ePUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw
 }
 
 // transform image into 1 or 3 images
-// only doublepage with autosplit has 3 versions
+// only doublepage with split + rotate has 3 versions
 func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epubimage.EPUBImage {
 	g := gift.New()
 	src := input.Image
@@ -218,7 +217,7 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	// Only part 0 can be a double page
 	isDoublePage := part == 0 && srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
 
-	if e.Image.AutoRotate && isDoublePage {
+	if e.Image.RotateDoublePage() && isDoublePage {
 		g.Add(gift.Rotate90())
 	}
 

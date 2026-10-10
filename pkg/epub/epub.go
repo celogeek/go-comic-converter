@@ -240,7 +240,7 @@ func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReade
 
 	parts = make([]epubPart, 0)
 	cover := images[0]
-	if cover.DoublePage && !e.Image.KeepDoublePageIfSplit {
+	if cover.DoublePage && !e.Image.KeepDoublePage() {
 		images = images[1:]
 	}
 
@@ -438,7 +438,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		// Double Page or Last Image that is not a double page
 		if !e.Image.View.PortraitOnly &&
 			(img.DoublePage ||
-				(!e.Image.KeepDoublePageIfSplit && img.Part == 1) ||
+				(!e.Image.KeepDoublePage() && img.Part == 1) ||
 				(img.Part == 0 && img == lastImage)) {
 			if err := e.writeBlank(wz, img); err != nil {
 				return err

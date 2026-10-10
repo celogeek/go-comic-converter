@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
 type Converter struct {
@@ -127,9 +128,7 @@ func (c *Converter) InitParse() {
 	c.AddIntParam(&c.Options.Image.Brightness, "brightness", c.Options.Image.Brightness, "Brightness readjustment: between -100 and 100, > 0 lighter, < 0 darker")
 	c.AddIntParam(&c.Options.Image.Contrast, "contrast", c.Options.Image.Contrast, "Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast")
 	c.AddReversibleBoolParam(&c.Options.Image.AutoContrast, "autocontrast", c.Options.Image.AutoContrast, "Improve contrast automatically")
-	c.AddReversibleBoolParam(&c.Options.Image.AutoRotate, "autorotate", c.Options.Image.AutoRotate, "Auto Rotate page when width > height")
-	c.AddReversibleBoolParam(&c.Options.Image.AutoSplitDoublePage, "autosplitdoublepage", c.Options.Image.AutoSplitDoublePage, "Auto Split double page when width > height")
-	c.AddReversibleBoolParam(&c.Options.Image.KeepDoublePageIfSplit, "keepdoublepageifsplit", c.Options.Image.KeepDoublePageIfSplit, "Keep the double page if split")
+	c.AddIntParam(&c.Options.Image.DoublePageMode, "doublepagemode", c.Options.Image.DoublePageMode, "Double page mode (width > height)\n0 = split\n1 = split + rotate\n2 = rotate")
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
@@ -276,8 +275,7 @@ func (c *Converter) Parse() {
 
 	if c.Options.Auto {
 		c.Options.Image.AutoContrast = true
-		c.Options.Image.AutoRotate = true
-		c.Options.Image.AutoSplitDoublePage = true
+		c.Options.Image.DoublePageMode = epuboptions.DoublePageSplitRotate
 	}
 
 	if c.Options.MaxQuality {
@@ -306,14 +304,12 @@ func (c *Converter) Parse() {
 		c.Options.Image.Brightness = 0
 		c.Options.Image.Contrast = 0
 		c.Options.Image.AutoContrast = false
-		c.Options.Image.AutoRotate = false
 		c.Options.Image.NoBlankImage = false
 		c.Options.Image.Resize = false
 	}
 
 	if c.Options.Image.AppleBookCompatibility {
-		c.Options.Image.AutoSplitDoublePage = true
-		c.Options.Image.KeepDoublePageIfSplit = false
+		c.Options.Image.DoublePageMode = epuboptions.DoublePageSplit
 		c.Options.Image.KeepSplitDoublePageAspect = true
 	}
 
@@ -429,6 +425,11 @@ func (c *Converter) Validate() error {
 	// Title Page
 	if c.Options.TitlePage < 0 || c.Options.TitlePage > 2 {
 		return errors.New("title page should be 0, 1 or 2")
+	}
+
+	// Double Page Mode
+	if c.Options.Image.DoublePageMode < 0 || c.Options.Image.DoublePageMode > 2 {
+		return errors.New("double page mode should be 0, 1 or 2")
 	}
 
 	// Grayscale Mode

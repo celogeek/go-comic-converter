@@ -14,9 +14,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Intelligent cropping (support removing even page numbers)
 - Customize brightness and contrast
 - Auto contrast
-- Auto rotate (if reader mainly read on portrait)
-- Auto split double page (for easy read on portrait)
-- Keep double page if split
+- Double page handling (never kept untouched): split, split + rotate, or rotate only
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Support cover page or not (first page will be taken in that case)
@@ -186,9 +184,7 @@ Options:
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
     Auto contrast                   : 1
-    Auto rotate                     : 1
-    Auto split double page          : 1
-    Keep double page if split       : 1
+    Double page mode                : split + rotate
     Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
@@ -309,9 +305,7 @@ Options:
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
     Auto contrast                   : 1
-    Auto rotate                     : 1
-    Auto split double page          : 1
-    Keep double page if split       : 1
+    Double page mode                : split + rotate
     Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
@@ -341,9 +335,7 @@ Options:
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
     Auto contrast                   : 1
-    Auto rotate                     : 1
-    Auto split double page          : 1
-    Keep double page if split       : 1
+    Double page mode                : split + rotate
     Keep split double page aspect   : 1
     No blank image                  : 1
     Limit                           : 200 Mb
@@ -505,12 +497,11 @@ Config:
     	Contrast readjustment: between -100 and 100, > 0 more contrast, < 0 less contrast
   -autocontrast or -autocontrast=1 (to enabled), -autocontrast=0 (to disabled)
     	Improve contrast automatically
-  -autorotate or -autorotate=1 (to enabled), -autorotate=0 (to disabled)
-    	Auto Rotate page when width > height
-  -autosplitdoublepage or -autosplitdoublepage=1 (to enabled), -autosplitdoublepage=0 (to disabled)
-    	Auto Split double page when width > height
-  -keepdoublepageifsplit or -keepdoublepageifsplit=1 (to enabled), -keepdoublepageifsplit=0 (to disabled) (default 1)
-    	Keep the double page if split
+  -doublepagemode=int
+    	Double page mode (width > height)
+    	0 = split
+    	1 = split + rotate
+    	2 = rotate
   -keepsplitdoublepageaspect or -keepsplitdoublepageaspect=1 (to enabled), -keepsplitdoublepageaspect=0 (to disabled) (default 1)
     	Keep aspect of split part of a double page (best for landscape rendering)
   -noblankimage or -noblankimage=1 (to enabled), -noblankimage=0 (to disabled) (default 1)

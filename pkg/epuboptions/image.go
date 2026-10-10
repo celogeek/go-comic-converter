@@ -1,14 +1,19 @@
 package epuboptions
 
+// Double page modes: a double page (width > height) is never kept untouched.
+const (
+	DoublePageSplit       = 0 // split in 2 pages
+	DoublePageSplitRotate = 1 // rotated double page, then split in 2 pages
+	DoublePageRotate      = 2 // rotated double page only
+)
+
 type Image struct {
 	Crop                      Crop   `yaml:"crop" json:"crop"`
 	Quality                   int    `yaml:"quality" json:"quality"`
 	Brightness                int    `yaml:"brightness" json:"brightness"`
 	Contrast                  int    `yaml:"contrast" json:"contrast"`
 	AutoContrast              bool   `yaml:"auto_contrast" json:"auto_contrast"`
-	AutoRotate                bool   `yaml:"auto_rotate" json:"auto_rotate"`
-	AutoSplitDoublePage       bool   `yaml:"auto_split_double_page" json:"auto_split_double_page"`
-	KeepDoublePageIfSplit     bool   `yaml:"keep_double_page_if_split" json:"keep_double_page_if_split"`
+	DoublePageMode            int    `yaml:"double_page_mode" json:"double_page_mode"` // 0 = split, 1 = split + rotate, 2 = rotate
 	KeepSplitDoublePageAspect bool   `yaml:"keep_split_double_page_aspect" json:"keep_split_double_page_aspect"`
 	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
 	Manga                     bool   `yaml:"manga" json:"manga"`
@@ -18,4 +23,19 @@ type Image struct {
 	Resize                    bool   `yaml:"resize" json:"resize"`
 	Format                    string `yaml:"format" json:"format"`
 	AppleBookCompatibility    bool   `yaml:"apple_book_compatibility" json:"apple_book_compatibility"`
+}
+
+// SplitDoublePage tells if a double page is split in 2 pages.
+func (i Image) SplitDoublePage() bool {
+	return i.DoublePageMode != DoublePageRotate
+}
+
+// RotateDoublePage tells if a double page is rotated.
+func (i Image) RotateDoublePage() bool {
+	return i.DoublePageMode != DoublePageSplit
+}
+
+// KeepDoublePage tells if the double page itself (not only its parts) is part of the output.
+func (i Image) KeepDoublePage() bool {
+	return i.DoublePageMode != DoublePageSplit
 }

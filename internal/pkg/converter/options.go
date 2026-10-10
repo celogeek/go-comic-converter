@@ -56,7 +56,6 @@ func NewOptions() *Options {
 					Bottom:  3,
 				},
 				NoBlankImage:              true,
-				KeepDoublePageIfSplit:     true,
 				KeepSplitDoublePageAspect: true,
 				View: epuboptions.View{
 					Color: epuboptions.Color{
@@ -152,6 +151,16 @@ func (o *Options) ShowConfig() string {
 		}
 	}
 
+	doublePageMode := ""
+	switch o.Image.DoublePageMode {
+	case epuboptions.DoublePageSplit:
+		doublePageMode = "split"
+	case epuboptions.DoublePageSplitRotate:
+		doublePageMode = "split + rotate"
+	case epuboptions.DoublePageRotate:
+		doublePageMode = "rotate"
+	}
+
 	titlePage := ""
 	switch o.TitlePage {
 	case 0:
@@ -198,10 +207,8 @@ func (o *Options) ShowConfig() string {
 		{"Brightness", o.Image.Brightness, o.Image.Format != "copy" && o.Image.Brightness != 0},
 		{"Contrast", o.Image.Contrast, o.Image.Format != "copy" && o.Image.Contrast != 0},
 		{"Auto contrast", o.Image.AutoContrast, o.Image.Format != "copy"},
-		{"Auto rotate", o.Image.AutoRotate, o.Image.Format != "copy"},
-		{"Auto split double page", o.Image.AutoSplitDoublePage, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility)},
-		{"Keep double page if split", o.Image.KeepDoublePageIfSplit, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility) && o.Image.AutoSplitDoublePage},
-		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility) && o.Image.AutoSplitDoublePage},
+		{"Double page mode", doublePageMode, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility)},
+		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility) && o.Image.SplitDoublePage()},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
 		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},

@@ -180,7 +180,7 @@ func (o Content) getManifest() []tag {
 			img,
 			!o.ImageOptions.View.PortraitOnly &&
 				(img.DoublePage ||
-					(!o.ImageOptions.KeepDoublePageIfSplit && img.Part == 1) ||
+					(!o.ImageOptions.KeepDoublePage() && img.Part == 1) ||
 					(img.Part == 0 && img == lastImage)))
 	}
 
