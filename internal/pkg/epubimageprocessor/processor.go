@@ -244,7 +244,7 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	}
 
 	if e.Image.AutoContrast {
-		g.Add(epubimagefilters.AutoContrast())
+		g.Add(epubimagefilters.AutoContrast(e.Image.GrayScaleMode))
 	}
 
 	if e.Image.Contrast != 0 {
