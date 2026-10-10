@@ -8,7 +8,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 
 # Features
 - Support input from zip, cbz, rar, cbr, pdf, directory
-- Support all Kindle devices and kobo
+- Support all Kindle devices
 - Support Landscape and Portrait mode
 - Customize output image quality
 - Intelligent cropping (support removing even page numbers)
@@ -452,19 +452,6 @@ Config:
     	    - KPW5    - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
     	    - KO      - 1264 x 1680 - Kindle Oasis 2/3
     	    - KS      - 1860 x 2480 - Kindle Scribe
-    	    - KoMT    -  600 x 800  - Kobo Mini/Touch
-    	    - KoG     -  768 x 1024 - Kobo Glo
-    	    - KoGHD   - 1072 x 1448 - Kobo Glo HD
-    	    - KoA     -  758 x 1024 - Kobo Aura
-    	    - KoAHD   - 1080 x 1440 - Kobo Aura HD
-    	    - KoAH2O  - 1080 x 1430 - Kobo Aura H2O
-    	    - KoAO    - 1404 x 1872 - Kobo Aura ONE
-    	    - KoN     -  758 x 1024 - Kobo Nia
-    	    - KoC     - 1072 x 1448 - Kobo Clara HD/Kobo Clara 2E
-    	    - KoL     - 1264 x 1680 - Kobo Libra H2O/Kobo Libra 2
-    	    - KoF     - 1440 x 1920 - Kobo Forma
-    	    - KoS     - 1440 x 1920 - Kobo Sage
-    	    - KoE     - 1404 x 1872 - Kobo Elipsa
     	    - RM1     - 1404 x 1872 - reMarkable 1
     	    - RM2     - 1404 x 1872 - reMarkable 2
   -quality=int (default 85)
