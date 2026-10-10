@@ -146,6 +146,11 @@ func (o Content) getManifest() []tag {
 		imageTags = append(imageTags,
 			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": img.MediaType()}, ""},
 		)
+		if img.Stacked {
+			imageTags = append(imageTags,
+				tag{"item", tagAttrs{"id": img.BottomImgKey(), "href": img.BottomImgPath(), "media-type": img.MediaType()}, ""},
+			)
+		}
 		pageTags = append(pageTags,
 			tag{"item", tagAttrs{"id": img.PageKey(), "href": img.PagePath(), "media-type": "application/xhtml+xml"}, ""},
 		)

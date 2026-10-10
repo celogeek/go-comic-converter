@@ -8,14 +8,26 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
+// Maximum size of an image displayed as is (SR profile).
+//
+// A bigger image is stored in 2 halves, stacked in the same page,
+// so each half stays close to what the device can handle without downscaling.
+const (
+	MaxWidth  = 1200
+	MaxHeight = 1920
+)
+
 type EPUBImage struct {
-	Id                  int
-	Part                int
-	Raw                 image.Image
-	Width               int
-	Height              int
-	IsBlank             bool
-	DoublePage          bool
+	Id         int
+	Part       int
+	Raw        image.Image
+	Width      int
+	Height     int
+	IsBlank    bool
+	DoublePage bool
+	// Stacked tells the image is stored in 2 files, the top half and the bottom half (see BottomImgPath).
+	// Width and Height are the size of the whole image.
+	Stacked             bool
 	Path                string
 	Name                string
 	Format              string
@@ -72,6 +84,31 @@ func (i EPUBImage) EPUBImgPath() string {
 	return "OEBPS/" + i.ImgPath()
 }
 
+// NeedStack tells if an image of this size is too big to be stored in one file.
+func NeedStack(width, height int) bool {
+	return height > 1 && (width > MaxWidth || height > MaxHeight)
+}
+
+// TopHeight height of the top half of a stacked image.
+func (i EPUBImage) TopHeight() int {
+	return i.Height / 2
+}
+
+// BottomImgKey key for the bottom half of a stacked image
+func (i EPUBImage) BottomImgKey() string {
+	return i.ImgKey() + "_b"
+}
+
+// BottomImgPath image path of the bottom half of a stacked image
+func (i EPUBImage) BottomImgPath() string {
+	return "Images/" + i.BottomImgKey() + "." + i.Format
+}
+
+// EPUBBottomImgPath image path of the bottom half of a stacked image into the EPUB
+func (i EPUBImage) EPUBBottomImgPath() string {
+	return "OEBPS/" + i.BottomImgPath()
+}
+
 // MediaType of the epub image
 func (i EPUBImage) MediaType() string {
 	return "image/" + i.Format
@@ -85,12 +122,34 @@ func (i EPUBImage) ImgStyle(viewWidth, viewHeight int) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
+	return imgStyle(viewWidth, viewHeight, relWidth, relHeight, marginW, marginH)
+}
+
+// ImgStyles style to apply to each file of the image: the top half then the bottom half
+// when the image is stacked, so they are displayed as one image.
+func (i EPUBImage) ImgStyles(viewWidth, viewHeight int) []string {
+	if !i.Stacked {
+		return []string{i.ImgStyle(viewWidth, viewHeight)}
+	}
+
+	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
+	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
+
+	topHeight := int(float64(relHeight)*float64(i.TopHeight())/float64(i.Height) + 0.5)
+
+	return []string{
+		imgStyle(viewWidth, viewHeight, relWidth, topHeight, marginW, marginH),
+		imgStyle(viewWidth, viewHeight, relWidth, relHeight-topHeight, marginW, marginH+float64(topHeight)),
+	}
+}
+
+func imgStyle(viewWidth, viewHeight, width, height int, left, top float64) string {
 	style := make([]string, 0, 4)
 
-	style = append(style, "width:"+utils.IntToString(relWidth)+"px")
-	style = append(style, "height:"+utils.IntToString(relHeight)+"px")
-	style = append(style, "top:"+utils.FloatToString(marginH*100/float64(viewHeight), 2)+"%")
-	style = append(style, "left:"+utils.FloatToString(marginW*100/float64(viewWidth), 2)+"%")
+	style = append(style, "width:"+utils.IntToString(width)+"px")
+	style = append(style, "height:"+utils.IntToString(height)+"px")
+	style = append(style, "top:"+utils.FloatToString(top*100/float64(viewHeight), 2)+"%")
+	style = append(style, "left:"+utils.FloatToString(left*100/float64(viewWidth), 2)+"%")
 
 	return strings.Join(style, "; ")
 }

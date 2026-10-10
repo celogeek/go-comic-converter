@@ -15,6 +15,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Customize brightness and contrast
 - Auto contrast
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
+- Images bigger than the SR resolution (1200x1920), like with the KS or HR profile, are stored in 2 halves shown as one page, to keep the resolution on large devices
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Support cover page or not (first page will be taken in that case)

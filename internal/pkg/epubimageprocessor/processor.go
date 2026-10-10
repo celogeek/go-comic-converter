@@ -85,7 +85,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 				// do not keep double page if requested
 				if !(img.DoublePage && input.Id > 0 && !e.Image.KeepDoublePage()) {
-					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
+					if err = e.addImage(imgStorage, &img); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
@@ -104,7 +104,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 					img = e.transformImage(input, i+1, b)
-					if err = imgStorage.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality); err != nil {
+					if err = e.addImage(imgStorage, &img); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
@@ -137,6 +137,28 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	}
 
 	return images, nil
+}
+
+type subImager interface {
+	SubImage(r image.Rectangle) image.Image
+}
+
+// addImage compress the image into the storage.
+//
+// An image bigger than the SR resolution is stored in 2 halves, displayed stacked in the same page.
+func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimage.EPUBImage) error {
+	if sub, ok := img.Raw.(subImager); ok && epubimage.NeedStack(img.Width, img.Height) {
+		b := img.Raw.Bounds()
+		mid := b.Min.Y + img.TopHeight()
+		img.Stacked = true
+
+		if err := s.Add(img.EPUBImgPath(), sub.SubImage(image.Rect(b.Min.X, b.Min.Y, b.Max.X, mid)), e.Image.Quality); err != nil {
+			return err
+		}
+		return s.Add(img.EPUBBottomImgPath(), sub.SubImage(image.Rect(b.Min.X, mid, b.Max.X, b.Max.Y)), e.Image.Quality)
+	}
+
+	return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
 }
 
 func (e ePUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {

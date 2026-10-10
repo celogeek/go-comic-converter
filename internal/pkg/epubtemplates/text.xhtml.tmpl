@@ -8,6 +8,8 @@
     <meta name="viewport" content="{{ .ViewPort }}"/>
   </head>
   <body>
-    <img src="../{{ .ImagePath }}" alt="{{ .Title }}" style="{{ .ImageStyle }}"/>
+    {{- range .Images }}
+    <img src="../{{ .Path }}" alt="{{ $.Title }}" style="{{ .Style }}"/>
+    {{- end }}
   </body>
 </html>
