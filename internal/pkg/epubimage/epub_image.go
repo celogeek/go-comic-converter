@@ -143,6 +143,28 @@ func (i EPUBImage) ImgStyles(viewWidth, viewHeight int) []string {
 	}
 }
 
+// PanelZoom size of the image zoomed by the panel view, and the style of each of its files
+// (the top half then the bottom half when the image is stacked).
+//
+// The zoom is relative to the size of the image displayed in the page.
+func (i EPUBImage) PanelZoom(viewWidth, viewHeight int, zoom float64) (string, []string) {
+	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
+	width, height := int(float64(relWidth)*zoom+0.5), int(float64(relHeight)*zoom+0.5)
+	box := "width:" + utils.IntToString(width) + "px; height:" + utils.IntToString(height) + "px"
+
+	file := func(h, top int) string {
+		return "width:" + utils.IntToString(width) + "px; height:" + utils.IntToString(h) + "px; top:" + utils.IntToString(top) + "px; left:0"
+	}
+
+	if !i.Stacked {
+		return box, []string{file(height, 0)}
+	}
+
+	topHeight := int(float64(height)*float64(i.TopHeight())/float64(i.Height) + 0.5)
+
+	return box, []string{file(topHeight, 0), file(height-topHeight, topHeight)}
+}
+
 func imgStyle(viewWidth, viewHeight, width, height int, left, top float64) string {
 	style := make([]string, 0, 4)
 

@@ -96,12 +96,18 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, zipImg, bo
 		zipImgs = append(zipImgs, bottomZipImg)
 	}
 
+	var panel *epubtemplates.PanelView
+	if e.Image.AddPanelView {
+		panel = e.panelView(img, images)
+	}
+
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":    "Image " + utils.IntToString(img.Id) + " Part " + utils.IntToString(img.Part),
 			"ViewPort": e.Image.View.Port(),
 			"Images":   images,
+			"Panel":    panel,
 		})),
 	)
 	for i := 0; err == nil && i < len(zipImgs); i++ {
@@ -109,6 +115,31 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, zipImg, bo
 	}
 
 	return err
+}
+
+// panelViewZoom zoom of the panel view, relative to the size of the image in the page.
+const panelViewZoom = 1.5
+
+// panelView build the panel view of an image page
+func (e epub) panelView(img epubimage.EPUBImage, images []epubtemplates.Image) *epubtemplates.PanelView {
+	zoomStyle, zoomStyles := img.PanelZoom(e.Image.View.Width, e.Image.View.Height, panelViewZoom)
+	zoomImages := make([]epubtemplates.Image, len(images))
+	for i, image := range images {
+		zoomImages[i] = epubtemplates.Image{Path: image.Path, Style: zoomStyles[i]}
+	}
+
+	// Reading order of the corners: left to right, or right to left for manga.
+	corners := []epubtemplates.PanelCorner{{Key: "TL", Ordinal: 1}, {Key: "TR", Ordinal: 2}, {Key: "BL", Ordinal: 3}, {Key: "BR", Ordinal: 4}}
+	if e.Image.Manga {
+		corners = []epubtemplates.PanelCorner{{Key: "TL", Ordinal: 2}, {Key: "TR", Ordinal: 1}, {Key: "BL", Ordinal: 4}, {Key: "BR", Ordinal: 3}}
+	}
+
+	return &epubtemplates.PanelView{
+		Style:      img.ImgStyle(e.Image.View.Width, e.Image.View.Height),
+		ZoomStyle:  zoomStyle,
+		ZoomImages: zoomImages,
+		Corners:    corners,
+	}
 }
 
 // write blank page
@@ -424,6 +455,10 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 			"Foreground": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)),
 			"Background": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background)),
 		})},
+	}
+
+	if e.Image.AddPanelView {
+		content = append(content, zipContent{"OEBPS/Text/panelview.css", epubtemplates.PanelViewStyle})
 	}
 
 	if err = wz.WriteMagic(); err != nil {

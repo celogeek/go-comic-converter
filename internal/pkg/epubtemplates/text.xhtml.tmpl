@@ -5,11 +5,33 @@
     <meta charset="utf-8" />
     <title>{{ .Title }}</title>
     <link href="style.css" type="text/css" rel="stylesheet"/>
+    {{- if .Panel }}
+    <link href="panelview.css" type="text/css" rel="stylesheet"/>
+    {{- end }}
     <meta name="viewport" content="{{ .ViewPort }}"/>
   </head>
   <body>
     {{- range .Images }}
     <img src="../{{ .Path }}" alt="{{ $.Title }}" style="{{ .Style }}"/>
+    {{- end }}
+    {{- with .Panel }}
+    <div id="PV" style="{{ .Style }}">
+      {{- range .Corners }}
+      <div id="PV-{{ .Key }}">
+        <a class="app-amzn-magnify" data-app-amzn-magnify='{"targetId":"PV-{{ .Key }}-P", "ordinal":{{ .Ordinal }}}'></a>
+      </div>
+      {{- end }}
+    </div>
+    {{- $zoom := . }}
+    {{- range .Corners }}
+    <div class="PV-P" id="PV-{{ .Key }}-P">
+      <div class="PV-Z" style="{{ $zoom.ZoomStyle }}">
+        {{- range $zoom.ZoomImages }}
+        <img src="../{{ .Path }}" alt="" style="{{ .Style }}"/>
+        {{- end }}
+      </div>
+    </div>
+    {{- end }}
     {{- end }}
   </body>
 </html>

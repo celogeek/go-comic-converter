@@ -1,0 +1,55 @@
+a.app-amzn-magnify {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+
+#PV {
+    position: absolute;
+}
+
+#PV-TL, #PV-TR, #PV-BL, #PV-BR {
+    width: 49.5%;
+    height: 50%;
+}
+
+#PV-TL, #PV-BL {
+    float: left;
+}
+
+#PV-TR, #PV-BR {
+    float: right;
+}
+
+.PV-P {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.PV-Z {
+    position: absolute;
+}
+
+#PV-TL-P .PV-Z {
+    top: 0;
+    left: 0;
+}
+
+#PV-TR-P .PV-Z {
+    top: 0;
+    right: 0;
+}
+
+#PV-BL-P .PV-Z {
+    bottom: 0;
+    left: 0;
+}
+
+#PV-BR-P .PV-Z {
+    bottom: 0;
+    right: 0;
+}

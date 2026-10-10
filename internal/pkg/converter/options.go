@@ -211,6 +211,7 @@ func (o *Options) ShowConfig() string {
 		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility && o.Image.SplitDoublePage()},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
+		{"Add panel view", o.Image.AddPanelView, true},
 		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},
 		{"Strip first directory from toc", o.StripFirstDirectoryFromToc, true},
 		{"Sort path mode", sortpathmode, true},

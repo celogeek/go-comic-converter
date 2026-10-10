@@ -156,6 +156,10 @@ func (o Content) getManifest() []tag {
 		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg"}, ""},
 	}
 
+	if o.ImageOptions.AddPanelView {
+		items = append(items, tag{"item", tagAttrs{"id": "panelview_css", "href": "Text/panelview.css", "media-type": "text/css"}, ""})
+	}
+
 	if o.HasTitlePage {
 		items = append(items,
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
