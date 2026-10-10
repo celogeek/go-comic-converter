@@ -202,12 +202,13 @@ func (o Content) getSpineAuto() []tag {
 		if isDoublePage {
 			// Center the double page then start back to comic mode (mange/normal)
 			isOnTheRight = !o.ImageOptions.Manga
-			return "rendition:page-spread-center"
+			return "page-spread-center"
 		}
+		// Kindle needs the EPUB 3 core values, it ignores the spread with the rendition: alias.
 		if isOnTheRight {
-			return "rendition:page-spread-right"
+			return "page-spread-right"
 		} else {
-			return "rendition:page-spread-left"
+			return "page-spread-left"
 		}
 	}
 	getSpreadBlank := func() string {
@@ -227,7 +228,7 @@ func (o Content) getSpineAuto() []tag {
 			)
 		}
 	}
-	for i, img := range o.Images {
+	for _, img := range o.Images {
 		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
 			spine = append(spine, tag{
 				"itemref",
@@ -235,15 +236,11 @@ func (o Content) getSpineAuto() []tag {
 				"",
 			})
 		}
-		// register position for style adjustment
-		img.Position = getSpread(img.DoublePage)
 		spine = append(spine, tag{
 			"itemref",
-			tagAttrs{"idref": img.PageKey(), "properties": img.Position},
+			tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)},
 			"",
 		})
-		// save position, img is a value type
-		o.Images[i] = img
 	}
 	if o.ImageOptions.Manga == isOnTheRight {
 		spine = append(spine, tag{

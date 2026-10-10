@@ -18,7 +18,6 @@ type EPUBImage struct {
 	DoublePage          bool
 	Path                string
 	Name                string
-	Position            string
 	Format              string
 	OriginalAspectRatio float64
 	Error               error
@@ -80,9 +79,9 @@ func (i EPUBImage) MediaType() string {
 
 // ImgStyle style to apply to the image.
 //
-// center by default.
-// align to left or right if it's part of the split double page.
-func (i EPUBImage) ImgStyle(viewWidth, viewHeight int, align string) string {
+// Always centered: the same page is shown alone in portrait and in a spread in landscape,
+// and Kindle devices handle only top/left reliably.
+func (i EPUBImage) ImgStyle(viewWidth, viewHeight int) string {
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := float64(viewWidth-relWidth)/2, float64(viewHeight-relHeight)/2
 
@@ -91,18 +90,7 @@ func (i EPUBImage) ImgStyle(viewWidth, viewHeight int, align string) string {
 	style = append(style, "width:"+utils.IntToString(relWidth)+"px")
 	style = append(style, "height:"+utils.IntToString(relHeight)+"px")
 	style = append(style, "top:"+utils.FloatToString(marginH*100/float64(viewHeight), 2)+"%")
-	if align == "" {
-		switch i.Position {
-		case "rendition:page-spread-left":
-			style = append(style, "right:0")
-		case "rendition:page-spread-right":
-			style = append(style, "left:0")
-		default:
-			style = append(style, "left:"+utils.FloatToString(marginW*100/float64(viewWidth), 2)+"%")
-		}
-	} else {
-		style = append(style, align)
-	}
+	style = append(style, "left:"+utils.FloatToString(marginW*100/float64(viewWidth), 2)+"%")
 
 	return strings.Join(style, "; ")
 }
