@@ -171,16 +171,14 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 
 // write title image
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
-	if !e.Image.View.PortraitOnly {
-		if err := wz.WriteContent(
-			"OEBPS/Text/space_title.xhtml",
-			[]byte(e.render(epubtemplates.Blank, map[string]any{
-				"Title":    "Blank Page Title",
-				"ViewPort": e.Image.View.Port(),
-			})),
-		); err != nil {
-			return err
-		}
+	if err := wz.WriteContent(
+		"OEBPS/Text/space_title.xhtml",
+		[]byte(e.render(epubtemplates.Blank, map[string]any{
+			"Title":    "Blank Page Title",
+			"ViewPort": e.Image.View.Port(),
+		})),
+	); err != nil {
+		return err
 	}
 
 	// The title image has the view size, so it fills the page.
@@ -454,10 +452,9 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		}
 
 		// Double Page or Last Image that is not a double page
-		if !e.Image.View.PortraitOnly &&
-			(img.DoublePage ||
-				(!e.Image.KeepDoublePage() && img.Part == 1) ||
-				(img.Part == 0 && img == lastImage)) {
+		if img.DoublePage ||
+			(!e.Image.KeepDoublePage() && img.Part == 1) ||
+			(img.Part == 0 && img == lastImage) {
 			if err := e.writeBlank(wz, img); err != nil {
 				return err
 			}

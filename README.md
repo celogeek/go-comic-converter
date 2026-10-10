@@ -387,7 +387,7 @@ After playing around with the options, I have my perfect settings for all my dev
 
 ```
 $ go-comic-converter -reset
-$ go-comic-converter -profile SR -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -portrait-only=1 -grayscale=1 -grayscale-mode=2 -save
+$ go-comic-converter -profile SR -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -save
 
 Options:
     Profile                         : SR - Standard Resolution - 1200x1920
@@ -403,7 +403,6 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : 1:1.60
-    Portrait only                   : 1
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -418,7 +417,6 @@ Explanation:
 - `-aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
 - `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
 - `-crop=0`: do not remove anything
-- `-portrait-only=1`: disable landscape support. rendering is centered and works on all kindles
 - `-grayscale=1 -grayscale-mode=2`: use luminance mode of grayscale color
 
 # Help
@@ -531,8 +529,6 @@ Config:
     	 -1 = same as device
     	  0 = same as source
     	1.6 = amazon advice for kindle
-  -portrait-only or -portrait-only=1 (to enabled), -portrait-only=0 (to disabled)
-    	Portrait only: force orientation to portrait only.
   -titlepage=int (default 1)
     	Title page
     	0 = never

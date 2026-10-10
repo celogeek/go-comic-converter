@@ -207,8 +207,8 @@ func (o *Options) ShowConfig() string {
 		{"Brightness", o.Image.Brightness, o.Image.Format != "copy" && o.Image.Brightness != 0},
 		{"Contrast", o.Image.Contrast, o.Image.Format != "copy" && o.Image.Contrast != 0},
 		{"Auto contrast", o.Image.AutoContrast, o.Image.Format != "copy"},
-		{"Double page mode", doublePageMode, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility)},
-		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && (o.Image.View.PortraitOnly || !o.Image.AppleBookCompatibility) && o.Image.SplitDoublePage()},
+		{"Double page mode", doublePageMode, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility},
+		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility && o.Image.SplitDoublePage()},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
 		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},
@@ -218,11 +218,10 @@ func (o *Options) ShowConfig() string {
 		{"Background color", "#" + o.Image.View.Color.Background, true},
 		{"Resize", o.Image.Resize, o.Image.Format != "copy"},
 		{"Aspect ratio", aspectRatio, true},
-		{"Portrait only", o.Image.View.PortraitOnly, true},
 		{"Title page", titlePage, true},
 		{"Cover caption", o.CoverCaption, o.LimitMb != 0},
 		{"Font", font, true},
-		{"Apple book compatibility", o.Image.AppleBookCompatibility, !o.Image.View.PortraitOnly},
+		{"Apple book compatibility", o.Image.AppleBookCompatibility, true},
 	} {
 		if v.Condition {
 			if bv, ok := v.Value.(bool); ok {

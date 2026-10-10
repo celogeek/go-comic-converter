@@ -52,11 +52,10 @@ func testOptions(input, output string, coverCaption bool) epuboptions.EPUBOption
 			Format:  "jpeg",
 			Resize:  true,
 			View: epuboptions.View{
-				Width:        600,
-				Height:       800,
-				AspectRatio:  -1,
-				PortraitOnly: true,
-				Color:        epuboptions.Color{Foreground: "000000", Background: "FFFFFF"},
+				Width:       600,
+				Height:      800,
+				AspectRatio: -1,
+				Color:       epuboptions.Color{Foreground: "000000", Background: "FFFFFF"},
 			},
 		},
 	}

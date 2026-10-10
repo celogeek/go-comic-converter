@@ -140,7 +140,6 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
-	c.AddReversibleBoolParam(&c.Options.Image.View.PortraitOnly, "portrait-only", c.Options.Image.View.PortraitOnly, "Portrait only: force orientation to portrait only.")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 	c.AddReversibleBoolParam(&c.Options.CoverCaption, "covercaption", c.Options.CoverCaption, "Set cover caption when the epub is split")
 	c.AddStringParam(&c.Options.Font, "font", c.Options.Font, "Path to a TrueType font (.ttf) for the cover caption and title page. Default: embedded Literata")
@@ -311,10 +310,6 @@ func (c *Converter) Parse() {
 	if c.Options.Image.AppleBookCompatibility {
 		c.Options.Image.DoublePageMode = epuboptions.DoublePageSplit
 		c.Options.Image.KeepSplitDoublePageAspect = true
-	}
-
-	if c.Options.Image.View.PortraitOnly {
-		c.Options.Image.KeepSplitDoublePageAspect = false
 	}
 }
 

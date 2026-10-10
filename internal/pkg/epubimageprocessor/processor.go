@@ -199,8 +199,8 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	src := input.Image
 	srcBounds := src.Bounds()
 
-	// In portrait only, we don't need to keep aspect ratio between each split.
-	// We first cut, the crop.
+	// When the split halves don't need to keep the same aspect ratio,
+	// we first cut, then crop.
 	if part > 0 && !e.Image.KeepSplitDoublePageAspect {
 		g.Add(epubimagefilters.CropSplitDoublePage(right))
 	}

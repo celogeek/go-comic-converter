@@ -71,11 +71,7 @@ func (o Content) String() string {
 		spine.CreateAttr("page-progression-direction", "ltr")
 	}
 
-	if o.ImageOptions.View.PortraitOnly {
-		addToElement(spine, o.getSpinePortrait)
-	} else {
-		addToElement(spine, o.getSpineAuto)
-	}
+	addToElement(spine, o.getSpineAuto)
 
 	guide := pkg.CreateElement("guide")
 	addToElement(guide, o.getGuide)
@@ -107,19 +103,11 @@ func (o Content) getMeta() []tag {
 		{"dc:date", tagAttrs{}, o.UpdatedAt},
 	}
 
-	if o.ImageOptions.View.PortraitOnly {
-		metas = append(metas, []tag{
-			{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
-			{"meta", tagAttrs{"property": "rendition:spread"}, "none"},
-			{"meta", tagAttrs{"property": "rendition:orientation"}, "portrait"},
-		}...)
-	} else {
-		metas = append(metas, []tag{
-			{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
-			{"meta", tagAttrs{"property": "rendition:spread"}, "auto"},
-			{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
-		}...)
-	}
+	metas = append(metas, []tag{
+		{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
+		{"meta", tagAttrs{"property": "rendition:spread"}, "auto"},
+		{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
+	}...)
 
 	if o.ImageOptions.Manga {
 		metas = append(metas, tag{"meta", tagAttrs{"name": "primary-writing-mode", "content": "horizontal-rl"}, ""})
@@ -174,19 +162,16 @@ func (o Content) getManifest() []tag {
 			tag{"item", tagAttrs{"id": "img_title", "href": "Images/title.jpeg", "media-type": "image/jpeg"}, ""},
 		)
 
-		if !o.ImageOptions.View.PortraitOnly {
-			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
-		}
+		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
 	}
 
 	lastImage := o.Images[len(o.Images)-1]
 	for _, img := range o.Images {
 		addTag(
 			img,
-			!o.ImageOptions.View.PortraitOnly &&
-				(img.DoublePage ||
-					(!o.ImageOptions.KeepDoublePage() && img.Part == 1) ||
-					(img.Part == 0 && img == lastImage)))
+			img.DoublePage ||
+				(!o.ImageOptions.KeepDoublePage() && img.Part == 1) ||
+				(img.Part == 0 && img == lastImage))
 	}
 
 	items = append(items, imageTags...)
@@ -255,23 +240,6 @@ func (o Content) getSpineAuto() []tag {
 		})
 	}
 
-	return spine
-}
-
-func (o Content) getSpinePortrait() []tag {
-	var spine []tag
-	if o.HasTitlePage {
-		spine = append(spine,
-			tag{"itemref", tagAttrs{"idref": "page_title"}, ""},
-		)
-	}
-	for _, img := range o.Images {
-		spine = append(spine, tag{
-			"itemref",
-			tagAttrs{"idref": img.PageKey()},
-			"",
-		})
-	}
 	return spine
 }
 
