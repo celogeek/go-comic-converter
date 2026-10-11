@@ -443,22 +443,23 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		Name    string
 		Content string
 	}
+	opf := epubtemplates.Content{
+		Title:        title,
+		HasTitlePage: hasTitlePage,
+		UID:          e.UID,
+		Author:       e.Author,
+		Publisher:    e.Publisher,
+		UpdatedAt:    e.UpdatedAt,
+		ImageOptions: e.Image,
+		Cover:        part.Cover,
+		Images:       part.Images,
+		Current:      currentPart,
+		Total:        totalParts,
+	}
 	content := []zipContent{
 		{"META-INF/container.xml", epubtemplates.Container},
 		{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
-		{"OEBPS/content.opf", epubtemplates.Content{
-			Title:        title,
-			HasTitlePage: hasTitlePage,
-			UID:          e.UID,
-			Author:       e.Author,
-			Publisher:    e.Publisher,
-			UpdatedAt:    e.UpdatedAt,
-			ImageOptions: e.Image,
-			Cover:        part.Cover,
-			Images:       part.Images,
-			Current:      currentPart,
-			Total:        totalParts,
-		}.String()},
+		{"OEBPS/content.opf", opf.String()},
 		{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
 		{"OEBPS/Text/style.css", e.render(styleTemplate, map[string]any{
 			"Width":      e.Image.View.Width,
@@ -491,19 +492,16 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		}
 	}
 
-	lastImage := part.Images[len(part.Images)-1]
 	for _, img := range part.Images {
 		if err := e.writeImage(wz, img, imgStorage); err != nil {
 			return err
 		}
+	}
 
-		// Double Page or Last Image that is not a double page
-		if img.DoublePage ||
-			(!e.Image.KeepDoublePage() && img.Part == 1) ||
-			(img.Part == 0 && lastImage.Part == 0 && img.Id == lastImage.Id) {
-			if err := e.writeBlank(wz, img); err != nil {
-				return err
-			}
+	// the blank pages listed in the content: the spine refers to them
+	for _, img := range opf.Spaces() {
+		if err := e.writeBlank(wz, img); err != nil {
+			return err
 		}
 	}
 	return nil
