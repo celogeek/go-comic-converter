@@ -83,18 +83,15 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 			for input := range imageInput {
 				img := e.transformImage(input, 0, e.Image.Manga)
 
-				// do not keep double page if requested
-				if !(img.DoublePage && input.Id > 0 && !e.Image.KeepDoublePage()) {
+				// A double page that is not kept is not stored, it is only sent in case it ends up as the cover:
+				// the collector knows which image comes first once the blank ones are removed.
+				if !e.isDroppedDoublePage(img) {
 					if err := e.addImage(imgStorage, &img); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
-					// do not keep raw image except for cover
-					if img.Id > 0 {
-						img.Raw = nil
-					}
-					imageOutput <- img
 				}
+				imageOutput <- img
 
 				// DOUBLE PAGE
 				if !e.Image.SplitDoublePage() || // No split required
@@ -108,7 +105,6 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
-					img.Raw = nil
 					imageOutput <- img
 				}
 			}
@@ -121,6 +117,9 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 		close(imageOutput)
 	}()
 
+	// The cover is the first image once the blank ones are removed, it is the only one that keeps its raw data.
+	// Images come in any order: the raw data of the best candidate so far is released when a better one arrives.
+	cover := -1
 	for img := range imageOutput {
 		if img.Part == 0 {
 			_ = bar.Add(1)
@@ -128,7 +127,22 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 		if e.Image.NoBlankImage && img.IsBlank {
 			continue
 		}
+
+		if cover >= 0 && !isBefore(img, images[cover]) {
+			img.Raw = nil
+			// not stored, and not a page: nothing to keep
+			if e.isDroppedDoublePage(img) {
+				continue
+			}
+			images = append(images, img)
+			continue
+		}
+
+		if cover >= 0 {
+			images[cover].Raw = nil
+		}
 		images = append(images, img)
+		cover = len(images) - 1
 	}
 	_ = bar.Close()
 
@@ -136,7 +150,25 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 		return nil, errNoImagesFound
 	}
 
-	return images, nil
+	// a double page that is not kept is only used as the cover, not as a page
+	kept := images[:0]
+	for i, img := range images {
+		if i == cover || !e.isDroppedDoublePage(img) {
+			kept = append(kept, img)
+		}
+	}
+
+	return kept, nil
+}
+
+// isDroppedDoublePage tells if the image is a double page, that is not kept as a page (its parts are).
+func (e ePUBImageProcessor) isDroppedDoublePage(img epubimage.EPUBImage) bool {
+	return img.Part == 0 && img.DoublePage && !e.Image.KeepDoublePage()
+}
+
+// isBefore tells if the image comes before the other one in the book.
+func isBefore(a, b epubimage.EPUBImage) bool {
+	return a.Id < b.Id || (a.Id == b.Id && a.Part < b.Part)
 }
 
 type subImager interface {

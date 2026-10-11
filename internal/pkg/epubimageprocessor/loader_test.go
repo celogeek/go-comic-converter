@@ -2,8 +2,15 @@ package epubimageprocessor
 
 import (
 	"archive/zip"
+	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/jpeg"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
@@ -58,4 +65,86 @@ func writeBrokenZip(path string) error {
 		return err
 	}
 	return w.Close()
+}
+
+// writePages writes jpeg pages named 001.jpg, 002.jpg... "" is a blank page, "wide" a double page.
+func writePages(t *testing.T, dir string, pages ...string) {
+	t.Helper()
+	for i, kind := range pages {
+		w, h := 60, 90
+		if kind == "wide" {
+			w, h = 180, 90
+		}
+		img := image.NewGray(image.Rect(0, 0, w, h))
+		draw.Draw(img, img.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
+		if kind != "" {
+			draw.Draw(img, image.Rect(10, 10, w-10, h-10), image.NewUniform(color.Black), image.Point{}, draw.Src)
+		}
+		f, err := os.Create(filepath.Join(dir, fmt.Sprintf("%03d.jpg", i+1)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := jpeg.Encode(f, img, nil); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+	}
+}
+
+// The cover is the first image that is not blank, and the only one that keeps its raw data.
+func TestLoadCover(t *testing.T) {
+	for _, c := range []struct {
+		name      string
+		pages     []string
+		wantCover [2]int // id, part
+		want      [][2]int
+	}{
+		{"blank first", []string{"", "page", "page"}, [2]int{1, 0}, [][2]int{{1, 0}, {2, 0}}},
+		{"blank first twice", []string{"", "", "page"}, [2]int{2, 0}, [][2]int{{2, 0}}},
+		{"blank then double page", []string{"", "wide", "page"}, [2]int{1, 0}, [][2]int{{1, 0}, {1, 1}, {1, 2}, {2, 0}}},
+		{"double page first", []string{"wide", "wide", "page"}, [2]int{0, 0}, [][2]int{{0, 0}, {0, 1}, {0, 2}, {1, 1}, {1, 2}, {2, 0}}},
+		{"no blank", []string{"page", "page"}, [2]int{0, 0}, [][2]int{{0, 0}, {1, 0}}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			dir := filepath.Join(t.TempDir(), "in")
+			if err := os.Mkdir(dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			writePages(t, dir, c.pages...)
+
+			e := New(epuboptions.EPUBOptions{
+				Input:        dir,
+				Output:       filepath.Join(t.TempDir(), "book.epub"),
+				Workers:      4,
+				Quiet:        true,
+				TrueTypeFont: fonts.Default,
+				Image:        epuboptions.Image{Format: "jpeg", Quality: 90, NoBlankImage: true},
+			})
+			images, err := e.Load()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sort.Slice(images, func(i, j int) bool {
+				if images[i].Id == images[j].Id {
+					return images[i].Part < images[j].Part
+				}
+				return images[i].Id < images[j].Id
+			})
+
+			var got [][2]int
+			for i, img := range images {
+				got = append(got, [2]int{img.Id, img.Part})
+				if hasRaw := img.Raw != nil; hasRaw != (i == 0) {
+					t.Errorf("image %d part %d: raw data kept = %v", img.Id, img.Part, hasRaw)
+				}
+			}
+			if !reflect.DeepEqual(got, c.want) {
+				t.Errorf("got images %v, want %v", got, c.want)
+			}
+			if got[0] != c.wantCover {
+				t.Errorf("got cover %v, want %v", got[0], c.wantCover)
+			}
+		})
+	}
 }
