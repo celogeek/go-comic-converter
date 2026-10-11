@@ -383,6 +383,16 @@ func (c *Converter) Validate() error {
 		return errors.New("limitmb should be 0 or >= 20")
 	}
 
+	// Quality
+	if c.Options.Image.Quality < 1 || c.Options.Image.Quality > 100 {
+		return errors.New("quality should be between 1 and 100")
+	}
+
+	// Workers
+	if c.Options.Workers < 1 {
+		return errors.New("workers should be at least 1")
+	}
+
 	// Brightness
 	if c.Options.Image.Brightness < -100 || c.Options.Image.Brightness > 100 {
 		return errors.New("brightness should be between -100 and 100")
