@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/color"
+	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
@@ -21,10 +21,10 @@ import (
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
-	"github.com/fogleman/gg"
-	"github.com/golang/freetype/truetype"
 	"github.com/nwaples/rardecode/v2"
 )
 
@@ -74,26 +74,36 @@ func (e ePUBImageProcessor) load() (totalImages int, output chan task, err error
 	}
 }
 
+// corruptedImage page shown in place of an image that cannot be read, with the title box of the cover,
+// in the foreground and background colors of the view.
 func (e ePUBImageProcessor) corruptedImage(path, name string) image.Image {
-	var w, h float64 = 1200, 1920
-	face := truetype.NewFace(e.TrueTypeFont, &truetype.Options{Size: 64, DPI: 72})
 	txt := name
 	if path != "" {
 		txt += "\nin " + filepath.Clean(path)
 	}
 	txt += "\nis corrupted!"
 
-	g := gg.NewContext(int(w), int(h))
-	g.SetColor(color.White)
-	g.Clear()
-	g.SetColor(color.Black)
-	g.DrawRoundedRectangle(0, 0, w, h, 0.5)
-	g.SetLineWidth(6)
-	g.Stroke()
-	g.DrawRoundedRectangle(0, 0, 480, 640, 0.5)
-	g.SetFontFace(face)
-	g.DrawStringWrapped(txt, w/2, h/2, 0.5, 0.5, 640, 1.5, gg.AlignCenter)
-	return g.Image()
+	colors := e.Image.View.Color
+	foreground := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Foreground)
+	background := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Background)
+
+	src := image.NewRGBA(image.Rect(0, 0, epubimage.MaxWidth, epubimage.MaxHeight))
+	draw.Draw(src, src.Bounds(), image.NewUniform(background), image.Point{}, draw.Src)
+
+	fontSize := epubimagefilters.TitleFontSize(src.Bounds().Dx())
+
+	dst := image.NewRGBA(src.Bounds())
+	epubimagefilters.CoverTitle{
+		Title:       txt,
+		Align:       "center",
+		Font:        e.TrueTypeFont,
+		FontSize:    fontSize,
+		BorderWidth: epubimagefilters.TitleBorderWidth(fontSize),
+		Foreground:  foreground,
+		Background:  background,
+	}.Draw(dst, src, nil)
+
+	return dst
 }
 
 // load a directory of images

@@ -23,6 +23,17 @@ type CoverTitle struct {
 	Background  color.Color
 }
 
+// TitleFontSize scales the text of a title box with the image width:
+// 64px on a 1200px wide image (SR profile), never below 16px.
+func TitleFontSize(width int) float64 {
+	return math.Max(16, float64(width)*64/1200)
+}
+
+// TitleBorderWidth scales the border of a title box with its font size, never below 1px.
+func TitleBorderWidth(fontSize float64) float64 {
+	return math.Max(1, fontSize/16)
+}
+
 // Bounds size is the same as source
 func (p CoverTitle) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	return srcBounds

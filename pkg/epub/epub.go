@@ -153,17 +153,11 @@ func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
 	)
 }
 
-// titleFontSize scales the cover caption and title page text with the image width:
-// 64px on a 1200px wide image (SR profile), never below 16px.
-func titleFontSize(width int) float64 {
-	return math.Max(16, float64(width)*64/1200)
-}
-
 // write cover image, used as thumbnail only (it has no page)
 func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, coverText string) error {
 	// the cover is reduced to the max size, the font follows
 	coverWidth, _ := epubimage.FitSize(img.Raw.Bounds().Dx(), img.Raw.Bounds().Dy())
-	fontSize := titleFontSize(coverWidth)
+	fontSize := epubimagefilters.TitleFontSize(coverWidth)
 	coverTitle, err := e.imageProcessor.CoverTitleData(epubimageprocessor.CoverTitleDataOptions{
 		Src:  img.Raw,
 		Name: "cover",
@@ -171,7 +165,7 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 			Title:       coverText,
 			Align:       "bottom",
 			FontSize:    fontSize,
-			BorderWidth: math.Max(1, fontSize/16),
+			BorderWidth: epubimagefilters.TitleBorderWidth(fontSize),
 			Foreground:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground),
 			Background:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background),
 			Font:        e.TrueTypeFont,
@@ -243,7 +237,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		Title: epubimagefilters.CoverTitle{
 			Title:      titlePage,
 			Align:      "center",
-			FontSize:   titleFontSize(e.Image.View.Width),
+			FontSize:   epubimagefilters.TitleFontSize(e.Image.View.Width),
 			Foreground: foreground,
 			Background: background,
 			Font:       e.TrueTypeFont,

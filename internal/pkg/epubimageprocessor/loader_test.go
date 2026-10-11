@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
@@ -146,5 +147,40 @@ func TestLoadCover(t *testing.T) {
 				t.Errorf("got cover %v, want %v", got[0], c.wantCover)
 			}
 		})
+	}
+}
+
+// The corrupted image is a full size page with the name of the file in a box, in the colors of the view.
+func TestCorruptedImage(t *testing.T) {
+	opts := epuboptions.EPUBOptions{TrueTypeFont: fonts.Default}
+	opts.Image.View.Color = epuboptions.Color{Foreground: "FF0000", Background: "00FF00"}
+	e := ePUBImageProcessor{opts}
+
+	img := e.corruptedImage("Vol 1/Chapter 2/", "003.jpg")
+	if b := img.Bounds(); b.Dx() != 1200 || b.Dy() != 1920 {
+		t.Errorf("got %dx%d, want 1200x1920", b.Dx(), b.Dy())
+	}
+
+	// the page is the background color, the text box border and text are the foreground color
+	if got := utils.ColorToHex(img.At(5, 5)); got != "00FF00" {
+		t.Errorf("page color %s, want 00FF00", got)
+	}
+	foreground := 0
+	for y := 0; y < img.Bounds().Dy(); y++ {
+		for x := 0; x < img.Bounds().Dx(); x += 2 {
+			if utils.ColorToHex(img.At(x, y)) == "FF0000" {
+				foreground++
+			}
+		}
+	}
+	if foreground == 0 {
+		t.Error("expected the text box to be drawn in the foreground color")
+	}
+
+	// grayscale keeps the page in gray
+	opts.Image.GrayScale = true
+	img = ePUBImageProcessor{opts}.corruptedImage("", "003.jpg")
+	if r, g, b, _ := img.At(5, 5).RGBA(); r != g || g != b {
+		t.Errorf("grayscale page color is not gray: %d %d %d", r, g, b)
 	}
 }
