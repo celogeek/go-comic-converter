@@ -39,8 +39,7 @@ type epub struct {
 	Publisher string
 	UpdatedAt string
 
-	templateProcessor *template.Template
-	imageProcessor    epubimageprocessor.EPUBImageProcessor
+	imageProcessor epubimageprocessor.EPUBImageProcessor
 }
 
 type epubPart struct {
@@ -51,11 +50,6 @@ type epubPart struct {
 // New initialize EPUB
 func New(options epuboptions.EPUBOptions) EPUB {
 	uid := uuid.Must(uuid.NewV4())
-	tmpl := template.New("parser")
-	tmpl.Funcs(template.FuncMap{
-		"mod":  func(i, j int) bool { return i%j == 0 },
-		"zoom": func(s int, z float32) int { return int(float32(s) * z) },
-	})
 	if options.TrueTypeFont == nil {
 		options.TrueTypeFont = fonts.Default
 	}
@@ -68,23 +62,29 @@ func New(options epuboptions.EPUBOptions) EPUB {
 	}
 
 	return epub{
-		EPUBOptions:       options,
-		UID:               uid.String(),
-		Publisher:         "GO Comic Converter",
-		UpdatedAt:         time.Now().UTC().Format("2006-01-02T15:04:05Z"),
-		templateProcessor: tmpl,
-		imageProcessor:    imageProcessor,
+		EPUBOptions:    options,
+		UID:            uid.String(),
+		Publisher:      "GO Comic Converter",
+		UpdatedAt:      time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		imageProcessor: imageProcessor,
 	}
 }
 
+var (
+	textTemplate  = template.Must(template.New("text").Parse(epubtemplates.Text))
+	blankTemplate = template.Must(template.New("blank").Parse(epubtemplates.Blank))
+	styleTemplate = template.Must(template.New("style").Parse(epubtemplates.Style))
+
+	multipleNewLines = regexp.MustCompile("\n+")
+)
+
 // render templates
-func (e epub) render(templateString string, data map[string]any) string {
+func (e epub) render(tmpl *template.Template, data map[string]any) string {
 	var result strings.Builder
-	tmpl := template.Must(e.templateProcessor.Parse(templateString))
 	if err := tmpl.Execute(&result, data); err != nil {
 		panic(err)
 	}
-	return regexp.MustCompile("\n+").ReplaceAllString(result.String(), "\n")
+	return multipleNewLines.ReplaceAllString(result.String(), "\n")
 }
 
 // write image to the zip
@@ -104,7 +104,7 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, imgStorage
 
 	err := wz.WriteContent(
 		img.EPUBPagePath(),
-		[]byte(e.render(epubtemplates.Text, map[string]any{
+		[]byte(e.render(textTemplate, map[string]any{
 			"Title":    "Image " + utils.IntToString(img.Id) + " Part " + utils.IntToString(img.Part),
 			"ViewPort": e.Image.View.Port(),
 			"Images":   images,
@@ -147,7 +147,7 @@ func (e epub) panelView(img epubimage.EPUBImage, images []epubtemplates.Image) *
 func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
 	return wz.WriteContent(
 		img.EPUBSpacePath(),
-		[]byte(e.render(epubtemplates.Blank, map[string]any{
+		[]byte(e.render(blankTemplate, map[string]any{
 			"Title":    "Blank Page " + utils.IntToString(img.Id),
 			"ViewPort": e.Image.View.Port(),
 		})),
@@ -201,7 +201,7 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
 	if err := wz.WriteContent(
 		"OEBPS/Text/space_title.xhtml",
-		[]byte(e.render(epubtemplates.Blank, map[string]any{
+		[]byte(e.render(blankTemplate, map[string]any{
 			"Title":    "Blank Page Title",
 			"ViewPort": e.Image.View.Port(),
 		})),
@@ -212,7 +212,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 	// The title image has the view size, so it fills the page.
 	if err := wz.WriteContent(
 		"OEBPS/Text/title.xhtml",
-		[]byte(e.render(epubtemplates.Text, map[string]any{
+		[]byte(e.render(textTemplate, map[string]any{
 			"Title":    title,
 			"ViewPort": e.Image.View.Port(),
 			"Images":   e.tileImages("title", epubimage.Tiled(e.Image.View.Width, e.Image.View.Height)),
@@ -404,16 +404,20 @@ func (e epub) computeViewPort(epubParts []epubPart) (int, int) {
 	}
 }
 
-func (e epub) writePart(path string, currentPart, totalParts int, part epubPart, imgStorage epubzip.StorageImageReader) error {
+func (e epub) writePart(path string, currentPart, totalParts int, part epubPart, imgStorage epubzip.StorageImageReader) (err error) {
 	hasTitlePage := e.TitlePage == 1 || (e.TitlePage == 2 && totalParts > 1)
 
 	wz, err := epubzip.New(path)
 	if err != nil {
 		return err
 	}
-	defer func(wz epubzip.EPUBZip) {
+	defer func() {
 		_ = wz.Close()
-	}(wz)
+		// do not leave a partial epub behind
+		if err != nil {
+			_ = os.Remove(path)
+		}
+	}()
 
 	title := e.Title
 	titlePage := e.Title
@@ -448,7 +452,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 			Total:        totalParts,
 		}.String()},
 		{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
-		{"OEBPS/Text/style.css", e.render(epubtemplates.Style, map[string]any{
+		{"OEBPS/Text/style.css", e.render(styleTemplate, map[string]any{
 			"Width":      e.Image.View.Width,
 			"Height":     e.Image.View.Height,
 			"Foreground": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)),
@@ -488,7 +492,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		// Double Page or Last Image that is not a double page
 		if img.DoublePage ||
 			(!e.Image.KeepDoublePage() && img.Part == 1) ||
-			(img.Part == 0 && img == lastImage) {
+			(img.Part == 0 && lastImage.Part == 0 && img.Id == lastImage.Id) {
 			if err := e.writeBlank(wz, img); err != nil {
 				return err
 			}

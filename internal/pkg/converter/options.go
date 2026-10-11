@@ -2,7 +2,9 @@
 package converter
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -114,7 +116,7 @@ func (o *Options) LoadConfig() error {
 		_ = f.Close()
 	}(f)
 	err = yaml.NewDecoder(f).Decode(o)
-	if err != nil && err.Error() != "EOF" {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
 

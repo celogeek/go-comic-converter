@@ -186,7 +186,7 @@ func (o Content) getManifest() []tag {
 			img,
 			img.DoublePage ||
 				(!o.ImageOptions.KeepDoublePage() && img.Part == 1) ||
-				(img.Part == 0 && img == lastImage))
+				(img.Part == 0 && lastImage.Part == 0 && img.Id == lastImage.Id))
 	}
 
 	items = append(items, imageTags...)
