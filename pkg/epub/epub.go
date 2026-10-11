@@ -415,7 +415,10 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		return err
 	}
 	defer func() {
-		_ = wz.Close()
+		// the end of the zip is written on close, a failure there makes the epub invalid
+		if cerr := wz.Close(); err == nil {
+			err = cerr
+		}
 		// do not leave a partial epub behind
 		if err != nil {
 			_ = os.Remove(path)

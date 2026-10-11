@@ -27,11 +27,14 @@ func New(path string) (EPUBZip, error) {
 }
 
 // Close compress pipe and file.
+//
+// The end of the zip is written on close: the file is always closed, and the first error is returned.
 func (e EPUBZip) Close() error {
-	if err := e.wz.Close(); err != nil {
-		return err
+	err := e.wz.Close()
+	if cerr := e.w.Close(); err == nil {
+		err = cerr
 	}
-	return e.w.Close()
+	return err
 }
 
 // WriteMagic Write mimetype, in a very specific way.
