@@ -42,3 +42,23 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+// the extension of the output is case insensitive: a name ending with .EPUB is a file, not a directory.
+func TestValidateOutputExtension(t *testing.T) {
+	for _, name := range []string{"out.epub", "out.EPUB", "out.Epub"} {
+		t.Run(name, func(t *testing.T) {
+			conv := New()
+			conv.Options.Input = t.TempDir()
+			conv.Options.Output = filepath.Join(t.TempDir(), name)
+			conv.Options.Workers = 1
+			want := conv.Options.Output
+
+			if err := conv.Validate(); err != nil {
+				t.Fatal(err)
+			}
+			if conv.Options.Output != want {
+				t.Errorf("got output %q, want %q", conv.Options.Output, want)
+			}
+		})
+	}
+}

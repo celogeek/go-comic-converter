@@ -341,7 +341,7 @@ func (c *Converter) Validate() error {
 	}
 
 	c.Options.Output = filepath.Clean(c.Options.Output)
-	if filepath.Ext(c.Options.Output) == ".epub" {
+	if strings.EqualFold(filepath.Ext(c.Options.Output), ".epub") {
 		fo, err := os.Stat(filepath.Dir(c.Options.Output))
 		if err != nil {
 			return err
