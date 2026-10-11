@@ -128,15 +128,26 @@ func (o Content) getMeta() []tag {
 	return metas
 }
 
+// imageItems manifest items of the jpeg tiles of the cover or the title image
+func imageItems(key, path string, img epubimage.EPUBImage) []tag {
+	items := make([]tag, 0, img.Tiles())
+	for idx := range img.Tiles() {
+		items = append(items, tag{"item", tagAttrs{
+			"id":         epubimage.TileName(key, idx),
+			"href":       epubimage.TileName(path, idx) + ".jpeg",
+			"media-type": "image/jpeg",
+		}, ""})
+	}
+
+	return items
+}
+
 func (o Content) getManifest() []tag {
 	var imageTags, pageTags, spaceTags []tag
 	addTag := func(img epubimage.EPUBImage, withSpace bool) {
-		imageTags = append(imageTags,
-			tag{"item", tagAttrs{"id": img.ImgKey(), "href": img.ImgPath(), "media-type": img.MediaType()}, ""},
-		)
-		if img.Stacked {
+		for idx := range img.Tiles() {
 			imageTags = append(imageTags,
-				tag{"item", tagAttrs{"id": img.BottomImgKey(), "href": img.BottomImgPath(), "media-type": img.MediaType()}, ""},
+				tag{"item", tagAttrs{"id": img.TileImgKey(idx), "href": img.TileImgPath(idx), "media-type": img.MediaType()}, ""},
 			)
 		}
 		pageTags = append(pageTags,
@@ -152,8 +163,8 @@ func (o Content) getManifest() []tag {
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
-		{"item", tagAttrs{"id": "page_cover", "href": "Text/cover.xhtml", "media-type": "application/xhtml+xml"}, ""},
-		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg"}, ""},
+		// The cover is only the thumbnail of the book, it has no page.
+		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg", "properties": "cover-image"}, ""},
 	}
 
 	if o.ImageOptions.AddPanelView {
@@ -163,8 +174,8 @@ func (o Content) getManifest() []tag {
 	if o.HasTitlePage {
 		items = append(items,
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
-			tag{"item", tagAttrs{"id": "img_title", "href": "Images/title.jpeg", "media-type": "image/jpeg"}, ""},
 		)
+		items = append(items, imageItems("img_title", "Images/title", epubimage.Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
 
 		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
 	}
@@ -250,7 +261,6 @@ func (o Content) getSpineAuto() []tag {
 // getGuide Section guide of the content
 func (o Content) getGuide() []tag {
 	return []tag{
-		{"reference", tagAttrs{"type": "cover", "title": "cover", "href": "Text/cover.xhtml"}, ""},
 		{"reference", tagAttrs{"type": "text", "title": "content", "href": o.Images[0].PagePath()}, ""},
 	}
 }

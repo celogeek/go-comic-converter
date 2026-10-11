@@ -19,7 +19,7 @@ import (
 
 type EPUBImageProcessor interface {
 	Load() (images []epubimage.EPUBImage, err error)
-	CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error)
+	CoverTitleData(o CoverTitleDataOptions) ([]epubzip.Image, error)
 }
 
 type ePUBImageProcessor struct {
@@ -145,20 +145,25 @@ type subImager interface {
 
 // addImage compress the image into the storage.
 //
-// An image bigger than the SR resolution is stored in 2 halves, displayed stacked in the same page.
+// An image bigger than the SR resolution is stored as a grid of tiles, displayed together in the same page.
 func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimage.EPUBImage) error {
-	if sub, ok := img.Raw.(subImager); ok && epubimage.NeedStack(img.Width, img.Height) {
-		b := img.Raw.Bounds()
-		mid := b.Min.Y + img.TopHeight()
-		img.Stacked = true
-
-		if err := s.Add(img.EPUBImgPath(), sub.SubImage(image.Rect(b.Min.X, b.Min.Y, b.Max.X, mid)), e.Image.Quality); err != nil {
-			return err
-		}
-		return s.Add(img.EPUBBottomImgPath(), sub.SubImage(image.Rect(b.Min.X, mid, b.Max.X, b.Max.Y)), e.Image.Quality)
+	img.Cols, img.Rows = 1, 1
+	sub, ok := img.Raw.(subImager)
+	if ok {
+		img.Cols, img.Rows = epubimage.Grid(img.Width, img.Height)
+	}
+	if !ok || img.Tiles() == 1 {
+		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
 	}
 
-	return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
+	b := img.Raw.Bounds()
+	for idx := range img.Tiles() {
+		if err := s.Add(img.EPUBTileImgPath(idx), sub.SubImage(img.TileBounds(idx, b)), e.Image.Quality); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (e ePUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
@@ -316,20 +321,53 @@ func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Imag
 }
 
 // CoverTitleData draws the title box on the source image (the cover or the title page background) and compresses it to jpeg.
-func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) (epubzip.Image, error) {
-	g := gift.New(o.Title)
+//
+// The title image bigger than the SR resolution is stored as a grid of tiles, like the pages.
+// The cover is only used as thumbnail, so it is never tiled, but it is always reduced to the max size,
+// whatever the device or the resize option.
+func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.Image, error) {
+	g := gift.New()
+	if o.Name == "cover" {
+		sb := o.Src.Bounds()
+		if w, h := epubimage.FitSize(sb.Dx(), sb.Dy()); w != sb.Dx() || h != sb.Dy() {
+			g.Add(gift.Resize(w, h, gift.LanczosResampling))
+		}
+	}
+	g.Add(o.Title)
+
 	var dst draw.Image
 	if o.Name == "cover" && e.Image.GrayScale {
-		dst = e.cover16LevelOfGray(o.Src.Bounds())
+		dst = e.cover16LevelOfGray(g.Bounds(o.Src.Bounds()))
 	} else {
 		dst = e.createImage(o.Src, g.Bounds(o.Src.Bounds()))
 	}
 	g.Draw(dst, o.Src)
 
-	return epubzip.CompressImage(
-		"OEBPS/Images/"+o.Name+".jpeg",
-		"jpeg",
-		dst,
-		e.Image.Quality,
-	)
+	b := dst.Bounds()
+	tiled := epubimage.Tiled(b.Dx(), b.Dy())
+	sub, ok := dst.(subImager)
+	if !ok || o.Name == "cover" {
+		tiled.Cols, tiled.Rows = 1, 1
+	}
+
+	images := make([]epubzip.Image, 0, tiled.Tiles())
+	for idx := range tiled.Tiles() {
+		var part image.Image = dst
+		if tiled.Tiles() > 1 {
+			part = sub.SubImage(tiled.TileBounds(idx, b))
+		}
+
+		img, err := epubzip.CompressImage(
+			"OEBPS/Images/"+epubimage.TileName(o.Name, idx)+".jpeg",
+			"jpeg",
+			part,
+			e.Image.Quality,
+		)
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, img)
+	}
+
+	return images, nil
 }

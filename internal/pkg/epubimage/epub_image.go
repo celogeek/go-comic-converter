@@ -9,8 +9,8 @@ import (
 
 // Maximum size of an image displayed as is (SR profile).
 //
-// A bigger image is stored in 2 halves, stacked in the same page,
-// so each half stays close to what the device can handle without downscaling.
+// A bigger image is stored as a grid of tiles, displayed side by side in the same page,
+// so each file stays within what the device can handle without downscaling.
 const (
 	MaxWidth  = 1200
 	MaxHeight = 1920
@@ -24,9 +24,9 @@ type EPUBImage struct {
 	Height     int
 	IsBlank    bool
 	DoublePage bool
-	// Stacked tells the image is stored in 2 files, the top half and the bottom half (see BottomImgPath).
-	// Width and Height are the size of the whole image.
-	Stacked             bool
+	// Cols and Rows tell the image is stored in Cols x Rows files (see TileImgPath), row by row.
+	// Width and Height are the size of the whole image. 0 is the same as 1.
+	Cols, Rows          int
 	Path                string
 	Name                string
 	Format              string
@@ -88,24 +88,90 @@ func NeedStack(width, height int) bool {
 	return height > 1 && (width > MaxWidth || height > MaxHeight)
 }
 
-// TopHeight height of the top half of a stacked image.
-func (i EPUBImage) TopHeight() int {
-	return i.Height / 2
+// FitSize size of an image reduced to the max size, keeping its aspect ratio.
+// An image within the max size is returned as is.
+func FitSize(width, height int) (int, int) {
+	if width <= MaxWidth && height <= MaxHeight {
+		return width, height
+	}
+
+	wratio := float64(width) / MaxWidth
+	hratio := float64(height) / MaxHeight
+	if wratio > hratio {
+		return MaxWidth, max(1, min(MaxHeight, int(float64(height)/wratio+0.5)))
+	}
+
+	return max(1, min(MaxWidth, int(float64(width)/hratio+0.5))), MaxHeight
 }
 
-// BottomImgKey key for the bottom half of a stacked image
-func (i EPUBImage) BottomImgKey() string {
-	return i.ImgKey() + "_b"
+// Grid number of columns and rows needed to keep each tile of an image of this size within the max size.
+func Grid(width, height int) (cols, rows int) {
+	cols, rows = 1, 1
+	if NeedStack(width, height) {
+		cols = (width + MaxWidth - 1) / MaxWidth
+		rows = (height + MaxHeight - 1) / MaxHeight
+	}
+	return
 }
 
-// BottomImgPath image path of the bottom half of a stacked image
-func (i EPUBImage) BottomImgPath() string {
-	return "Images/" + i.BottomImgKey() + "." + i.Format
+// Tiles number of files used to store the image.
+func (i EPUBImage) Tiles() int {
+	return max(i.Cols, 1) * max(i.Rows, 1)
 }
 
-// EPUBBottomImgPath image path of the bottom half of a stacked image into the EPUB
-func (i EPUBImage) EPUBBottomImgPath() string {
-	return "OEBPS/" + i.BottomImgPath()
+// cut position of the n-th cut of a side of the given size, scaled to the displayed size.
+//
+// The image is cut every max pixels, the last piece being the remainder.
+func cut(size, max, n, displayed int) int {
+	c := min(n*max, size)
+	return (c*displayed + size/2) / size
+}
+
+// tileRect area of the tile idx, scaled to an image of the given size.
+//
+// The image is cut every MaxWidth and every MaxHeight, so each tile is at the max size except the last ones.
+func (i EPUBImage) tileRect(idx, width, height int) image.Rectangle {
+	cols := max(i.Cols, 1)
+	c, r := idx%cols, idx/cols
+
+	return image.Rect(
+		cut(i.Width, MaxWidth, c, width), cut(i.Height, MaxHeight, r, height),
+		cut(i.Width, MaxWidth, c+1, width), cut(i.Height, MaxHeight, r+1, height),
+	)
+}
+
+// TileBounds area of the tile idx into the raw image.
+func (i EPUBImage) TileBounds(idx int, b image.Rectangle) image.Rectangle {
+	return i.tileRect(idx, i.Width, i.Height).Add(b.Min)
+}
+
+// Tiled image of the given size, with the grid needed to store it.
+func Tiled(width, height int) EPUBImage {
+	cols, rows := Grid(width, height)
+	return EPUBImage{Width: width, Height: height, Cols: cols, Rows: rows}
+}
+
+// TileName name of the tile idx of an image, the first one being the image itself
+func TileName(name string, idx int) string {
+	if idx == 0 {
+		return name
+	}
+	return name + "_" + utils.IntToString(idx)
+}
+
+// TileImgKey key for the tile idx of the image, the first one being the image itself
+func (i EPUBImage) TileImgKey(idx int) string {
+	return TileName(i.ImgKey(), idx)
+}
+
+// TileImgPath image path of the tile idx
+func (i EPUBImage) TileImgPath(idx int) string {
+	return "Images/" + i.TileImgKey(idx) + "." + i.Format
+}
+
+// EPUBTileImgPath image path of the tile idx into the EPUB
+func (i EPUBImage) EPUBTileImgPath(idx int) string {
+	return "OEBPS/" + i.TileImgPath(idx)
 }
 
 // MediaType of the epub image
@@ -129,27 +195,23 @@ func margins(viewWidth, viewHeight, width, height int) (left, top int) {
 	return (viewWidth - width) / 2, (viewHeight - height) / 2
 }
 
-// ImgStyles style to apply to each file of the image: the top half then the bottom half
-// when the image is stacked, so they are displayed as one image.
+// ImgStyles style to apply to each file of the image, tile by tile,
+// so they are displayed as one image.
 func (i EPUBImage) ImgStyles(viewWidth, viewHeight int) []string {
-	if !i.Stacked {
-		return []string{i.ImgStyle(viewWidth, viewHeight)}
-	}
-
 	relWidth, relHeight := i.RelSize(viewWidth, viewHeight)
 	marginW, marginH := margins(viewWidth, viewHeight, relWidth, relHeight)
 
-	topHeight := int(float64(relHeight)*float64(i.TopHeight())/float64(i.Height) + 0.5)
-
-	// whole pixels, so the bottom half starts exactly where the top half ends (no seam)
-	return []string{
-		imgStyle(relWidth, topHeight, marginW, marginH),
-		imgStyle(relWidth, relHeight-topHeight, marginW, marginH+topHeight),
+	// whole pixels, so each tile starts exactly where the previous one ends (no seam)
+	styles := make([]string, i.Tiles())
+	for idx := range styles {
+		r := i.tileRect(idx, relWidth, relHeight)
+		styles[idx] = imgStyle(r.Dx(), r.Dy(), marginW+r.Min.X, marginH+r.Min.Y)
 	}
+
+	return styles
 }
 
-// PanelZoom size of the image zoomed by the panel view, and the style of each of its files
-// (the top half then the bottom half when the image is stacked).
+// PanelZoom size of the image zoomed by the panel view, and the style of each of its files (tile by tile).
 //
 // The zoom is relative to the size of the image displayed in the page.
 func (i EPUBImage) PanelZoom(viewWidth, viewHeight int, zoom float64) (string, []string) {
@@ -157,17 +219,13 @@ func (i EPUBImage) PanelZoom(viewWidth, viewHeight int, zoom float64) (string, [
 	width, height := int(float64(relWidth)*zoom+0.5), int(float64(relHeight)*zoom+0.5)
 	box := "width:" + utils.IntToString(width) + "px; height:" + utils.IntToString(height) + "px"
 
-	file := func(h, top int) string {
-		return "width:" + utils.IntToString(width) + "px; height:" + utils.IntToString(h) + "px; top:" + utils.IntToString(top) + "px; left:0"
+	styles := make([]string, i.Tiles())
+	for idx := range styles {
+		r := i.tileRect(idx, width, height)
+		styles[idx] = imgStyle(r.Dx(), r.Dy(), r.Min.X, r.Min.Y)
 	}
 
-	if !i.Stacked {
-		return box, []string{file(height, 0)}
-	}
-
-	topHeight := int(float64(height)*float64(i.TopHeight())/float64(i.Height) + 0.5)
-
-	return box, []string{file(topHeight, 0), file(height-topHeight, topHeight)}
+	return box, styles
 }
 
 func imgStyle(width, height, left, top int) string {

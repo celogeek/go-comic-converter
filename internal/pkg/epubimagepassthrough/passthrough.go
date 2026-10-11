@@ -49,7 +49,7 @@ func (e ePUBImagePassthrough) Load() (images []epubimage.EPUBImage, err error) {
 	}
 }
 
-func (e ePUBImagePassthrough) CoverTitleData(o epubimageprocessor.CoverTitleDataOptions) (epubzip.Image, error) {
+func (e ePUBImagePassthrough) CoverTitleData(o epubimageprocessor.CoverTitleDataOptions) ([]epubzip.Image, error) {
 	return epubimageprocessor.New(e.EPUBOptions).CoverTitleData(o)
 }
 

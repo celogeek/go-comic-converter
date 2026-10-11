@@ -87,13 +87,13 @@ func (e epub) render(templateString string, data map[string]any) string {
 }
 
 // write image to the zip
-func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, zipImg, bottomZipImg *zip.File) error {
+func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, imgStorage epubzip.StorageImageReader) error {
 	styles := img.ImgStyles(e.Image.View.Width, e.Image.View.Height)
-	images := []epubtemplates.Image{{Path: img.ImgPath(), Style: styles[0]}}
-	zipImgs := []*zip.File{zipImg}
-	if img.Stacked {
-		images = append(images, epubtemplates.Image{Path: img.BottomImgPath(), Style: styles[1]})
-		zipImgs = append(zipImgs, bottomZipImg)
+	images := make([]epubtemplates.Image, len(styles))
+	zipImgs := make([]*zip.File, len(styles))
+	for idx, style := range styles {
+		images[idx] = epubtemplates.Image{Path: img.TileImgPath(idx), Style: style}
+		zipImgs[idx] = imgStorage.Get(img.EPUBTileImgPath(idx))
 	}
 
 	var panel *epubtemplates.PanelView
@@ -159,22 +159,11 @@ func titleFontSize(width int) float64 {
 	return math.Max(16, float64(width)*64/1200)
 }
 
-// write cover image
+// write cover image, used as thumbnail only (it has no page)
 func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, coverText string) error {
-	if err := wz.WriteContent(
-		"OEBPS/Text/cover.xhtml",
-		[]byte(e.render(epubtemplates.Text, map[string]any{
-			"Title":    "Cover",
-			"ViewPort": e.Image.View.Port(),
-			"Images": []epubtemplates.Image{
-				{Path: "Images/cover.jpeg", Style: img.ImgStyle(e.Image.View.Width, e.Image.View.Height)},
-			},
-		})),
-	); err != nil {
-		return err
-	}
-
-	fontSize := titleFontSize(img.Raw.Bounds().Dx())
+	// the cover is reduced to the max size, the font follows
+	coverWidth, _ := epubimage.FitSize(img.Raw.Bounds().Dx(), img.Raw.Bounds().Dy())
+	fontSize := titleFontSize(coverWidth)
 	coverTitle, err := e.imageProcessor.CoverTitleData(epubimageprocessor.CoverTitleDataOptions{
 		Src:  img.Raw,
 		Name: "cover",
@@ -193,11 +182,24 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 		return err
 	}
 
-	if err := wz.WriteRaw(coverTitle); err != nil {
-		return err
+	for _, c := range coverTitle {
+		if err := wz.WriteRaw(c); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+// tileImages images of a tiled image displayed centered into the view
+func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.Image {
+	styles := img.ImgStyles(e.Image.View.Width, e.Image.View.Height)
+	images := make([]epubtemplates.Image, len(styles))
+	for idx, style := range styles {
+		images[idx] = epubtemplates.Image{Path: "Images/" + epubimage.TileName(name, idx) + ".jpeg", Style: style}
+	}
+
+	return images
 }
 
 // write title image
@@ -218,9 +220,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		[]byte(e.render(epubtemplates.Text, map[string]any{
 			"Title":    title,
 			"ViewPort": e.Image.View.Port(),
-			"Images": []epubtemplates.Image{
-				{Path: "Images/title.jpeg", Style: e.Image.View.Style() + "top:0;left:0"},
-			},
+			"Images":   e.tileImages("title", epubimage.Tiled(e.Image.View.Width, e.Image.View.Height)),
 		})),
 	); err != nil {
 		return err
@@ -253,18 +253,20 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		return err
 	}
 
-	if err := wz.WriteRaw(coverTitle); err != nil {
-		return err
+	for _, c := range coverTitle {
+		if err := wz.WriteRaw(c); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// imgSize size of the image in the storage, with its bottom half if stacked
+// imgSize size of the image in the storage, with all its tiles
 func imgSize(imgStorage epubzip.StorageImageReader, img epubimage.EPUBImage) uint64 {
-	size := imgStorage.Size(img.EPUBImgPath())
-	if img.Stacked {
-		size += imgStorage.Size(img.EPUBBottomImgPath())
+	var size uint64
+	for idx := range img.Tiles() {
+		size += imgStorage.Size(img.EPUBTileImgPath(idx))
 	}
 	return size
 }
@@ -482,7 +484,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 	lastImage := part.Images[len(part.Images)-1]
 	for _, img := range part.Images {
-		if err := e.writeImage(wz, img, imgStorage.Get(img.EPUBImgPath()), imgStorage.Get(img.EPUBBottomImgPath())); err != nil {
+		if err := e.writeImage(wz, img, imgStorage); err != nil {
 			return err
 		}
 
