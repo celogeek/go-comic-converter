@@ -133,7 +133,7 @@ func TestWriteRemovesTemporaryStorage(t *testing.T) {
 		{"convert", input, "jpeg", false, false},
 		{"convert dry", input, "jpeg", true, false},
 		{"copy dry", input, "copy", true, false},
-		{"copy unreadable image", bad, "copy", false, true},
+		{"copy unreadable image", bad, "copy", false, false},
 		{"no images", empty, "jpeg", false, true},
 	} {
 		t.Run(c.name, func(t *testing.T) {

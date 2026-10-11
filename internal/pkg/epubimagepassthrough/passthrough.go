@@ -379,12 +379,6 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		}, nil
 	}
 
-	var uncompressedData []byte
-	uncompressedData, err = getData()
-	if err != nil {
-		return
-	}
-
 	// dirname is the input directory to strip, an archive has none
 	p, fn := utils.SplitPath(dirname, filename)
 
@@ -409,18 +403,23 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		return
 	}
 
-	var config image.Config
-	config, err = decodeConfig(bytes.NewReader(uncompressedData))
-	if err != nil {
-		return
+	// an image that cannot be read is replaced by a page that tells it, and reported at the end
+	var (
+		uncompressedData []byte
+		config           image.Config
+		rawImage         image.Image
+		readErr          error
+	)
+	uncompressedData, readErr = getData()
+	if readErr == nil {
+		config, readErr = decodeConfig(bytes.NewReader(uncompressedData))
 	}
-
-	var rawImage image.Image
-	if id == 0 {
-		rawImage, err = decode(bytes.NewReader(uncompressedData))
-		if err != nil {
-			return
-		}
+	// only the cover needs the decoded image
+	if readErr == nil && id == 0 {
+		rawImage, readErr = decode(bytes.NewReader(uncompressedData))
+	}
+	if readErr != nil {
+		return e.storeCorruptedImage(imgStorage, id, p, fn, readErr)
 	}
 
 	img = epubimage.EPUBImage{
@@ -438,6 +437,39 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 	}
 
 	err = imgStorage.AddRaw(img.EPUBImgPath(), uncompressedData)
+
+	return
+}
+
+// storeCorruptedImage stores the corrupted page of an unreadable image, the cause is kept to be reported.
+func (e ePUBImagePassthrough) storeCorruptedImage(
+	imgStorage epubzip.StorageImageWriter,
+	id int,
+	path, name string,
+	cause error,
+) (img epubimage.EPUBImage, err error) {
+	page := epubimageprocessor.CorruptedImage(e.EPUBOptions, path, name)
+
+	img = epubimage.EPUBImage{
+		Id:                  id,
+		Width:               page.Bounds().Dx(),
+		Height:              page.Bounds().Dy(),
+		Path:                path,
+		Name:                name,
+		Format:              "jpeg",
+		OriginalAspectRatio: float64(page.Bounds().Dy()) / float64(page.Bounds().Dx()),
+		Error:               cause,
+	}
+	// the first image is the cover
+	if id == 0 {
+		img.Raw = page
+	}
+
+	var buf bytes.Buffer
+	if err = jpeg.Encode(&buf, page, &jpeg.Options{Quality: e.Image.Quality}); err != nil {
+		return
+	}
+	err = imgStorage.AddRaw(img.EPUBImgPath(), buf.Bytes())
 
 	return
 }

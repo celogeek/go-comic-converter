@@ -2,12 +2,15 @@ package epubimagepassthrough
 
 import (
 	"bytes"
+	"errors"
 	"image"
 	"image/jpeg"
 	"path/filepath"
 	"testing"
 
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
@@ -60,4 +63,62 @@ func TestCopyRawDataToStorage(t *testing.T) {
 			t.Error("expected an error, got nil")
 		}
 	})
+}
+
+func TestCopyRawDataToStorageUnreadableImage(t *testing.T) {
+	var buf bytes.Buffer
+	if err := jpeg.Encode(&buf, image.NewGray(image.Rect(0, 0, 10, 20)), nil); err != nil {
+		t.Fatal(err)
+	}
+	truncated := buf.Bytes()[:buf.Len()/2]
+
+	e := ePUBImagePassthrough{epuboptions.EPUBOptions{
+		TrueTypeFont: fonts.Default,
+		Image: epuboptions.Image{
+			Quality: 85,
+			View:    epuboptions.View{Color: epuboptions.Color{Foreground: "000000", Background: "FFFFFF"}},
+		},
+	}}
+
+	for _, c := range []struct {
+		name     string
+		data     []byte
+		readErr  error
+		id       int
+		wantCov  bool
+		filename string
+	}{
+		{"bad header", []byte("bad"), nil, 1, false, "ch1/001.jpg"},
+		{"truncated cover", truncated, nil, 0, true, "ch1/000.jpg"},
+		{"read error", nil, errors.New("read failed"), 2, false, "ch1/002.png"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			storage, err := epubzip.NewStorageImageWriter(filepath.Join(t.TempDir(), "img.zip"), "jpeg")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer storage.Close()
+
+			img, err := e.copyRawDataToStorage(
+				storage,
+				func() ([]byte, error) { return c.data, c.readErr },
+				c.id, "", c.filename,
+			)
+			if err != nil {
+				t.Fatalf("unreadable image must not fail the conversion: %v", err)
+			}
+			if img.Error == nil {
+				t.Error("the cause must be kept to be reported")
+			}
+			if img.Format != "jpeg" || img.Width != epubimage.MaxWidth || img.Height != epubimage.MaxHeight {
+				t.Errorf("got %s %dx%d", img.Format, img.Width, img.Height)
+			}
+			if img.Path != "ch1/" {
+				t.Errorf("got path %q", img.Path)
+			}
+			if (img.Raw != nil) != c.wantCov {
+				t.Errorf("raw data kept = %v, want %v", img.Raw != nil, c.wantCov)
+			}
+		})
+	}
 }

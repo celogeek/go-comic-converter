@@ -25,6 +25,7 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
+	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 	"github.com/nwaples/rardecode/v2"
 )
 
@@ -72,6 +73,11 @@ func (e ePUBImageProcessor) load() (totalImages int, output chan task, err error
 			return
 		}
 	}
+}
+
+// CorruptedImage page shown in place of an image that cannot be read, with the options of the view.
+func CorruptedImage(o epuboptions.EPUBOptions, path, name string) image.Image {
+	return ePUBImageProcessor{o}.corruptedImage(path, name)
 }
 
 // corruptedImage page shown in place of an image that cannot be read, with the title box of the cover,
