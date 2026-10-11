@@ -284,7 +284,9 @@ func (e epub) getParts() (parts []epubPart, imgStorage epubzip.StorageImageReade
 
 	parts = make([]epubPart, 0)
 	cover := images[0]
-	if cover.DoublePage && !e.Image.KeepDoublePage() {
+	// a double page that is split is only kept for the cover, its parts follow it as the pages.
+	// the copy mode never splits, the double page is then a page of its own.
+	if cover.DoublePage && !e.Image.KeepDoublePage() && len(images) > 1 && images[1].Id == cover.Id {
 		images = images[1:]
 	}
 

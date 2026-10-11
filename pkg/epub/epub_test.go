@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -151,4 +152,35 @@ func TestWriteRemovesTemporaryStorage(t *testing.T) {
 			assert.True(t, os.IsNotExist(err), "temporary storage left behind: %v", err)
 		})
 	}
+}
+
+// the copy mode never splits: a double page at the start of the book is a page, not only the cover.
+func TestWriteCopyKeepsLeadingDoublePage(t *testing.T) {
+	input := t.TempDir()
+	for name, size := range map[string]image.Rectangle{
+		"001.jpg": image.Rect(0, 0, 400, 200),
+		"002.jpg": image.Rect(0, 0, 200, 400),
+	} {
+		f, err := os.Create(filepath.Join(input, name))
+		require.NoError(t, err)
+		require.NoError(t, jpeg.Encode(f, image.NewGray(size), nil))
+		require.NoError(t, f.Close())
+	}
+
+	o := testOptions(input, filepath.Join(t.TempDir(), "comic.epub"), false)
+	o.Image.Format = "copy"
+	o.TitlePage = 0
+	require.NoError(t, New(o).Write())
+
+	z, err := zip.OpenReader(o.Output)
+	require.NoError(t, err)
+	defer func() { _ = z.Close() }()
+
+	pages := 0
+	for _, f := range z.File {
+		if strings.HasPrefix(f.Name, "OEBPS/Text/page_") {
+			pages++
+		}
+	}
+	assert.Equal(t, 2, pages, "both images are pages")
 }
