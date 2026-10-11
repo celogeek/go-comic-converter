@@ -47,7 +47,3 @@ func (e StorageImageReader) Size(filename string) uint64 {
 func (e StorageImageReader) Close() error {
 	return e.fh.Close()
 }
-
-func (e StorageImageReader) Remove() error {
-	return os.Remove(e.filename)
-}

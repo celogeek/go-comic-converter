@@ -369,6 +369,16 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 	dirname string,
 	filename string,
 ) (img epubimage.EPUBImage, err error) {
+	if e.Dry {
+		p, fn := utils.SplitPath(dirname, filename)
+		return epubimage.EPUBImage{
+			Id:     id,
+			Path:   p,
+			Name:   fn,
+			Format: e.Image.Format,
+		}, nil
+	}
+
 	var uncompressedData []byte
 	uncompressedData, err = getData()
 	if err != nil {

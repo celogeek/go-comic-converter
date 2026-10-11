@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/draw"
 	"math"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -496,6 +497,13 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 // create the zip
 func (e epub) Write() error {
+	// the temporary storage must not outlive the conversion, whatever happens
+	if !e.Dry {
+		defer func() {
+			_ = os.Remove(e.ImgStorage())
+		}()
+	}
+
 	epubParts, imgStorage, err := e.getParts()
 	if err != nil {
 		return err
@@ -510,7 +518,6 @@ func (e epub) Write() error {
 	}
 	defer func() {
 		_ = imgStorage.Close()
-		_ = imgStorage.Remove()
 	}()
 
 	totalParts := len(epubParts)

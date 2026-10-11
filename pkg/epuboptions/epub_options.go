@@ -1,7 +1,11 @@
 // Package epuboptions for EPUB creation.
 package epuboptions
 
-import "github.com/golang/freetype/truetype"
+import (
+	"os"
+
+	"github.com/golang/freetype/truetype"
+)
 
 type EPUBOptions struct {
 	// Output
@@ -35,6 +39,10 @@ func (o EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {
 	return
 }
 
+// ImgStorage is the temporary file that holds the processed images, a dry run writes nothing.
 func (o EPUBOptions) ImgStorage() string {
+	if o.Dry {
+		return os.DevNull
+	}
 	return o.Output + ".tmp"
 }

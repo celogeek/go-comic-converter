@@ -113,3 +113,42 @@ func TestWriteSplitTitlePageAndCoverCaption(t *testing.T) {
 		})
 	}
 }
+
+// the temporary image storage must be removed whatever the outcome.
+func TestWriteRemovesTemporaryStorage(t *testing.T) {
+	input := t.TempDir()
+	writeNoisyImages(t, input, 2)
+	bad := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(bad, "bad.jpg"), []byte("bad"), 0o644))
+	empty := t.TempDir()
+
+	for _, c := range []struct {
+		name    string
+		input   string
+		format  string
+		dry     bool
+		wantErr bool
+	}{
+		{"convert", input, "jpeg", false, false},
+		{"convert dry", input, "jpeg", true, false},
+		{"copy dry", input, "copy", true, false},
+		{"copy unreadable image", bad, "copy", false, true},
+		{"no images", empty, "jpeg", false, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			output := filepath.Join(t.TempDir(), "comic.epub")
+			o := testOptions(c.input, output, false)
+			o.Image.Format = c.format
+			o.Dry = c.dry
+
+			err := New(o).Write()
+			if c.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			_, err = os.Stat(o.Output + ".tmp")
+			assert.True(t, os.IsNotExist(err), "temporary storage left behind: %v", err)
+		})
+	}
+}
