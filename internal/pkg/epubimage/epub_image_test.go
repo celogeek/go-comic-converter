@@ -29,6 +29,18 @@ func TestImgStyles(t *testing.T) {
 		t.Errorf("single image: got %v", got)
 	}
 
+	// an image copied as is has no grid (Cols and Rows unset): it must fill the same area as a single image
+	for _, c := range []EPUBImage{
+		{Width: 3000, Height: 4000},
+		{Width: 1500, Height: 2400},
+		{Width: 1000, Height: 1500},
+	} {
+		got := c.ImgStyles(1200, 1920)
+		if want := []string{c.ImgStyle(1200, 1920)}; !reflect.DeepEqual(got, want) {
+			t.Errorf("image %dx%d without grid: got %v, want %v", c.Width, c.Height, got, want)
+		}
+	}
+
 	// 2 columns x 2 rows, cut every 1200 x 1920 of the full size image
 	tiled := EPUBImage{Width: 2000, Height: 3001, Cols: 2, Rows: 2}
 	got := tiled.ImgStyles(1000, 1500)
@@ -65,7 +77,11 @@ func TestGrid(t *testing.T) {
 				t.Errorf("tile %d of %dx%d is %dx%d", idx, c.w, c.h, r.Dx(), r.Dy())
 			}
 			// tiles are at the max size, only the last column / row is smaller
-			if wantW := min(MaxWidth, c.w-(idx%cols)*MaxWidth); r.Dx() != wantW {
+			wantW := MaxWidth
+			if idx%cols == cols-1 {
+				wantW = c.w - (idx%cols)*MaxWidth
+			}
+			if r.Dx() != wantW {
 				t.Errorf("tile %d of %dx%d has width %d, want %d", idx, c.w, c.h, r.Dx(), wantW)
 			}
 		}

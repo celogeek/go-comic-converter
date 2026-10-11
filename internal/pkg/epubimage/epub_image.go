@@ -127,16 +127,27 @@ func cut(size, max, n, displayed int) int {
 	return (c*displayed + size/2) / size
 }
 
+// edge position of the n-th cut of a side cut into count pieces, scaled to the displayed size.
+//
+// The last piece always ends at the end of the side, even when the image is not tiled
+// (Cols and Rows unset, as for an image copied as is) and bigger than the max size.
+func edge(size, max, n, count, displayed int) int {
+	if n >= count {
+		return displayed
+	}
+	return cut(size, max, n, displayed)
+}
+
 // tileRect area of the tile idx, scaled to an image of the given size.
 //
 // The image is cut every MaxWidth and every MaxHeight, so each tile is at the max size except the last ones.
 func (i EPUBImage) tileRect(idx, width, height int) image.Rectangle {
-	cols := max(i.Cols, 1)
+	cols, rows := max(i.Cols, 1), max(i.Rows, 1)
 	c, r := idx%cols, idx/cols
 
 	return image.Rect(
-		cut(i.Width, MaxWidth, c, width), cut(i.Height, MaxHeight, r, height),
-		cut(i.Width, MaxWidth, c+1, width), cut(i.Height, MaxHeight, r+1, height),
+		edge(i.Width, MaxWidth, c, cols, width), edge(i.Height, MaxHeight, r, rows, height),
+		edge(i.Width, MaxWidth, c+1, cols, width), edge(i.Height, MaxHeight, r+1, rows, height),
 	)
 }
 

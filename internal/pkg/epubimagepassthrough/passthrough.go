@@ -375,10 +375,13 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 	}
 
 	p, fn := filepath.Split(filepath.Clean(filename))
-	if p == dirname {
-		p = ""
-	} else {
-		p = p[len(dirname)+1:]
+	// strip the input directory, an archive has none
+	if dirname != "" {
+		if len(p) > len(dirname) {
+			p = p[len(dirname)+1:]
+		} else {
+			p = ""
+		}
 	}
 
 	var (
@@ -387,7 +390,8 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		decode       func(r io.Reader) (image.Image, error)
 	)
 
-	switch filepath.Ext(fn) {
+	// same case insensitive match as isSupportedImage
+	switch ext := strings.ToLower(filepath.Ext(fn)); ext {
 	case ".png":
 		format = "png"
 		decodeConfig = png.DecodeConfig
@@ -396,6 +400,9 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		format = "jpeg"
 		decodeConfig = jpeg.DecodeConfig
 		decode = jpeg.Decode
+	default:
+		err = fmt.Errorf("unsupported image format (%s): %s", ext, fn)
+		return
 	}
 
 	var config image.Config
