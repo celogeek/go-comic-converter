@@ -244,8 +244,8 @@ func (e ePUBImageProcessor) loadCbz() (totalImages int, output chan task, err er
 					f, err = job.F.Open()
 					if err == nil {
 						img, _, err = image.Decode(f)
+						_ = f.Close()
 					}
-					_ = f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.F.Name))
@@ -325,7 +325,8 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 					if rerr == io.EOF {
 						break
 					}
-					utils.Fatalf("\nerror processing image %s: %s\n", f.Name, rerr)
+					// f is nil on error
+					utils.Fatalf("\nerror processing image %s: %s\n", e.Input, rerr)
 				}
 				if i, ok := indexedNames[f.Name]; ok {
 					var b bytes.Buffer
@@ -362,8 +363,8 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 					f, err = job.Open()
 					if err == nil {
 						img, _, err = image.Decode(f)
+						_ = f.Close()
 					}
-					_ = f.Close()
 				}
 
 				p, fn := filepath.Split(filepath.Clean(job.Name))

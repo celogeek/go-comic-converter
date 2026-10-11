@@ -85,7 +85,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 				// do not keep double page if requested
 				if !(img.DoublePage && input.Id > 0 && !e.Image.KeepDoublePage()) {
-					if err = e.addImage(imgStorage, &img); err != nil {
+					if err := e.addImage(imgStorage, &img); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
@@ -104,7 +104,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
 					img = e.transformImage(input, i+1, b)
-					if err = e.addImage(imgStorage, &img); err != nil {
+					if err := e.addImage(imgStorage, &img); err != nil {
 						_ = bar.Close()
 						utils.Fatalf("error with %s: %s", input.Name, err)
 					}
