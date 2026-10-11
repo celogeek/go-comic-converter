@@ -34,7 +34,10 @@ type task struct {
 	Image image.Image
 	Path  string
 	Name  string
+	// Error is the cause of a corrupted image, the page shown in its place is the image.
 	Error error
+	// Fatal is an error that stops the conversion, the other fields are not set.
+	Fatal error
 }
 
 var errNoImagesFound = errors.New("no images found")
@@ -317,6 +320,7 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 		Id   int
 		Name string
 		Open func() (io.ReadCloser, error)
+		Err  error
 	}
 
 	jobs := make(chan job)
@@ -325,7 +329,8 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 		if isSolid && !e.Dry {
 			r, rerr := rardecode.OpenReader(e.Input)
 			if rerr != nil {
-				utils.Fatalf("\nerror processing image %s: %s\n", e.Input, rerr)
+				jobs <- job{Err: fmt.Errorf("error processing image %s: %w", e.Input, rerr)}
+				return
 			}
 			defer func(r *rardecode.ReadCloser) {
 				_ = r.Close()
@@ -333,19 +338,21 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 			for {
 				f, rerr := r.Next()
 				if rerr != nil {
-					if rerr == io.EOF {
+					if errors.Is(rerr, io.EOF) {
 						break
 					}
 					// f is nil on error
-					utils.Fatalf("\nerror processing image %s: %s\n", e.Input, rerr)
+					jobs <- job{Err: fmt.Errorf("error processing image %s: %w", e.Input, rerr)}
+					return
 				}
 				if i, ok := indexedNames[f.Name]; ok {
 					var b bytes.Buffer
 					_, rerr = io.Copy(&b, r)
 					if rerr != nil {
-						utils.Fatalf("\nerror processing image %s: %s\n", f.Name, rerr)
+						jobs <- job{Err: fmt.Errorf("error processing image %s: %w", f.Name, rerr)}
+						return
 					}
-					jobs <- job{i, f.Name, func() (io.ReadCloser, error) {
+					jobs <- job{Id: i, Name: f.Name, Open: func() (io.ReadCloser, error) {
 						return io.NopCloser(bytes.NewReader(b.Bytes())), nil
 					}}
 				}
@@ -353,7 +360,7 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 		} else {
 			for _, img := range files {
 				if i, ok := indexedNames[img.Name]; ok {
-					jobs <- job{i, img.Name, img.Open}
+					jobs <- job{Id: i, Name: img.Name, Open: img.Open}
 				}
 			}
 		}

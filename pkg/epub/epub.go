@@ -7,10 +7,13 @@ import (
 	"image/draw"
 	"math"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
+	"syscall"
 	"text/template"
 	"time"
 
@@ -503,10 +506,47 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 // create the zip
 func (e epub) Write() error {
+	// the epub being written, removed on an interruption
+	var (
+		writingMu sync.Mutex
+		writing   string
+	)
+	setWriting := func(path string) {
+		writingMu.Lock()
+		defer writingMu.Unlock()
+		writing = path
+	}
+
 	// the temporary storage must not outlive the conversion, whatever happens
 	if !e.Dry {
 		defer func() {
 			_ = os.Remove(e.ImgStorage())
+		}()
+
+		// an interruption exits without running the deferred calls: remove the files by hand
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+		done := make(chan struct{})
+		defer func() {
+			signal.Stop(sigs)
+			close(done)
+		}()
+		go func() {
+			select {
+			case <-done:
+			case sig := <-sigs:
+				_ = os.Remove(e.ImgStorage())
+				writingMu.Lock()
+				if writing != "" {
+					_ = os.Remove(writing)
+				}
+				writingMu.Unlock()
+				utils.Printf("\nInterrupted\n")
+				if sig == os.Interrupt {
+					os.Exit(130)
+				}
+				os.Exit(143)
+			}
 		}()
 	}
 
@@ -547,6 +587,7 @@ func (e epub) Write() error {
 
 		path := e.Output[0:len(e.Output)-len(ext)] + suffix + ext
 
+		setWriting(path)
 		if err := e.writePart(
 			path,
 			i+1,
@@ -557,6 +598,7 @@ func (e epub) Write() error {
 			return err
 		}
 
+		setWriting("")
 		_ = bar.Add(1)
 	}
 	_ = bar.Close()

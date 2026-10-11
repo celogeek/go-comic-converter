@@ -2,6 +2,7 @@
 package epubimageprocessor
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -41,6 +42,9 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	// dry run, skip conversion
 	if e.Dry {
 		for img := range imageInput {
+			if img.Fatal != nil {
+				return nil, img.Fatal
+			}
 			images = append(images, epubimage.EPUBImage{
 				Id:     img.Id,
 				Path:   img.Path,
@@ -75,37 +79,38 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	if e.Image.Format == "png" {
 		wr = 100
 	}
+	// The first error stops the conversion, the workers then only drain the input so the loaders can finish.
+	var (
+		failMu  sync.Mutex
+		failure error
+	)
+	fail := func(err error) {
+		failMu.Lock()
+		defer failMu.Unlock()
+		if failure == nil {
+			failure = err
+		}
+	}
+	failed := func() bool {
+		failMu.Lock()
+		defer failMu.Unlock()
+		return failure != nil
+	}
+
 	for range e.WorkersRatio(wr) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
 			for input := range imageInput {
-				img := e.transformImage(input, 0, e.Image.Manga)
-
-				// A double page that is not kept is not stored, it is only sent in case it ends up as the cover:
-				// the collector knows which image comes first once the blank ones are removed.
-				if !e.isDroppedDoublePage(img) {
-					if err := e.addImage(imgStorage, &img); err != nil {
-						_ = bar.Close()
-						utils.Fatalf("error with %s: %s", input.Name, err)
-					}
+				if input.Fatal != nil {
+					fail(input.Fatal)
 				}
-				imageOutput <- img
-
-				// DOUBLE PAGE
-				if !e.Image.SplitDoublePage() || // No split required
-					!img.DoublePage { // Not a double page
+				if failed() {
 					continue
 				}
-
-				for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
-					img = e.transformImage(input, i+1, b)
-					if err := e.addImage(imgStorage, &img); err != nil {
-						_ = bar.Close()
-						utils.Fatalf("error with %s: %s", input.Name, err)
-					}
-					imageOutput <- img
+				if err := e.processImage(imgStorage, input, imageOutput); err != nil {
+					fail(fmt.Errorf("error with %s: %w", input.Name, err))
 				}
 			}
 		}()
@@ -146,6 +151,10 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	}
 	_ = bar.Close()
 
+	if failure != nil {
+		return nil, failure
+	}
+
 	if len(images) == 0 {
 		return nil, errNoImagesFound
 	}
@@ -159,6 +168,36 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	}
 
 	return kept, nil
+}
+
+// processImage transforms the image, stores it and sends it to the output, with its parts when it is a split double page.
+func (e ePUBImageProcessor) processImage(imgStorage epubzip.StorageImageWriter, input task, output chan<- epubimage.EPUBImage) error {
+	img := e.transformImage(input, 0, e.Image.Manga)
+
+	// A double page that is not kept is not stored, it is only sent in case it ends up as the cover:
+	// the collector knows which image comes first once the blank ones are removed.
+	if !e.isDroppedDoublePage(img) {
+		if err := e.addImage(imgStorage, &img); err != nil {
+			return err
+		}
+	}
+	output <- img
+
+	// DOUBLE PAGE
+	if !e.Image.SplitDoublePage() || // No split required
+		!img.DoublePage { // Not a double page
+		return nil
+	}
+
+	for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
+		img = e.transformImage(input, i+1, b)
+		if err := e.addImage(imgStorage, &img); err != nil {
+			return err
+		}
+		output <- img
+	}
+
+	return nil
 }
 
 // isDroppedDoublePage tells if the image is a double page, that is not kept as a page (its parts are).
