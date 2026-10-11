@@ -166,12 +166,7 @@ func (e ePUBImageProcessor) loadDir() (totalImages int, output chan task, err er
 					}
 				}
 
-				p, fn := filepath.Split(job.Path)
-				if p == input {
-					p = ""
-				} else {
-					p = p[len(input)+1:]
-				}
+				p, fn := utils.SplitPath(input, job.Path)
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
@@ -258,7 +253,7 @@ func (e ePUBImageProcessor) loadCbz() (totalImages int, output chan task, err er
 					}
 				}
 
-				p, fn := filepath.Split(filepath.Clean(job.F.Name))
+				p, fn := utils.SplitPath("", job.F.Name)
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}
@@ -377,7 +372,7 @@ func (e ePUBImageProcessor) loadCbr() (totalImages int, output chan task, err er
 					}
 				}
 
-				p, fn := filepath.Split(filepath.Clean(job.Name))
+				p, fn := utils.SplitPath("", job.Name)
 				if err != nil {
 					img = e.corruptedImage(p, fn)
 				}

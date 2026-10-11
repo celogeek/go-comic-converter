@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -71,4 +72,18 @@ func FormatNumberOfDigits(i int) string {
 func PartLabel(part, total int) string {
 	fmtLen := FormatNumberOfDigits(total)
 	return fmt.Sprintf("Part "+fmtLen+" of "+fmtLen, part, total)
+}
+
+// SplitPath cleans path and splits it into its directory and its file name.
+// The directory is relative to root (when not empty) and ends with a separator, it is empty for a file at the root.
+func SplitPath(root, path string) (dir, name string) {
+	dir, name = filepath.Split(filepath.Clean(path))
+	if root == "" {
+		return
+	}
+	rel, err := filepath.Rel(root, dir)
+	if err != nil || rel == "." {
+		return "", name
+	}
+	return rel + string(filepath.Separator), name
 }

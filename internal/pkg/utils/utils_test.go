@@ -1,6 +1,10 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+	"path/filepath"
+	"testing"
+)
 
 func ExampleFloatToString() {
 	fmt.Println("test=" + FloatToString(3.14151617, 0) + "=")
@@ -72,4 +76,24 @@ func ExamplePartLabel() {
 	// Part 01 of 10
 	// Part 10 of 12
 	// Part 007 of 100
+}
+
+func TestSplitPath(t *testing.T) {
+	sep := string(filepath.Separator)
+	for _, c := range []struct{ root, path, dir, name string }{
+		{"", "a.jpg", "", "a.jpg"},
+		{"", "Chap1/a.jpg", "Chap1" + sep, "a.jpg"},
+		{"", "./Chap1//a.jpg", "Chap1" + sep, "a.jpg"},
+		{".", "a.jpg", "", "a.jpg"},
+		{".", "Chap1/a.jpg", "Chap1" + sep, "a.jpg"},
+		{".", "Chap1/sub/a.jpg", "Chap1" + sep + "sub" + sep, "a.jpg"},
+		{"in", "in/a.jpg", "", "a.jpg"},
+		{"in", "in/Chap1/a.jpg", "Chap1" + sep, "a.jpg"},
+		{"/abs/in", "/abs/in/a/b/c.jpg", "a" + sep + "b" + sep, "c.jpg"},
+	} {
+		dir, name := SplitPath(c.root, c.path)
+		if dir != c.dir || name != c.name {
+			t.Errorf("SplitPath(%q, %q) = (%q, %q), want (%q, %q)", c.root, c.path, dir, name, c.dir, c.name)
+		}
+	}
 }

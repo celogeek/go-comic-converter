@@ -22,6 +22,7 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
@@ -374,15 +375,8 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		return
 	}
 
-	p, fn := filepath.Split(filepath.Clean(filename))
-	// strip the input directory, an archive has none
-	if dirname != "" {
-		if len(p) > len(dirname) {
-			p = p[len(dirname)+1:]
-		} else {
-			p = ""
-		}
-	}
+	// dirname is the input directory to strip, an archive has none
+	p, fn := utils.SplitPath(dirname, filename)
 
 	var (
 		format       string

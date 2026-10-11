@@ -324,6 +324,12 @@ func (c *Converter) Validate() error {
 	var defaultOutput string
 	inputBase := filepath.Clean(c.Options.Input)
 	if fi.IsDir() {
+		// "." and ".." have no name, use the real one
+		if b := filepath.Base(inputBase); b == "." || b == ".." {
+			if inputBase, err = filepath.Abs(inputBase); err != nil {
+				return err
+			}
+		}
 		defaultOutput = inputBase + ".epub"
 	} else {
 		ext := filepath.Ext(inputBase)
