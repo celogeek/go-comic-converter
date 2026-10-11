@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
@@ -183,4 +184,26 @@ func TestWriteCopyKeepsLeadingDoublePage(t *testing.T) {
 		}
 	}
 	assert.Equal(t, 2, pages, "both images are pages")
+}
+
+// the aspect ratio of the source can be extreme, the view is never thinner than the limits.
+func TestComputeViewPortLimitsSourceAspectRatio(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		ratio float64
+		want  [2]int
+	}{
+		{"extreme tall", 1000, [2]int{266, 800}},
+		{"extreme wide", 0.0001, [2]int{600, 300}},
+		{"in the limits", 1.6, [2]int{500, 800}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			e := New(testOptions("", "", false)).(epub)
+			e.Image.View.AspectRatio = 0
+			parts := []epubPart{{Cover: epubimage.EPUBImage{OriginalAspectRatio: c.ratio}}}
+
+			w, h := e.computeViewPort(parts)
+			assert.Equal(t, c.want, [2]int{w, h})
+		})
+	}
 }

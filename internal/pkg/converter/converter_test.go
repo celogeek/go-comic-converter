@@ -19,6 +19,14 @@ func TestValidate(t *testing.T) {
 		{"quality 100", func(c *Converter) { c.Options.Image.Quality = 100 }, false},
 		{"quality 0", func(c *Converter) { c.Options.Image.Quality = 0 }, true},
 		{"quality 101", func(c *Converter) { c.Options.Image.Quality = 101 }, true},
+		{"aspect ratio device", func(c *Converter) { c.Options.Image.View.AspectRatio = -1 }, false},
+		{"aspect ratio source", func(c *Converter) { c.Options.Image.View.AspectRatio = 0 }, false},
+		{"aspect ratio 1.6", func(c *Converter) { c.Options.Image.View.AspectRatio = 1.6 }, false},
+		{"aspect ratio min", func(c *Converter) { c.Options.Image.View.AspectRatio = 0.5 }, false},
+		{"aspect ratio max", func(c *Converter) { c.Options.Image.View.AspectRatio = 3 }, false},
+		{"aspect ratio too small", func(c *Converter) { c.Options.Image.View.AspectRatio = 0.0001 }, true},
+		{"aspect ratio too big", func(c *Converter) { c.Options.Image.View.AspectRatio = 1000 }, true},
+		{"aspect ratio negative", func(c *Converter) { c.Options.Image.View.AspectRatio = -2 }, true},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			conv := New()

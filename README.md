@@ -518,7 +518,7 @@ Config:
   -format=string (default "jpeg")
     	Format of output images: jpeg (lossy), png (lossless), copy (no processing)
   -aspect-ratio=float
-    	Aspect ratio (height/width) of the output
+    	Aspect ratio (height/width) of the output, between 0.5 and 3
     	 -1 = same as device
     	  0 = same as source
     	1.6 = amazon advice for kindle

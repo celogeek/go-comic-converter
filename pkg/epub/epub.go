@@ -398,6 +398,8 @@ func (e epub) computeViewPort(epubParts []epubPart) (int, int) {
 	if bestAspectRatio == 0 {
 		bestAspectRatio = e.computeAspectRatio(epubParts)
 	}
+	// the ratio of the source can be extreme, as for a 1 pixel wide image
+	bestAspectRatio = min(max(bestAspectRatio, epuboptions.MinAspectRatio), epuboptions.MaxAspectRatio)
 
 	viewWidth, viewHeight := int(float64(e.Image.View.Height)/bestAspectRatio), int(float64(e.Image.View.Width)*bestAspectRatio)
 	if viewWidth > e.Image.View.Width {

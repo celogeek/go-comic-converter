@@ -4,6 +4,13 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
+// Limits of the aspect ratio (height/width) of the view: the profiles go from 1.1 to 1.8,
+// anything outside gives a page too thin to read.
+const (
+	MinAspectRatio = 0.5
+	MaxAspectRatio = 3.0
+)
+
 type View struct {
 	Width       int     `yaml:"-" json:"width"`
 	Height      int     `yaml:"-" json:"height"`
