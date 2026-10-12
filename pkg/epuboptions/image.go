@@ -15,6 +15,7 @@ type Image struct {
 	AutoContrast              bool   `yaml:"auto_contrast" json:"auto_contrast"`
 	DoublePageMode            int    `yaml:"double_page_mode" json:"double_page_mode"` // 0 = split, 1 = split + rotate, 2 = rotate
 	KeepSplitDoublePageAspect bool   `yaml:"keep_split_double_page_aspect" json:"keep_split_double_page_aspect"`
+	CombineSplitDoublePage    bool   `yaml:"combine_split_double_page" json:"combine_split_double_page"`
 	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
 	Manga                     bool   `yaml:"manga" json:"manga"`
 	AddPanelView              bool   `yaml:"-" json:"add_panel_view"`

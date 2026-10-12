@@ -15,11 +15,13 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Customize brightness and contrast
 - Auto contrast
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
-- Images bigger than the SR resolution (1200x1920), like with the KS or HR profile, are stored in 2 halves shown as one page, to keep the resolution on large devices
+- Images bigger than the SR resolution (1200x1920), like with the KS or HR profile, are stored as a grid of tiles shown as one page, to keep the resolution on large devices
+- Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
 - Embedded panel view for the older devices that need it (set by the profile)
-- Support cover page or not (first page will be taken in that case)
+- The cover is the first image that is not blank
+- An unreadable image is replaced by a page with its name, instead of stopping the conversion
 - Support title page (cover with embedded title and part)
 - Split EPUB size for easy upload
 - 3 sorting methods (depending on your source, you can ensure the page go in the right order)
@@ -37,7 +39,7 @@ When you read the comic on a Kindle, you can customize how you read it with the 
 The panel view is handled natively by recent Kindles, for example the Kindle Scribe.
 The embedded panel view comes only from the profile: it is enabled for the older devices that need it, and can't be changed from the command line or the saved config.
 
-The grayscale can only be turned off (`-grayscale=0`) only with a profile of a color device (`HR`, `SR`, `KCS`, `KSC`, `KoCC`, `KoLC`, `RMP`, `RMPM`).
+The grayscale can only be turned off (`-grayscale=0`) with a profile of a color device (`HR`, `SR`, `KCS`, `KSC`, `KoCC`, `KoLC`, `RMP`, `RMPM`).
 
 # Installation
 
@@ -190,8 +192,7 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 1
-    Double page mode                : split + rotate
+    Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
@@ -217,8 +218,9 @@ Cover:
 
 Files:
   - Chapter 1
-    - img2.jpg
+    - img1.jpg
     - img10.jpg
+    - img2.jpg
   - Chapter 2
     - img01.jpg
     - img02.jpg
@@ -257,6 +259,7 @@ Cover:
 
 Files:
   - Chapter 1
+    - img1.jpg
     - img2.jpg
     - img10.jpg
   - Chapter 2
@@ -285,6 +288,8 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Double page mode                : split
+    Keep split double page aspect   : 1
     No blank image                  : 1
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
@@ -311,8 +316,7 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 1
-    Double page mode                : split + rotate
+    Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
@@ -341,8 +345,7 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
-    Auto contrast                   : 1
-    Double page mode                : split + rotate
+    Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
     Limit                           : 200 Mb
@@ -373,6 +376,8 @@ Options:
     Grayscale mode                  : normal
     Crop                            : 1
     Crop ratio                      : 1 Left - 1 Up - 1 Right - 3 Bottom - Limit 0% - Skip disabled
+    Double page mode                : split
+    Keep split double page aspect   : 1
     No blank image                  : 1
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
@@ -393,14 +398,18 @@ After playing around with the options, I have my perfect settings for all my dev
 
 ```
 $ go-comic-converter -reset
-$ go-comic-converter -profile SR -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -save
+$ go-comic-converter -profile KS -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -titlepage=1 -covercaption=1 -combinesplitdoublepage=1 --doublepagemode=0 -autocontrast=1 -save
 
 Options:
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : KS - Kindle Scribe - 1860x2480
     Format                          : jpeg
     Quality                         : 90
     Grayscale                       : 1
     Grayscale mode                  : luminance
+    Double page mode                : split
+    Combine split double page       : 1
+    Double page mode                : split
+    Keep split double page aspect   : 1
     No blank image                  : 1
     Manga                           : 1
     Limit                           : 200 Mb
@@ -417,13 +426,18 @@ Saving to ~/.go-comic-converter.yaml
 ```
 
 Explanation:
-- `-profile SR`: standard resolution (fast conversion from Amazon as images do not need to be resized)
+- `-profile KS`: my big device. put yours for best result.
 - `-quality 90`: JPEG output quality of images
 - `-manga`: manga mode, read right to left
 - `-aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
 - `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
 - `-crop=0`: do not remove anything
 - `-grayscale=1 -grayscale-mode=2`: use luminance mode of grayscale color
+- `-titlepage=1`: create a page with the title
+- `-covercaption=1`: add a footer on epub that is split on the thumbnail
+- `-combinesplitdoublepage=1`: combine pages that should be as 1 big picture
+- `-doublepagemode=0`: split the double page, the kindle will show an option to see them entirely in landscape
+- `-autocontrast=1`: improve automatically the contrast
 
 # Help
 
@@ -543,6 +557,8 @@ Config:
     	2 = rotate
   -keepsplitdoublepageaspect or -keepsplitdoublepageaspect=1 (to enabled), -keepsplitdoublepageaspect=0 (to disabled) (default 1)
     	Keep aspect of split part of a double page (best for landscape rendering)
+  -combinesplitdoublepage or -combinesplitdoublepage=1 (to enabled), -combinesplitdoublepage=0 (to disabled)
+    	Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)
   -noblankimage or -noblankimage=1 (to enabled), -noblankimage=0 (to disabled) (default 1)
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)

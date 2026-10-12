@@ -210,6 +210,7 @@ func (o *Options) ShowConfig() string {
 		{"Auto contrast", o.Image.AutoContrast, o.Image.Format != "copy"},
 		{"Double page mode", doublePageMode, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility},
 		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility && o.Image.SplitDoublePage()},
+		{"Combine split double page", o.Image.CombineSplitDoublePage, o.Image.Format != "copy"},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
 		{"Add panel view", o.Image.AddPanelView, true},

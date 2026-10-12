@@ -69,6 +69,13 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	})
 	wg := &sync.WaitGroup{}
 
+	var source <-chan task = imageInput
+
+	// 2 pages merged count as 2 in the progress
+	if e.Image.CombineSplitDoublePage {
+		source = e.combineSplitDoublePages(imageInput, func() { _ = bar.Add(1) })
+	}
+
 	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
 		_ = bar.Close()
@@ -102,7 +109,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 		go func() {
 			defer wg.Done()
 
-			for input := range imageInput {
+			for input := range source {
 				if input.Fatal != nil {
 					fail(input.Fatal)
 				}

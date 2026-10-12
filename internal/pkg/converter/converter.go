@@ -130,6 +130,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.AutoContrast, "autocontrast", c.Options.Image.AutoContrast, "Improve contrast automatically")
 	c.AddIntParam(&c.Options.Image.DoublePageMode, "doublepagemode", c.Options.Image.DoublePageMode, "Double page mode (width > height)\n0 = split\n1 = split + rotate\n2 = rotate")
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
+	c.AddReversibleBoolParam(&c.Options.Image.CombineSplitDoublePage, "combinesplitdoublepage", c.Options.Image.CombineSplitDoublePage, "Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
