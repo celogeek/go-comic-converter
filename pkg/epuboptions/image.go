@@ -17,7 +17,7 @@ type Image struct {
 	KeepSplitDoublePageAspect bool   `yaml:"keep_split_double_page_aspect" json:"keep_split_double_page_aspect"`
 	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
 	Manga                     bool   `yaml:"manga" json:"manga"`
-	AddPanelView              bool   `yaml:"add_panel_view" json:"add_panel_view"`
+	AddPanelView              bool   `yaml:"-" json:"add_panel_view"`
 	View                      View   `yaml:"view" json:"view"`
 	GrayScale                 bool   `yaml:"grayscale" json:"grayscale"`
 	GrayScaleMode             int    `yaml:"grayscale_mode" json:"gray_scale_mode"` // 0 = normal, 1 = average, 2 = luminance

@@ -18,7 +18,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Images bigger than the SR resolution (1200x1920), like with the KS or HR profile, are stored in 2 halves shown as one page, to keep the resolution on large devices
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
-- Optional embedded panel view (`-addpanelview`)
+- Embedded panel view for the older devices that need it (set by the profile)
 - Support cover page or not (first page will be taken in that case)
 - Support title page (cover with embedded title and part)
 - Split EPUB size for easy upload
@@ -34,8 +34,10 @@ When you read the comic on a Kindle, you can customize how you read it with the 
 - Landscape / Portrait
 - Activate panel view for small device
 
-The panel view is handled natively by recent Kindles, for example the Kindle Scribe, so you don't need `-addpanelview` for them.
-Enable it only if your device doesn't offer a panel view on its own.
+The panel view is handled natively by recent Kindles, for example the Kindle Scribe.
+The embedded panel view comes only from the profile: it is enabled for the older devices that need it, and can't be changed from the command line or the saved config.
+
+The grayscale can only be turned off (`-grayscale=0`) only with a profile of a color device (`HR`, `SR`, `KCS`, `KSC`, `KoCC`, `KoLC`, `RMP`, `RMPM`).
 
 # Installation
 
@@ -545,8 +547,6 @@ Config:
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
-  -addpanelview or -addpanelview=1 (to enabled), -addpanelview=0 (to disabled)
-    	Add an embedded panel view. Recent Kindles (ex: Scribe) handle it natively: enable it only if your device doesn't offer a panel view.
   -limitmb=int (default 200)
     	Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited
   -strip or -strip=1 (to enabled), -strip=0 (to disabled)

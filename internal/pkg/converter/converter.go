@@ -132,7 +132,6 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
-	c.AddReversibleBoolParam(&c.Options.Image.AddPanelView, "addpanelview", c.Options.Image.AddPanelView, "Add an embedded panel view. Recent Kindles (ex: Scribe) handle it natively: enable it only if your device doesn't offer a panel view.")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
@@ -272,6 +271,11 @@ func (c *Converter) Parse() {
 		os.Exit(0)
 	}
 
+	// The panel view only comes from the profile.
+	if p := c.Options.GetProfile(); p != nil {
+		c.Options.Image.AddPanelView = p.Features.PanelView
+	}
+
 	if c.Options.MaxQuality {
 		c.Options.Image.Format = "png"
 		c.Options.Image.GrayScale = false
@@ -371,11 +375,17 @@ func (c *Converter) Validate() error {
 
 	// Profile
 	if c.Options.Profile == "" {
-		return errors.New("profile missing")
+		return ErrProfileMissing
 	}
 
-	if p := c.Options.GetProfile(); p == nil {
-		return fmt.Errorf("profile %q doesn't exists", c.Options.Profile)
+	p := c.Options.GetProfile()
+	if p == nil {
+		return &UnknownProfileError{Profile: c.Options.Profile}
+	}
+
+	// Grayscale
+	if !p.Features.Color && !c.Options.Image.GrayScale {
+		return fmt.Errorf("profile %q doesn't support color, grayscale can't be turned off", c.Options.Profile)
 	}
 
 	// LimitMb
@@ -455,8 +465,25 @@ func (c *Converter) Validate() error {
 	return nil
 }
 
-// Fatal Helper to show usage, err and exit 1
+// ErrProfileMissing no profile selected.
+var ErrProfileMissing = errors.New("profile missing")
+
+// UnknownProfileError the selected profile doesn't exist.
+type UnknownProfileError struct {
+	Profile string
+}
+
+func (e *UnknownProfileError) Error() string {
+	return fmt.Sprintf("profile %q doesn't exists", e.Profile)
+}
+
+// Fatal Helper to show usage, err and exit 1.
+// A wrong profile only shows the available profiles instead of the whole usage.
 func (c *Converter) Fatal(err error) {
+	var unknown *UnknownProfileError
+	if errors.Is(err, ErrProfileMissing) || errors.As(err, &unknown) {
+		utils.Fatalf("Error: %s\n\nAvailable profiles:\n%s\n", err, c.Options.AvailableProfiles())
+	}
 	c.Cmd.Usage()
 	utils.Fatalf("\nError: %s\n", err)
 }
