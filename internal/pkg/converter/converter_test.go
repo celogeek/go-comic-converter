@@ -5,6 +5,7 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -199,5 +200,43 @@ func TestParseZoom(t *testing.T) {
 				t.Errorf("got zoom %v, want %v", got, c.want)
 			}
 		})
+	}
+}
+
+// the profiles are listed as a table, a row per profile.
+func TestProfilesString(t *testing.T) {
+	lines := strings.Split(NewProfiles().String(), "\n")
+	if want := len(NewProfiles()) + 2; len(lines) != want {
+		t.Fatalf("got %d lines, want %d", len(lines), want)
+	}
+	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Description"} {
+		if !strings.Contains(lines[0], h) {
+			t.Errorf("header %q missing: %q", h, lines[0])
+		}
+	}
+	if strings.Trim(lines[1], "- ") != "" {
+		t.Errorf("missing separator: %q", lines[1])
+	}
+	for _, c := range []struct {
+		code string
+		want []string
+	}{
+		{"K1", []string{"Kindle", "2007", "600 x 800", "x1", "Kindle 1"}},
+		{"AB", []string{"Apple", "1640 x 2360", "x1.5", "yes", "Apple Books Standard Resolution"}},
+	} {
+		var row string
+		for _, l := range lines[2:] {
+			if f := strings.Fields(l); len(f) > 1 && f[1] == c.code {
+				row = l
+			}
+		}
+		if row == "" {
+			t.Errorf("%s: no row", c.code)
+		}
+		for _, w := range c.want {
+			if !strings.Contains(row, w) {
+				t.Errorf("%s: %q missing from %q", c.code, w, row)
+			}
+		}
 	}
 }

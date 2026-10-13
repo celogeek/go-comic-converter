@@ -120,26 +120,57 @@ func NewProfiles() Profiles {
 	return profiles
 }
 
+// String table of the profiles: a row per profile, with the features of the device.
 func (p Profiles) String() string {
-	s := make([]string, 0)
-	var last epuboptions.DeviceType
+	rows := make([][]string, 0, len(p)+2)
+	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Description"})
+	rows = append(rows, nil) // separator
 	for _, v := range p {
-		if v.Type != last {
-			s = append(s, "    "+string(v.Type)+":")
-			last = v.Type
-		}
 		year := ""
 		if v.Year > 0 {
-			year = " (" + utils.IntToString(v.Year) + ")"
+			year = utils.IntToString(v.Year)
 		}
-		s = append(s, fmt.Sprintf(
-			"      - %-7s %7s - %4d x %-4d - x%-4s - %s",
+		rows = append(rows, []string{
+			string(v.Type),
 			v.Code,
 			year,
-			v.Width, v.Height,
-			utils.FloatToString(v.Features.Zoom, -1),
+			fmt.Sprintf("%4d x %-4d", v.Width, v.Height),
+			"x" + utils.FloatToString(v.Features.Zoom, -1),
+			yesOrNot(v.Features.Color),
+			yesOrNot(v.Features.PanelView),
 			v.Description,
-		))
+		})
 	}
-	return strings.Join(s, "\n")
+
+	widths := make([]int, len(rows[0]))
+	for _, r := range rows {
+		for i, c := range r {
+			widths[i] = max(widths[i], len(c))
+		}
+	}
+
+	lines := make([]string, 0, len(rows))
+	for _, r := range rows {
+		cells := make([]string, len(widths))
+		for i := range widths {
+			switch {
+			case r == nil:
+				cells[i] = strings.Repeat("-", widths[i])
+			case i == len(widths)-1:
+				cells[i] = r[i]
+			default:
+				cells[i] = fmt.Sprintf("%-*s", widths[i], r[i])
+			}
+		}
+		lines = append(lines, strings.Join(cells, "  "))
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func yesOrNot(b bool) string {
+	if b {
+		return "yes"
+	}
+	return ""
 }
