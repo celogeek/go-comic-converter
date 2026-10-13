@@ -211,16 +211,18 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 
 // getSpineAuto spine part of the content.
 //
-// The normal pages have no side: a side on every page shows the "Preview double page" on every page on Kindle.
-// A double page is centered, and the 2 parts of a split double page are facing each other.
+// Kindle is centered by default, and a side on every page shows the "Preview double page" on every page:
+// only the double page is centered, and the 2 parts of a split double page are facing each other.
 //
-// A blank page is added before them when they would start on the wrong side:
-// the first part of the split on the first side (right for manga), the double page on a spread of its own.
+// The other devices (Apple Books for example) don't support the center, they balance the left and right pages by themselves:
+// the pages have no hint, and a blank page fills the spread when a double page
+// (or the first part of a split) would start on the wrong side.
 func (o Content) getSpineAuto() []tag {
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.Manga {
 		first, second = second, first
 	}
+	filler := o.ImageOptions.Device != epuboptions.Kindle
 
 	var spine []tag
 	if o.HasTitlePage {
@@ -230,25 +232,32 @@ func (o Content) getSpineAuto() []tag {
 	// the page is on the second side of the spread
 	onSecondSide := false
 	for _, img := range o.Images {
-		if onSecondSide && (img.DoublePage || img.Part == 1) {
-			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": second + " layout-blank"}, ""})
-			onSecondSide = false
+		attrs := tagAttrs{"idref": img.PageKey()}
+
+		if filler {
+			if onSecondSide && (img.DoublePage || img.Part == 1) {
+				spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey()}, ""})
+				onSecondSide = false
+			}
+			switch {
+			case img.DoublePage, img.Part == 2:
+				onSecondSide = false
+			case img.Part == 1:
+				onSecondSide = true
+			default:
+				onSecondSide = !onSecondSide
+			}
+		} else {
+			switch {
+			case img.DoublePage:
+				attrs["properties"] = "page-spread-center"
+			case img.Part == 1:
+				attrs["properties"] = first
+			case img.Part == 2:
+				attrs["properties"] = second
+			}
 		}
 
-		attrs := tagAttrs{"idref": img.PageKey()}
-		switch {
-		case img.DoublePage:
-			attrs["properties"] = "page-spread-center"
-			onSecondSide = false
-		case img.Part == 1:
-			attrs["properties"] = first
-			onSecondSide = true
-		case img.Part == 2:
-			attrs["properties"] = second
-			onSecondSide = false
-		default:
-			onSecondSide = !onSecondSide
-		}
 		spine = append(spine, tag{"itemref", attrs, ""})
 	}
 
