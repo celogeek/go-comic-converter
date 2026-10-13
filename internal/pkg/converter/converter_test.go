@@ -81,6 +81,7 @@ func TestParsePanelView(t *testing.T) {
 		{"old kindle", []string{"-profile", "K1"}, true},
 		{"recent kindle", []string{"-profile", "KS"}, false},
 		{"kobo", []string{"-profile", "KoCC"}, false},
+		{"apple", []string{"-profile", "AB"}, false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			conv := New()
@@ -126,6 +127,10 @@ func TestParseDevice(t *testing.T) {
 		{"KS", epuboptions.Kindle, 1200, 1920},
 		{"KoCC", epuboptions.Kobo, 0, 0},
 		{"SR", epuboptions.Generic, 0, 0},
+		{"AB", epuboptions.Apple, 2366, 2366},
+		{"ABP13", epuboptions.Apple, 2366, 2366},
+		{"ABI", epuboptions.Apple, 2366, 2366},
+		{"ABD", epuboptions.Apple, 2366, 2366},
 		{"RM2", epuboptions.ReMarkable, 0, 0},
 	} {
 		t.Run(c.profile, func(t *testing.T) {

@@ -40,7 +40,7 @@ When you read the comic on a Kindle, you can customize how you read it with the 
 The panel view is handled natively by recent Kindles, for example the Kindle Scribe.
 The embedded panel view comes only from the profile: it is enabled for the older devices that need it, and can't be changed from the command line or the saved config.
 
-The grayscale can only be turned off (`-grayscale=0`) with a profile of a color device (`HR`, `SR`, `KCS`, `KSC`, `KoCC`, `KoLC`, `RMP`, `RMPM`).
+The grayscale can only be turned off (`-grayscale=0`) with a profile of a color device (`HR`, `SR`, `KCS`, `KSC`, `KoCC`, `KoLC`, `RMP`, `RMPM`, `AB`, `ABD`, `ABI`, `ABM`, `ABP11`, `ABP13`).
 
 # Installation
 
@@ -522,6 +522,13 @@ Config:
     	      - RMP      (2024) - 1620 x 2160 - reMarkable Paper Pro
     	      - RMPM     (2025) -  954 x 1696 - reMarkable Paper Pro Move
     	      - RMPU     (2026) - 1404 x 1872 - reMarkable Paper Pure
+    	    Apple:
+    	      - ABD      (2026) - 1920 x 2713 - Apple Books on iPhone Duo
+    	      - AB       (2026) - 1640 x 2360 - Apple Books on iPad/iPad Air
+    	      - ABP11    (2025) - 1668 x 2420 - Apple Books on iPad Pro 11"
+    	      - ABP13    (2025) - 2064 x 2752 - Apple Books on iPad Pro 13"
+    	      - ABI      (2025) - 1320 x 2868 - Apple Books on iPhone
+    	      - ABM      (2024) - 1488 x 2266 - Apple Books on iPad mini
   -quality=int (default 85)
     	Quality of the image
   -grayscale or -grayscale=1 (to enabled), -grayscale=0 (to disabled) (default 1)
