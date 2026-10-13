@@ -31,6 +31,8 @@ func main() {
 	switch {
 	case cmd.Options.Version:
 		version()
+	case cmd.Options.ShowCommand:
+		utils.Println(cmd.CommandLine())
 	case cmd.Options.Save:
 		save(cmd)
 	case cmd.Options.Show:

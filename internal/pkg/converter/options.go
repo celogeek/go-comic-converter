@@ -26,6 +26,7 @@ type Options struct {
 	Save         bool `yaml:"-" json:"-"`
 	Reset        bool `yaml:"-" json:"-"`
 	IgnoreConfig bool `yaml:"-" json:"-"`
+	ShowCommand  bool `yaml:"-" json:"-"`
 
 	// Shortcut
 	NoFilter     bool `yaml:"-" json:"-"`

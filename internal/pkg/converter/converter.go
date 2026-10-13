@@ -134,13 +134,13 @@ func (c *Converter) AddReversibleBoolParam(p *bool, name string, value bool, usa
 
 // InitParse Initialize the parser with all section and parameter.
 func (c *Converter) InitParse() {
-	c.AddSection("Output")
+	c.AddSection(sectionOutput)
 	c.AddStringParam(&c.Options.Input, "input", "", "Source of comic to convert: directory, cbz, zip, cbr, rar, pdf")
 	c.AddStringParam(&c.Options.Output, "output", "", "Output of the EPUB (directory or EPUB): (default [INPUT].epub)")
 	c.AddStringParam(&c.Options.Author, "author", "GO Comic Converter", "Author of the EPUB")
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
 
-	c.AddSection("Config")
+	c.AddSection(sectionConfig)
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
 	c.AddIntParam(&c.Options.Image.Quality, "quality", c.Options.Image.Quality, "Quality of the image")
 	c.AddReversibleBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")
@@ -177,6 +177,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
 	c.AddBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
+	c.AddBoolParam(&c.Options.ShowCommand, "show-command", false, "Show the command line equivalent to the current options: -ignore-config, the profile, and the options that differ from the default")
 	c.AddBoolParam(&c.Options.IgnoreConfig, "ignore-config", false, "Ignore your saved parameters, and use the default ones (with -help to show them)")
 
 	c.AddSection("Shortcut")

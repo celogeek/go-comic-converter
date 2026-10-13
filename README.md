@@ -404,6 +404,23 @@ $ go-comic-converter -input MyComic.cbz -ignore-config
 
 Your saved file is not changed, unless you add `-save` (the built-in default, and the other options you set, are saved).
 
+### Show the command line
+To get a command line that gives the same result whatever the saved parameters of the one who runs it
+(to share it, or to keep it), use `-show-command`:
+
+```
+$ go-comic-converter -profile AB -manga -quality 70 -input MyComic.cbz -show-command
+go-comic-converter -ignore-config \
+  -input=MyComic.cbz \
+  -profile=AB \
+  -quality=70 \
+  -manga=1
+```
+
+It starts with `-ignore-config`, so the saved parameters of the one who runs it don't matter, then the profile,
+and every option that differs from the built-in default. The options at their default are skipped, and so is the zoom of the profile
+(1.5 for Apple Books, 1 for the others). The options you saved are part of it, add `-ignore-config` to your own arguments to leave them out.
+
 # My own settings
 
 After playing around with the options, I have my perfect settings for all my devices.
@@ -623,6 +640,8 @@ Default config:
     	Save your parameters as default
   -reset
     	Reset your parameters to default
+  -show-command
+    	Show the command line equivalent to the current options: -ignore-config, the profile, and the options that differ from the default
   -ignore-config
     	Ignore your saved parameters, and use the default ones (with -help to show them)
 
