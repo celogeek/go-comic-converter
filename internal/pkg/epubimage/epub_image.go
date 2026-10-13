@@ -83,9 +83,9 @@ func (i EPUBImage) Tiles() int {
 
 // cut position of the n-th cut of a side of the given size, scaled to the displayed size.
 //
-// The image is cut every max pixels, the last piece being the remainder.
-func cut(size, max, n, displayed int) int {
-	c := min(n*max, size)
+// The side is cut every step pixels (see TileSize.step), the last piece being the remainder.
+func cut(size, step, n, displayed int) int {
+	c := min(n*step, size)
 	return (c*displayed + size/2) / size
 }
 
@@ -93,24 +93,25 @@ func cut(size, max, n, displayed int) int {
 //
 // The last piece always ends at the end of the side, even when the image is not tiled
 // (Cols and Rows unset, as for an image copied as is) and bigger than the max size.
-func edge(size, max, n, count, displayed int) int {
+func edge(size, step, n, count, displayed int) int {
 	if n >= count {
 		return displayed
 	}
-	return cut(size, max, n, displayed)
+	return cut(size, step, n, displayed)
 }
 
 // tileRect area of the tile idx, scaled to an image of the given size.
 //
-// The image is cut every tile width and every tile height, so each tile is at the max size except the last ones.
+// The tiles of a side have the same length, a multiple of 16 (see TileSize.step), except the last one.
 func (i EPUBImage) tileRect(idx, width, height int) image.Rectangle {
 	cols, rows := max(i.Cols, 1), max(i.Rows, 1)
 	c, r := idx%cols, idx/cols
-	t := i.Tile
+	stepW := i.Tile.step(i.Width, cols, i.Tile.Width)
+	stepH := i.Tile.step(i.Height, rows, i.Tile.Height)
 
 	return image.Rect(
-		edge(i.Width, t.Width, c, cols, width), edge(i.Height, t.Height, r, rows, height),
-		edge(i.Width, t.Width, c+1, cols, width), edge(i.Height, t.Height, r+1, rows, height),
+		edge(i.Width, stepW, c, cols, width), edge(i.Height, stepH, r, rows, height),
+		edge(i.Width, stepW, c+1, cols, width), edge(i.Height, stepH, r+1, rows, height),
 	)
 }
 

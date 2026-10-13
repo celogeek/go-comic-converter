@@ -22,32 +22,70 @@ func TestNeedStack(t *testing.T) {
 
 func TestGrid(t *testing.T) {
 	for _, c := range []struct {
+		tile             TileSize
 		w, h, cols, rows int
 	}{
-		{1200, 1920, 1, 1},
-		{1860, 2480, 2, 2},
-		{1200, 3000, 1, 2},
-		{2400, 1920, 2, 1},
-		{3000, 1, 1, 1},
+		{TileKindle, 1200, 1920, 1, 1},
+		{TileKindle, 1860, 2480, 2, 2},
+		{TileKindle, 1200, 3000, 1, 2},
+		{TileKindle, 2400, 1920, 2, 1},
+		{TileKindle, 3000, 1, 1, 1},
+		{TileKindle, 3601, 5761, 4, 4},
+		{TileApple, 2460, 3540, 2, 2},
+		{TileApple, 2064, 2752, 1, 2},
 	} {
-		cols, rows := TileKindle.Grid(c.w, c.h)
+		cols, rows := c.tile.Grid(c.w, c.h)
 		if cols != c.cols || rows != c.rows {
 			t.Errorf("Grid(%d, %d) = %d, %d, want %d, %d", c.w, c.h, cols, rows, c.cols, c.rows)
 		}
-		// every tile stays within the limit
-		e := EPUBImage{Width: c.w, Height: c.h, Cols: cols, Rows: rows, Tile: TileKindle}
+
+		// tiles are contiguous, in the limit, and balanced: only the last column / row is shorter,
+		// every cut is a multiple of 16 (a jpeg block)
+		e := EPUBImage{Width: c.w, Height: c.h, Cols: cols, Rows: rows, Tile: c.tile}
+		first := e.tileRect(0, c.w, c.h)
 		for idx := range e.Tiles() {
 			r := e.tileRect(idx, c.w, c.h)
-			if cols*rows > 1 && (r.Dx() > TileKindle.Width || r.Dy() > TileKindle.Height) {
+			col, row := idx%cols, idx/cols
+			if cols*rows > 1 && (r.Dx() > c.tile.Width || r.Dy() > c.tile.Height) {
 				t.Errorf("tile %d of %dx%d is %dx%d", idx, c.w, c.h, r.Dx(), r.Dy())
 			}
-			// tiles are at the max size, only the last column / row is smaller
-			wantW := TileKindle.Width
-			if idx%cols == cols-1 {
-				wantW = c.w - (idx%cols)*TileKindle.Width
+			if (col == 0 && r.Min.X != 0) || (col > 0 && r.Min.X != e.tileRect(idx-1, c.w, c.h).Max.X) ||
+				(row == 0 && r.Min.Y != 0) || (row > 0 && r.Min.Y != e.tileRect(idx-cols, c.w, c.h).Max.Y) {
+				t.Errorf("tile %d of %dx%d is not contiguous: %v", idx, c.w, c.h, r)
 			}
-			if r.Dx() != wantW {
-				t.Errorf("tile %d of %dx%d has width %d, want %d", idx, c.w, c.h, r.Dx(), wantW)
+			if col == cols-1 && r.Max.X != c.w || row == rows-1 && r.Max.Y != c.h {
+				t.Errorf("tile %d of %dx%d ends at %v, not at the end of the image", idx, c.w, c.h, r.Max)
+			}
+			if col < cols-1 && (r.Dx() != first.Dx() || r.Dx()%16 != 0) {
+				t.Errorf("tile %d of %dx%d has width %d, want %d, a multiple of 16", idx, c.w, c.h, r.Dx(), first.Dx())
+			}
+			if row < rows-1 && (r.Dy() != first.Dy() || r.Dy()%16 != 0) {
+				t.Errorf("tile %d of %dx%d has height %d, want %d, a multiple of 16", idx, c.w, c.h, r.Dy(), first.Dy())
+			}
+			if col == cols-1 && cols > 1 && (r.Dx() > first.Dx() || first.Dx()-r.Dx() >= 16*cols) {
+				t.Errorf("last column of %dx%d has width %d, first one has %d", c.w, c.h, r.Dx(), first.Dx())
+			}
+			if row == rows-1 && rows > 1 && (r.Dy() > first.Dy() || first.Dy()-r.Dy() >= 16*rows) {
+				t.Errorf("last row of %dx%d has height %d, first one has %d", c.w, c.h, r.Dy(), first.Dy())
+			}
+		}
+	}
+
+	// exact cuts
+	for _, c := range []struct {
+		tile  TileSize
+		w, h  int
+		sizes [][2]int
+	}{
+		{TileKindle, 1860, 2480, [][2]int{{944, 1248}, {916, 1248}, {944, 1232}, {916, 1232}}},
+		{TileKindle, 1200, 3000, [][2]int{{1200, 1504}, {1200, 1496}}},
+		{TileApple, 2460, 3540, [][2]int{{1232, 1776}, {1228, 1776}, {1232, 1764}, {1228, 1764}}},
+	} {
+		cols, rows := c.tile.Grid(c.w, c.h)
+		e := EPUBImage{Width: c.w, Height: c.h, Cols: cols, Rows: rows, Tile: c.tile}
+		for idx, want := range c.sizes {
+			if r := e.tileRect(idx, c.w, c.h); r.Dx() != want[0] || r.Dy() != want[1] {
+				t.Errorf("tile %d of %dx%d is %dx%d, want %dx%d", idx, c.w, c.h, r.Dx(), r.Dy(), want[0], want[1])
 			}
 		}
 	}

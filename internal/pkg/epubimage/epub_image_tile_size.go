@@ -54,6 +54,26 @@ func (t TileSize) Grid(width, height int) (cols, rows int) {
 	return
 }
 
+// jpegBlock size of the block of a JPEG, the chroma is subsampled by 2: a tile with a partial block
+// at a seam is compressed with a padding (and it shows as a faint edge).
+const jpegBlock = 16
+
+// step length of the tiles of a side of the given size cut into count tiles, no longer than the max.
+//
+// The tiles have the same length, rounded up to a multiple of the jpeg block (only the last tile is shorter),
+// instead of tiles at the max size followed by a thin remainder: the cuts are always on a block boundary.
+func (TileSize) step(size, count, max int) int {
+	if count <= 1 {
+		return size
+	}
+	step := (size + count - 1) / count
+	step = (step + jpegBlock - 1) / jpegBlock * jpegBlock
+	if max > 0 && step > max {
+		step = max
+	}
+	return step
+}
+
 // Tiled image of the given size, with the grid needed to store it.
 func (t TileSize) Tiled(width, height int) EPUBImage {
 	cols, rows := t.Grid(width, height)

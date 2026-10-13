@@ -23,14 +23,14 @@ func TestImgStyles(t *testing.T) {
 		}
 	}
 
-	// 2 columns x 2 rows, cut every 1200 x 1920 of the full size image
+	// 2 columns x 2 rows, balanced tiles cut at a multiple of 16 of the full size image: 1008 + 992, 1504 + 1497
 	tiled := EPUBImage{Width: 2000, Height: 3001, Cols: 2, Rows: 2, Tile: TileKindle}
 	got := tiled.ImgStyles(1000, 1500)
 	want := []string{
-		"width:600px; height:960px; top:0px; left:0px",
-		"width:400px; height:960px; top:0px; left:600px",
-		"width:600px; height:540px; top:960px; left:0px",
-		"width:400px; height:540px; top:960px; left:600px",
+		"width:504px; height:752px; top:0px; left:0px",
+		"width:496px; height:752px; top:0px; left:504px",
+		"width:504px; height:748px; top:752px; left:0px",
+		"width:496px; height:748px; top:752px; left:504px",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("tiled image: got %v, want %v", got, want)
