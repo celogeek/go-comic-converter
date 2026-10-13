@@ -463,64 +463,64 @@ Config:
     	    Kindle:
     	      - HR              - 2400 x 3840 - Kindle High Resolution
     	      - SR              - 1200 x 1920 - Kindle Standard Resolution
-    	      - K1       (2007) -  600 x 800  - Kindle 1
-    	      - K2       (2009) -  600 x 800  - Kindle 2
-    	      - KDX      (2009) -  824 x 1200 - Kindle DX/DXG
-    	      - K3       (2010) -  600 x 800  - Kindle Keyboard
-    	      - K4       (2011) -  600 x 800  - Kindle 4
-    	      - KT       (2011) -  600 x 800  - Kindle Touch
-    	      - K5       (2012) -  600 x 800  - Kindle 5
-    	      - KPW1     (2012) -  758 x 1024 - Kindle Paperwhite 1
-    	      - KPW2     (2013) -  758 x 1024 - Kindle Paperwhite 2
-    	      - K7       (2014) -  600 x 800  - Kindle 7
-    	      - KV       (2014) - 1072 x 1448 - Kindle Voyage
-    	      - KPW3     (2015) - 1072 x 1448 - Kindle Paperwhite 3
-    	      - KO1      (2016) - 1072 x 1448 - Kindle Oasis 1
-    	      - K8       (2016) -  600 x 800  - Kindle 8
-    	      - KO2      (2017) - 1264 x 1680 - Kindle Oasis 2
-    	      - KPW4     (2018) - 1072 x 1448 - Kindle Paperwhite 4
-    	      - K10      (2019) -  600 x 800  - Kindle 10
-    	      - KO3      (2019) - 1264 x 1680 - Kindle Oasis 3
-    	      - KPW5     (2021) - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
-    	      - K11      (2022) - 1072 x 1448 - Kindle 11
-    	      - KS       (2022) - 1860 x 2480 - Kindle Scribe
+    	      - KS3      (2025) - 1980 x 2640 - Kindle Scribe 3
+    	      - KSC      (2025) - 1980 x 2640 - Kindle Scribe Colorsoft
     	      - K12      (2024) - 1072 x 1448 - Kindle 12
     	      - KPW12    (2024) - 1264 x 1680 - Kindle Paperwhite 12/Signature Edition
     	      - KCS      (2024) - 1264 x 1680 - Kindle Colorsoft
     	      - KS2      (2024) - 1860 x 2480 - Kindle Scribe 2
-    	      - KS3      (2025) - 1980 x 2640 - Kindle Scribe 3
-    	      - KSC      (2025) - 1980 x 2640 - Kindle Scribe Colorsoft
+    	      - K11      (2022) - 1072 x 1448 - Kindle 11
+    	      - KS       (2022) - 1860 x 2480 - Kindle Scribe
+    	      - KPW5     (2021) - 1236 x 1648 - Kindle Paperwhite 5/Signature Edition
+    	      - K10      (2019) -  600 x 800  - Kindle 10
+    	      - KO3      (2019) - 1264 x 1680 - Kindle Oasis 3
+    	      - KPW4     (2018) - 1072 x 1448 - Kindle Paperwhite 4
+    	      - KO2      (2017) - 1264 x 1680 - Kindle Oasis 2
+    	      - KO1      (2016) - 1072 x 1448 - Kindle Oasis 1
+    	      - K8       (2016) -  600 x 800  - Kindle 8
+    	      - KPW3     (2015) - 1072 x 1448 - Kindle Paperwhite 3
+    	      - K7       (2014) -  600 x 800  - Kindle 7
+    	      - KV       (2014) - 1072 x 1448 - Kindle Voyage
+    	      - KPW2     (2013) -  758 x 1024 - Kindle Paperwhite 2
+    	      - K5       (2012) -  600 x 800  - Kindle 5
+    	      - KPW1     (2012) -  758 x 1024 - Kindle Paperwhite 1
+    	      - K4       (2011) -  600 x 800  - Kindle 4
+    	      - KT       (2011) -  600 x 800  - Kindle Touch
+    	      - K3       (2010) -  600 x 800  - Kindle Keyboard
+    	      - K2       (2009) -  600 x 800  - Kindle 2
+    	      - KDX      (2009) -  824 x 1200 - Kindle DX/DXG
+    	      - K1       (2007) -  600 x 800  - Kindle 1
     	    Kobo:
-    	      - KoR      (2010) -  600 x 800  - Kobo eReader
-    	      - KoT      (2011) -  600 x 800  - Kobo Touch
-    	      - KoM      (2012) -  600 x 800  - Kobo Mini
-    	      - KoG      (2012) -  758 x 1024 - Kobo Glo
-    	      - KoA      (2013) -  758 x 1024 - Kobo Aura
-    	      - KoAHD    (2013) - 1080 x 1440 - Kobo Aura HD
-    	      - KoAH2O   (2014) - 1080 x 1430 - Kobo Aura H2O
-    	      - KoGHD    (2015) - 1072 x 1448 - Kobo Glo HD
-    	      - KoT2     (2015) -  600 x 800  - Kobo Touch 2.0
-    	      - KoAO     (2016) - 1404 x 1872 - Kobo Aura One
-    	      - KoA2     (2016) -  758 x 1024 - Kobo Aura Edition 2
-    	      - KoAH2O2  (2017) - 1080 x 1430 - Kobo Aura H2O Edition 2
-    	      - KoCHD    (2018) - 1072 x 1448 - Kobo Clara HD
-    	      - KoF      (2018) - 1440 x 1920 - Kobo Forma
-    	      - KoLH2O   (2019) - 1264 x 1680 - Kobo Libra H2O
-    	      - KoN      (2020) -  758 x 1024 - Kobo Nia
-    	      - KoE      (2021) - 1404 x 1872 - Kobo Elipsa
-    	      - KoS      (2021) - 1440 x 1920 - Kobo Sage
-    	      - KoL2     (2021) - 1264 x 1680 - Kobo Libra 2
-    	      - KoC2E    (2022) - 1072 x 1448 - Kobo Clara 2E
-    	      - KoE2     (2023) - 1404 x 1872 - Kobo Elipsa 2E
     	      - KoCBW    (2024) - 1072 x 1448 - Kobo Clara BW
     	      - KoCC     (2024) - 1072 x 1448 - Kobo Clara Colour
     	      - KoLC     (2024) - 1264 x 1680 - Kobo Libra Colour
+    	      - KoE2     (2023) - 1404 x 1872 - Kobo Elipsa 2E
+    	      - KoC2E    (2022) - 1072 x 1448 - Kobo Clara 2E
+    	      - KoE      (2021) - 1404 x 1872 - Kobo Elipsa
+    	      - KoS      (2021) - 1440 x 1920 - Kobo Sage
+    	      - KoL2     (2021) - 1264 x 1680 - Kobo Libra 2
+    	      - KoN      (2020) -  758 x 1024 - Kobo Nia
+    	      - KoLH2O   (2019) - 1264 x 1680 - Kobo Libra H2O
+    	      - KoCHD    (2018) - 1072 x 1448 - Kobo Clara HD
+    	      - KoF      (2018) - 1440 x 1920 - Kobo Forma
+    	      - KoAH2O2  (2017) - 1080 x 1430 - Kobo Aura H2O Edition 2
+    	      - KoAO     (2016) - 1404 x 1872 - Kobo Aura One
+    	      - KoA2     (2016) -  758 x 1024 - Kobo Aura Edition 2
+    	      - KoGHD    (2015) - 1072 x 1448 - Kobo Glo HD
+    	      - KoT2     (2015) -  600 x 800  - Kobo Touch 2.0
+    	      - KoAH2O   (2014) - 1080 x 1430 - Kobo Aura H2O
+    	      - KoA      (2013) -  758 x 1024 - Kobo Aura
+    	      - KoAHD    (2013) - 1080 x 1440 - Kobo Aura HD
+    	      - KoM      (2012) -  600 x 800  - Kobo Mini
+    	      - KoG      (2012) -  758 x 1024 - Kobo Glo
+    	      - KoT      (2011) -  600 x 800  - Kobo Touch
+    	      - KoR      (2010) -  600 x 800  - Kobo eReader
     	    reMarkable:
-    	      - RM1      (2017) - 1404 x 1872 - reMarkable 1
-    	      - RM2      (2020) - 1404 x 1872 - reMarkable 2
-    	      - RMP      (2024) - 1620 x 2160 - reMarkable Paper Pro
-    	      - RMPM     (2025) -  954 x 1696 - reMarkable Paper Pro Move
     	      - RMPU     (2026) - 1404 x 1872 - reMarkable Paper Pure
+    	      - RMPM     (2025) -  954 x 1696 - reMarkable Paper Pro Move
+    	      - RMP      (2024) - 1620 x 2160 - reMarkable Paper Pro
+    	      - RM2      (2020) - 1404 x 1872 - reMarkable 2
+    	      - RM1      (2017) - 1404 x 1872 - reMarkable 1
     	    Apple:
     	      - ABD      (2026) - 1920 x 2713 - Apple Books on iPhone Duo
     	      - AB       (2026) - 1640 x 2360 - Apple Books on iPad/iPad Air
