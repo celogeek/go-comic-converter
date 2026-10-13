@@ -31,7 +31,7 @@ func TestValidate(t *testing.T) {
 		{"aspect ratio too big", func(c *Converter) { c.Options.Image.View.AspectRatio = 1000 }, true},
 		{"grayscale off with color profile", func(c *Converter) { c.Options.Profile = "KCS"; c.Options.Image.GrayScale = false }, false},
 		{"grayscale on with color profile", func(c *Converter) { c.Options.Profile = "KCS"; c.Options.Image.GrayScale = true }, false},
-		{"grayscale off with generic profile", func(c *Converter) { c.Options.Image.GrayScale = false }, false},
+		{"grayscale off with the default profile", func(c *Converter) { c.Options.Image.GrayScale = false }, false},
 		{"grayscale on with grayscale profile", func(c *Converter) { c.Options.Profile = "K1"; c.Options.Image.GrayScale = true }, false},
 		{"grayscale off with grayscale profile", func(c *Converter) { c.Options.Profile = "K1"; c.Options.Image.GrayScale = false }, true},
 		{"aspect ratio negative", func(c *Converter) { c.Options.Image.View.AspectRatio = -2 }, true},
@@ -126,7 +126,8 @@ func TestParseDevice(t *testing.T) {
 	}{
 		{"KS", epuboptions.Kindle, 1200, 1920},
 		{"KoCC", epuboptions.Kobo, 0, 0},
-		{"SR", epuboptions.Generic, 0, 0},
+		{"SR", epuboptions.Kindle, 1200, 1920},
+		{"HR", epuboptions.Kindle, 1200, 1920},
 		{"AB", epuboptions.Apple, 2366, 2366},
 		{"ABP13", epuboptions.Apple, 2366, 2366},
 		{"ABI", epuboptions.Apple, 2366, 2366},

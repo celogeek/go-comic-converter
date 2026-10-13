@@ -16,7 +16,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Auto contrast
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
 - Images are tiled only for the devices with a limit on the size of an image: Kindle (1200x1920, the SR resolution) and Apple Books (2366x2366, under the 5.6 million pixels limit).
-  A bigger image is stored as a grid of tiles shown as one page, to keep the resolution on large devices. Other devices (Kobo, reMarkable, generic `HR` and `SR`) are never tiled
+  A bigger image is stored as a grid of tiles shown as one page, to keep the resolution on large devices. Other devices (Kobo, reMarkable) are never tiled
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
@@ -186,7 +186,7 @@ Options:
     Author                          : GO Comic Converter
     Title                           : mymanga
     Workers                         : numcpus
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : SR - Kindle Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
     Grayscale                       : 1
@@ -282,7 +282,7 @@ $ go-comic-converter -show
 Go Comic Converter
 
 Options:
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : SR - Kindle Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
     Grayscale                       : 1
@@ -310,7 +310,7 @@ $ go-comic-converter -manga -profile SR -limitmb 200 -save
 Go Comic Converter
 
 Options:
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : SR - Kindle Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
     Grayscale                       : 1
@@ -339,7 +339,7 @@ If you want to change a setting, you can change only one of them
 $ go-comic-converter -manga=0 -save
 
 Options:
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : SR - Kindle Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
     Grayscale                       : 1
@@ -370,7 +370,7 @@ $ go-comic-converter -reset
 Go Comic Converter
 
 Options:
-    Profile                         : SR - Standard Resolution - 1200x1920
+    Profile                         : SR - Kindle Standard Resolution - 1200x1920
     Format                          : jpeg
     Quality                         : 85
     Grayscale                       : 1
@@ -460,10 +460,9 @@ Output:
 Config:
   -profile=string (default "SR")
     	Profile to use: 
-    	    Generic:
-    	      - HR              - 2400 x 3840 - High Resolution
-    	      - SR              - 1200 x 1920 - Standard Resolution
     	    Kindle:
+    	      - HR              - 2400 x 3840 - Kindle High Resolution
+    	      - SR              - 1200 x 1920 - Kindle Standard Resolution
     	      - K1       (2007) -  600 x 800  - Kindle 1
     	      - K2       (2009) -  600 x 800  - Kindle 2
     	      - KDX      (2009) -  824 x 1200 - Kindle DX/DXG

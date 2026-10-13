@@ -36,10 +36,9 @@ type Profiles []Profile
 // NewProfiles Initialize list of all supported profiles.
 func NewProfiles() Profiles {
 	return []Profile{
-		// High Resolution for Tablet
-		{"HR", epuboptions.Generic, 0, 2400, 3840, "High Resolution", Features{Color: true}},
-		{"SR", epuboptions.Generic, 0, 1200, 1920, "Standard Resolution", Features{Color: true}},
-		// Kindle, by year of release
+		// Kindle, the generic resolutions first, then by year of release
+		{"HR", epuboptions.Kindle, 0, 2400, 3840, "Kindle High Resolution", Features{Color: true}},
+		{"SR", epuboptions.Kindle, 0, 1200, 1920, "Kindle Standard Resolution", Features{Color: true}},
 		{"K1", epuboptions.Kindle, 2007, 600, 800, "Kindle 1", Features{PanelView: true}},
 		{"K2", epuboptions.Kindle, 2009, 600, 800, "Kindle 2", Features{PanelView: true}},
 		{"KDX", epuboptions.Kindle, 2009, 824, 1200, "Kindle DX/DXG", Features{PanelView: true}},

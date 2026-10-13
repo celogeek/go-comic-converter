@@ -6,7 +6,6 @@ import "github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 type DeviceType string
 
 const (
-	Generic    DeviceType = "Generic"
 	Kindle     DeviceType = "Kindle"
 	Kobo       DeviceType = "Kobo"
 	ReMarkable DeviceType = "reMarkable"
