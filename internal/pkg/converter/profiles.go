@@ -97,11 +97,11 @@ func NewProfiles() Profiles {
 		{"RMP", epuboptions.ReMarkable, 2024, 1620, 2160, "reMarkable Paper Pro", Features{Color: true}},
 		{"RM2", epuboptions.ReMarkable, 2020, 1404, 1872, "reMarkable 2", Features{}},
 		{"RM1", epuboptions.ReMarkable, 2017, 1404, 1872, "reMarkable 1", Features{}},
-		// Apple, by year of the latest device of the profile, newest first. The panel view is handled by Apple Books
+		// Apple, the standard resolution first, then by year of the latest device of the profile, newest first. The panel view is handled by Apple Books
+		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", Features{Color: true}},
 		// TODO: provisional size taken from the leaks of the inner display (2713 x 1920), Apple has not published
 		// the resolution of the iPhone Duo yet (on sale 2026-10-23). To update once it is released.
 		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", Features{Color: true}},
-		{"AB", epuboptions.Apple, 2026, 1640, 2360, "Apple Books on iPad/iPad Air", Features{Color: true}},
 		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", Features{Color: true}},
 		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", Features{Color: true}},
 		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", Features{Color: true}},

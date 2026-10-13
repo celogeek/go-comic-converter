@@ -522,8 +522,8 @@ Config:
     	      - RM2      (2020) - 1404 x 1872 - reMarkable 2
     	      - RM1      (2017) - 1404 x 1872 - reMarkable 1
     	    Apple:
+    	      - AB              - 1640 x 2360 - Apple Books Standard Resolution
     	      - ABD      (2026) - 1920 x 2713 - Apple Books on iPhone Duo
-    	      - AB       (2026) - 1640 x 2360 - Apple Books on iPad/iPad Air
     	      - ABP11    (2025) - 1668 x 2420 - Apple Books on iPad Pro 11"
     	      - ABP13    (2025) - 2064 x 2752 - Apple Books on iPad Pro 13"
     	      - ABI      (2025) - 1320 x 2868 - Apple Books on iPhone
