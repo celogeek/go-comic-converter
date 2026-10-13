@@ -58,3 +58,33 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 		}
 	}
 }
+
+// On Kindle only the double pages have a side: a side on every page shows the "Preview double page" on every page.
+func TestContentKindleSideOnlyDoublePage(t *testing.T) {
+	book := []epubimage.EPUBImage{
+		{Id: 0, Format: "jpeg"},
+		{Id: 1, Part: 1, Format: "jpeg"},
+		{Id: 1, Part: 2, Format: "jpeg"},
+		{Id: 2, Format: "jpeg", DoublePage: true},
+		{Id: 3, Format: "jpeg"},
+	}
+
+	for _, c := range []struct {
+		manga bool
+		want  []string
+	}{
+		{false, []string{"", "page-spread-left", "page-spread-right", "page-spread-center", ""}},
+		{true, []string{"", "page-spread-right", "page-spread-left", "page-spread-center", ""}},
+	} {
+		content := Content{
+			ImageOptions: epuboptions.Image{Device: epuboptions.Kindle, Manga: c.manga},
+			Images:       book,
+		}
+		var got []string
+		for _, ref := range content.getSpineAuto() {
+			got = append(got, ref.attrs["properties"])
+		}
+		assert.Equal(t, c.want, got, "manga=%v", c.manga)
+		assert.Empty(t, content.Spaces(), "manga=%v: no blank page", c.manga)
+	}
+}

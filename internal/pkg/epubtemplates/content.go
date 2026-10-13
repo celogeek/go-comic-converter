@@ -172,7 +172,9 @@ func (o Content) getManifest() []tag {
 		)
 		items = append(items, imageItems("img_title", "Images/title", o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
 
-		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
+		if !o.sideOnlyDoublePage() {
+			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
+		}
 	}
 
 	for _, img := range o.Images {
@@ -196,6 +198,10 @@ func (o Content) getManifest() []tag {
 // The blank pages are shared by the manifest, the spine and the writer of the epub,
 // so the spine never refers to a page that does not exist (a part can start or end in the middle of a double page).
 func (o Content) Spaces() []epubimage.EPUBImage {
+	if o.sideOnlyDoublePage() {
+		return nil
+	}
+
 	need := map[string]bool{}
 
 	// double page, first half of a split double page, and the last image
@@ -226,8 +232,47 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 	return spaces
 }
 
+// sideOnlyDoublePage the normal pages have no side, only the double pages have one.
+//
+// Kindle shows the "Preview double page" on every page with the left / right hints.
+func (o Content) sideOnlyDoublePage() bool {
+	return o.ImageOptions.Device == epuboptions.Kindle
+}
+
+// getSpineOnlyDoublePage the normal pages have no side:
+// a double page is centered, and the 2 parts of a split double page are facing each other.
+func (o Content) getSpineOnlyDoublePage() []tag {
+	first, second := "page-spread-left", "page-spread-right"
+	if o.ImageOptions.Manga {
+		first, second = second, first
+	}
+
+	var spine []tag
+	if o.HasTitlePage {
+		spine = append(spine, tag{"itemref", tagAttrs{"idref": "page_title"}, ""})
+	}
+	for _, img := range o.Images {
+		attrs := tagAttrs{"idref": img.PageKey()}
+		switch {
+		case img.DoublePage:
+			attrs["properties"] = "page-spread-center"
+		case img.Part == 1:
+			attrs["properties"] = first
+		case img.Part == 2:
+			attrs["properties"] = second
+		}
+		spine = append(spine, tag{"itemref", attrs, ""})
+	}
+
+	return spine
+}
+
 // spine part of the content
 func (o Content) getSpineAuto() []tag {
+	if o.sideOnlyDoublePage() {
+		return o.getSpineOnlyDoublePage()
+	}
+
 	isOnTheRight := !o.ImageOptions.Manga
 	if o.ImageOptions.Device == epuboptions.Apple {
 		isOnTheRight = !isOnTheRight

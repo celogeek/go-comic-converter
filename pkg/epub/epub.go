@@ -202,14 +202,17 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 
 // write title image
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
-	if err := wz.WriteContent(
-		"OEBPS/Text/space_title.xhtml",
-		[]byte(e.render(blankTemplate, map[string]any{
-			"Title":    "Blank Page Title",
-			"ViewPort": e.Image.View.Port(),
-		})),
-	); err != nil {
-		return err
+	// no blank page before the title on Kindle: the normal pages have no side
+	if e.Image.Device != epuboptions.Kindle {
+		if err := wz.WriteContent(
+			"OEBPS/Text/space_title.xhtml",
+			[]byte(e.render(blankTemplate, map[string]any{
+				"Title":    "Blank Page Title",
+				"ViewPort": e.Image.View.Port(),
+			})),
+		); err != nil {
+			return err
+		}
 	}
 
 	// The title image has the view size, so it fills the page.
