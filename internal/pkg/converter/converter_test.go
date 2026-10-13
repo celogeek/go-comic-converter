@@ -155,3 +155,16 @@ func TestParseDevice(t *testing.T) {
 		})
 	}
 }
+
+// every profile has a zoom: the Apple Books profiles are stored 1.5 times bigger, the others as the view.
+func TestProfilesZoom(t *testing.T) {
+	for _, p := range NewProfiles() {
+		want := 1.0
+		if p.Type == epuboptions.Apple {
+			want = 1.5
+		}
+		if p.Features.Zoom != want {
+			t.Errorf("%s: got zoom %v, want %v", p.Code, p.Features.Zoom, want)
+		}
+	}
+}

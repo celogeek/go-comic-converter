@@ -25,6 +25,9 @@ type Features struct {
 	Color bool `json:"color"`
 	// PanelView is true when the device has no native panel view: it is added to the pages by default.
 	PanelView bool `json:"panel_view"`
+	// Zoom is the default zoom of the images: they are stored bigger than the view (1 = the size of the view).
+	// It is 1 when unset.
+	Zoom float64 `json:"zoom"`
 }
 
 func (p Profile) String() string {
@@ -35,7 +38,7 @@ type Profiles []Profile
 
 // NewProfiles Initialize list of all supported profiles.
 func NewProfiles() Profiles {
-	return []Profile{
+	profiles := []Profile{
 		// Kindle, the generic resolutions first, then by year of release, newest first
 		{"HR", epuboptions.Kindle, 0, 2400, 3840, "Kindle High Resolution", Features{Color: true}},
 		{"SR", epuboptions.Kindle, 0, 1200, 1920, "Kindle Standard Resolution", Features{Color: true}},
@@ -98,15 +101,23 @@ func NewProfiles() Profiles {
 		{"RM2", epuboptions.ReMarkable, 2020, 1404, 1872, "reMarkable 2", Features{}},
 		{"RM1", epuboptions.ReMarkable, 2017, 1404, 1872, "reMarkable 1", Features{}},
 		// Apple, the standard resolution first, then by year of the latest device of the profile, newest first. The panel view is handled by Apple Books
-		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", Features{Color: true}},
+		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", Features{Color: true, Zoom: 1.5}},
 		// TODO: provisional size taken from the leaks of the inner display (2713 x 1920), Apple has not published
 		// the resolution of the iPhone Duo yet (on sale 2026-10-23). To update once it is released.
-		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", Features{Color: true}},
-		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", Features{Color: true}},
-		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", Features{Color: true}},
-		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", Features{Color: true}},
-		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", Features{Color: true}},
+		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", Features{Color: true, Zoom: 1.5}},
+		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", Features{Color: true, Zoom: 1.5}},
+		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", Features{Color: true, Zoom: 1.5}},
+		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", Features{Color: true, Zoom: 1.5}},
+		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", Features{Color: true, Zoom: 1.5}},
 	}
+
+	for i := range profiles {
+		if profiles[i].Features.Zoom == 0 {
+			profiles[i].Features.Zoom = 1
+		}
+	}
+
+	return profiles
 }
 
 func (p Profiles) String() string {
@@ -122,10 +133,11 @@ func (p Profiles) String() string {
 			year = " (" + utils.IntToString(v.Year) + ")"
 		}
 		s = append(s, fmt.Sprintf(
-			"      - %-7s %7s - %4d x %-4d - %s",
+			"      - %-7s %7s - %4d x %-4d - x%-4s - %s",
 			v.Code,
 			year,
 			v.Width, v.Height,
+			utils.FloatToString(v.Features.Zoom, -1),
 			v.Description,
 		))
 	}
