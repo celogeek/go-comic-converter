@@ -143,7 +143,7 @@ func imageItems(key, path string, img epubimage.EPUBImage) []tag {
 }
 
 func (o Content) getManifest() []tag {
-	var imageTags, pageTags, spaceTags []tag
+	var imageTags, pageTags []tag
 	addTag := func(img epubimage.EPUBImage) {
 		for idx := range img.Tiles() {
 			imageTags = append(imageTags,
@@ -171,77 +171,23 @@ func (o Content) getManifest() []tag {
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		)
 		items = append(items, imageItems("img_title", "Images/title", o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
-
-		if !o.sideOnlyDoublePage() {
-			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
-		}
 	}
 
 	for _, img := range o.Images {
 		addTag(img)
 	}
-	for _, img := range o.Spaces() {
-		spaceTags = append(spaceTags,
-			tag{"item", tagAttrs{"id": img.SpaceKey(), "href": img.SpacePath(), "media-type": "application/xhtml+xml"}, ""},
-		)
-	}
 
 	items = append(items, imageTags...)
 	items = append(items, pageTags...)
-	items = append(items, spaceTags...)
 
 	return items
 }
 
-// Spaces images followed by a blank page, one per image id.
+// getSpineAuto spine part of the content.
 //
-// The blank pages are shared by the manifest, the spine and the writer of the epub,
-// so the spine never refers to a page that does not exist (a part can start or end in the middle of a double page).
-func (o Content) Spaces() []epubimage.EPUBImage {
-	if o.sideOnlyDoublePage() {
-		return nil
-	}
-
-	need := map[string]bool{}
-
-	// double page, first half of a split double page, and the last image
-	lastImage := o.Images[len(o.Images)-1]
-	for _, img := range o.Images {
-		if img.DoublePage ||
-			(!o.ImageOptions.KeepDoublePage() && img.Part == 1) ||
-			(img.Part == 0 && lastImage.Part == 0 && img.Id == lastImage.Id) {
-			need[img.SpaceKey()] = true
-		}
-	}
-
-	// the ones needed to put the pages on the right side of the spread
-	for _, t := range o.getSpineAuto() {
-		if key, ok := t.attrs["idref"]; ok {
-			need[key] = true
-		}
-	}
-
-	spaces := make([]epubimage.EPUBImage, 0, len(need))
-	for _, img := range o.Images {
-		if key := img.SpaceKey(); need[key] {
-			spaces = append(spaces, img)
-			need[key] = false
-		}
-	}
-
-	return spaces
-}
-
-// sideOnlyDoublePage the normal pages have no side, only the double pages have one.
-//
-// Kindle shows the "Preview double page" on every page with the left / right hints.
-func (o Content) sideOnlyDoublePage() bool {
-	return o.ImageOptions.Device == epuboptions.Kindle
-}
-
-// getSpineOnlyDoublePage the normal pages have no side:
-// a double page is centered, and the 2 parts of a split double page are facing each other.
-func (o Content) getSpineOnlyDoublePage() []tag {
+// The normal pages have no side: a side on every page shows the "Preview double page" on every page on Kindle.
+// A double page is centered, and the 2 parts of a split double page are facing each other.
+func (o Content) getSpineAuto() []tag {
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.Manga {
 		first, second = second, first
@@ -262,72 +208,6 @@ func (o Content) getSpineOnlyDoublePage() []tag {
 			attrs["properties"] = second
 		}
 		spine = append(spine, tag{"itemref", attrs, ""})
-	}
-
-	return spine
-}
-
-// spine part of the content
-func (o Content) getSpineAuto() []tag {
-	if o.sideOnlyDoublePage() {
-		return o.getSpineOnlyDoublePage()
-	}
-
-	isOnTheRight := !o.ImageOptions.Manga
-	if o.ImageOptions.Device == epuboptions.Apple {
-		isOnTheRight = !isOnTheRight
-	}
-	getSpread := func(isDoublePage bool) string {
-		isOnTheRight = !isOnTheRight
-		if isDoublePage {
-			// Center the double page then start back to comic mode (mange/normal)
-			isOnTheRight = !o.ImageOptions.Manga
-			return "page-spread-center"
-		}
-		// Kindle needs the EPUB 3 core values, it ignores the spread with the rendition: alias.
-		if isOnTheRight {
-			return "page-spread-right"
-		} else {
-			return "page-spread-left"
-		}
-	}
-	getSpreadBlank := func() string {
-		return getSpread(false) + " layout-blank"
-	}
-
-	var spine []tag
-	if o.HasTitlePage {
-		if o.ImageOptions.Device != epuboptions.Apple {
-			spine = append(spine,
-				tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
-				tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
-			)
-		} else {
-			spine = append(spine,
-				tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(true)}, ""},
-			)
-		}
-	}
-	for _, img := range o.Images {
-		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
-			spine = append(spine, tag{
-				"itemref",
-				tagAttrs{"idref": img.SpaceKey(), "properties": getSpreadBlank()},
-				"",
-			})
-		}
-		spine = append(spine, tag{
-			"itemref",
-			tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)},
-			"",
-		})
-	}
-	if o.ImageOptions.Manga == isOnTheRight {
-		spine = append(spine, tag{
-			"itemref",
-			tagAttrs{"idref": o.Images[len(o.Images)-1].SpaceKey(), "properties": getSpread(false)},
-			"",
-		})
 	}
 
 	return spine

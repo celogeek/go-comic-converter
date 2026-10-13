@@ -48,9 +48,6 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 							for _, ref := range c.getSpineAuto() {
 								assert.Contains(t, ids, ref.attrs["idref"], "%s: spine refers to a missing page", name)
 							}
-							for _, img := range c.Spaces() {
-								assert.Contains(t, ids, img.SpaceKey(), "%s: blank page not in the manifest", name)
-							}
 						}
 					}
 				}
@@ -59,8 +56,8 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 	}
 }
 
-// On Kindle only the double pages have a side: a side on every page shows the "Preview double page" on every page.
-func TestContentKindleSideOnlyDoublePage(t *testing.T) {
+// Only the double pages have a side: a side on every page shows the "Preview double page" on every page on Kindle.
+func TestContentSideOnlyDoublePage(t *testing.T) {
 	book := []epubimage.EPUBImage{
 		{Id: 0, Format: "jpeg"},
 		{Id: 1, Part: 1, Format: "jpeg"},
@@ -77,7 +74,7 @@ func TestContentKindleSideOnlyDoublePage(t *testing.T) {
 		{true, []string{"", "page-spread-right", "page-spread-left", "page-spread-center", ""}},
 	} {
 		content := Content{
-			ImageOptions: epuboptions.Image{Device: epuboptions.Kindle, Manga: c.manga},
+			ImageOptions: epuboptions.Image{Manga: c.manga},
 			Images:       book,
 		}
 		var got []string
@@ -85,6 +82,5 @@ func TestContentKindleSideOnlyDoublePage(t *testing.T) {
 			got = append(got, ref.attrs["properties"])
 		}
 		assert.Equal(t, c.want, got, "manga=%v", c.manga)
-		assert.Empty(t, content.Spaces(), "manga=%v: no blank page", c.manga)
 	}
 }

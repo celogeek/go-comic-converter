@@ -75,7 +75,6 @@ func New(options epuboptions.EPUBOptions) EPUB {
 
 var (
 	textTemplate  = template.Must(template.New("text").Parse(epubtemplates.Text))
-	blankTemplate = template.Must(template.New("blank").Parse(epubtemplates.Blank))
 	styleTemplate = template.Must(template.New("style").Parse(epubtemplates.Style))
 
 	multipleNewLines = regexp.MustCompile("\n+")
@@ -146,17 +145,6 @@ func (e epub) panelView(img epubimage.EPUBImage, images []epubtemplates.Image) *
 	}
 }
 
-// write blank page
-func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
-	return wz.WriteContent(
-		img.EPUBSpacePath(),
-		[]byte(e.render(blankTemplate, map[string]any{
-			"Title":    "Blank Page " + utils.IntToString(img.Id),
-			"ViewPort": e.Image.View.Port(),
-		})),
-	)
-}
-
 // write cover image, used as thumbnail only (it has no page)
 func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, coverText string) error {
 	// the cover is reduced to the max size, the font follows
@@ -202,19 +190,6 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 
 // write title image
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
-	// no blank page before the title on Kindle: the normal pages have no side
-	if e.Image.Device != epuboptions.Kindle {
-		if err := wz.WriteContent(
-			"OEBPS/Text/space_title.xhtml",
-			[]byte(e.render(blankTemplate, map[string]any{
-				"Title":    "Blank Page Title",
-				"ViewPort": e.Image.View.Port(),
-			})),
-		); err != nil {
-			return err
-		}
-	}
-
 	// The title image has the view size, so it fills the page.
 	if err := wz.WriteContent(
 		"OEBPS/Text/title.xhtml",
@@ -501,12 +476,6 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		}
 	}
 
-	// the blank pages listed in the content: the spine refers to them
-	for _, img := range opf.Spaces() {
-		if err := e.writeBlank(wz, img); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
