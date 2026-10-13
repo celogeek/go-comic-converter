@@ -394,6 +394,16 @@ Options:
 Reset default to ~/.go-comic-converter.yaml
 ```
 
+### Ignore the saved default
+The help and the options start from the parameters you saved. To ignore them for one run, and use the built-in default:
+
+```
+$ go-comic-converter -help -ignore-config
+$ go-comic-converter -input MyComic.cbz -ignore-config
+```
+
+Your saved file is not changed, unless you add `-save` (the built-in default, and the other options you set, are saved).
+
 # My own settings
 
 After playing around with the options, I have my perfect settings for all my devices.
@@ -613,6 +623,8 @@ Default config:
     	Save your parameters as default
   -reset
     	Reset your parameters to default
+  -ignore-config
+    	Ignore your saved parameters, and use the default ones (with -help to show them)
 
 Shortcut:
   -nofilter

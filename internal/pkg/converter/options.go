@@ -22,9 +22,10 @@ type Options struct {
 	Profile string `yaml:"profile" json:"profile"`
 
 	// Default Config
-	Show  bool `yaml:"-" json:"-"`
-	Save  bool `yaml:"-" json:"-"`
-	Reset bool `yaml:"-" json:"-"`
+	Show         bool `yaml:"-" json:"-"`
+	Save         bool `yaml:"-" json:"-"`
+	Reset        bool `yaml:"-" json:"-"`
+	IgnoreConfig bool `yaml:"-" json:"-"`
 
 	// Shortcut
 	NoFilter     bool `yaml:"-" json:"-"`

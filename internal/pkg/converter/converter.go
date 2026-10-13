@@ -16,6 +16,7 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -66,8 +67,34 @@ func New() *Converter {
 }
 
 // LoadConfig Load default options (config + default)
+//
+// The saved config is skipped with -ignore-config: the flags take their default from the options,
+// so it has to be known before they are declared (and the help shows the default values).
 func (c *Converter) LoadConfig() error {
+	if ignoreConfig(os.Args[1:]) {
+		return nil
+	}
 	return c.Options.LoadConfig()
+}
+
+// ignoreConfig tells if the arguments ask to ignore the saved config (-ignore-config, -ignore-config=0|1, the last one wins).
+func ignoreConfig(args []string) (ignore bool) {
+	for _, a := range args {
+		if a == "--" {
+			break
+		}
+		name, value, hasValue := strings.Cut(strings.TrimLeft(a, "-"), "=")
+		if name != "ignore-config" || !strings.HasPrefix(a, "-") {
+			continue
+		}
+		ignore = true
+		if hasValue {
+			if v, err := strconv.ParseBool(value); err == nil {
+				ignore = v
+			}
+		}
+	}
+	return ignore
 }
 
 // AddSection Create a new section of config
@@ -150,6 +177,7 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.Show, "show", false, "Show your default parameters")
 	c.AddBoolParam(&c.Options.Save, "save", false, "Save your parameters as default")
 	c.AddBoolParam(&c.Options.Reset, "reset", false, "Reset your parameters to default")
+	c.AddBoolParam(&c.Options.IgnoreConfig, "ignore-config", false, "Ignore your saved parameters, and use the default ones (with -help to show them)")
 
 	c.AddSection("Shortcut")
 	c.AddBoolParam(&c.Options.NoFilter, "nofilter", false, "Deactivate all filters")

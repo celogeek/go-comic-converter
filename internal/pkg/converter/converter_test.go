@@ -240,3 +240,66 @@ func TestProfilesString(t *testing.T) {
 		}
 	}
 }
+
+func TestIgnoreConfig(t *testing.T) {
+	for _, c := range []struct {
+		args []string
+		want bool
+	}{
+		{nil, false},
+		{[]string{"-profile", "KS"}, false},
+		{[]string{"-ignore-config"}, true},
+		{[]string{"--ignore-config"}, true},
+		{[]string{"-h", "-ignore-config"}, true},
+		{[]string{"-ignore-config=1"}, true},
+		{[]string{"-ignore-config=true"}, true},
+		{[]string{"-ignore-config=0"}, false},
+		{[]string{"-ignore-config", "-ignore-config=0"}, false},
+		{[]string{"-ignore-config=0", "-ignore-config"}, true},
+		// after the end of the flags, or as a value
+		{[]string{"--", "-ignore-config"}, false},
+		{[]string{"-title", "ignore-config"}, false},
+		{[]string{"-ignore-configs"}, false},
+	} {
+		if got := ignoreConfig(c.args); got != c.want {
+			t.Errorf("%v: got %v, want %v", c.args, got, c.want)
+		}
+	}
+}
+
+// the saved config gives the default of the options (and of the help), unless it is ignored.
+func TestLoadConfigIgnored(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	if err := os.WriteFile(filepath.Join(home, ".go-comic-converter.yaml"), []byte("profile: KS\nepuboptions:\n  image:\n    quality: 50\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range []struct {
+		name        string
+		args        []string
+		wantProfile string
+		wantQuality int
+	}{
+		{"saved config", []string{"-h"}, "KS", 50},
+		{"ignored", []string{"-h", "-ignore-config"}, "SR", 85},
+		{"ignored with a flag", []string{"-ignore-config", "-profile", "K1"}, "SR", 85},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			old := os.Args
+			defer func() { os.Args = old }()
+			os.Args = append([]string{"go-comic-converter"}, c.args...)
+
+			conv := New()
+			if err := conv.LoadConfig(); err != nil {
+				t.Fatal(err)
+			}
+			if conv.Options.Profile != c.wantProfile {
+				t.Errorf("got profile %q, want %q", conv.Options.Profile, c.wantProfile)
+			}
+			if conv.Options.Image.Quality != c.wantQuality {
+				t.Errorf("got quality %d, want %d", conv.Options.Image.Quality, c.wantQuality)
+			}
+		})
+	}
+}
