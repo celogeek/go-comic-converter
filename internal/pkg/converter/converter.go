@@ -139,6 +139,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Image.View.Color.Foreground, "foreground-color", c.Options.Image.View.Color.Foreground, "Foreground color in hexadecimal format RGB. Black=000000, White=FFFFFF")
 	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000000, White=FFFFFF, Light Gray=DDDDDD, Dark Gray=777777")
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
+	c.AddFloatParam(&c.Options.Image.Zoom, "zoom", c.Options.Image.Zoom, "Zoom of the images, between 1 and 3: they are stored bigger than the device for a better quality when you zoom\n  0 = zoom of the profile (1.5 for Apple Books, 1 for the others)\n  1 = size of the device\nThe size of the EPUB grows with the square of the zoom")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
@@ -275,6 +276,7 @@ func (c *Converter) Parse() {
 	if p := c.Options.GetProfile(); p != nil {
 		c.Options.Image.AddPanelView = p.Features.PanelView
 		c.Options.Image.Device = p.Type
+		c.Options.Image.ProfileZoom = p.Features.Zoom
 	}
 
 	if c.Options.MaxQuality {
@@ -440,6 +442,14 @@ func (c *Converter) Validate() error {
 		return fmt.Errorf(
 			"aspect ratio should be -1, 0 or between %v and %v",
 			epuboptions.MinAspectRatio, epuboptions.MaxAspectRatio,
+		)
+	}
+
+	// Zoom
+	if z := c.Options.Image.Zoom; z != 0 && (z < epuboptions.MinZoom || z > epuboptions.MaxZoom) {
+		return fmt.Errorf(
+			"zoom should be 0 or between %v and %v",
+			epuboptions.MinZoom, epuboptions.MaxZoom,
 		)
 	}
 

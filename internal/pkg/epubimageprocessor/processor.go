@@ -18,6 +18,25 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
+// zoomFactor factor applied to the view to size an image of the given size, for the zoom asked.
+//
+// The image is stored zoom times bigger than the view, but never bigger than its own size:
+// the zoom brings back the details of the image, it can't make up some. An image smaller
+// than the view is stretched to the view, as without zoom.
+func zoomFactor(width, height, viewWidth, viewHeight int, zoom float64) float64 {
+	if width <= 0 || height <= 0 || viewWidth <= 0 || viewHeight <= 0 || zoom <= 1 {
+		return 1
+	}
+
+	// scale that fits the image to the view
+	fit := min(float64(viewWidth)/float64(width), float64(viewHeight)/float64(height))
+	if fit >= 1 {
+		return 1
+	}
+
+	return min(zoom, 1/fit)
+}
+
 type EPUBImageProcessor interface {
 	Load() (images []epubimage.EPUBImage, err error)
 	CoverTitleData(o CoverTitleDataOptions) ([]epubzip.Image, error)
@@ -340,7 +359,13 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	}
 
 	if e.Image.Resize {
-		g.Add(gift.ResizeToFit(e.Image.View.Width, e.Image.View.Height, gift.LanczosResampling))
+		b := g.Bounds(src.Bounds())
+		k := zoomFactor(b.Dx(), b.Dy(), e.Image.View.Width, e.Image.View.Height, e.Image.ZoomFactor())
+		g.Add(gift.ResizeToFit(
+			int(float64(e.Image.View.Width)*k+0.5),
+			int(float64(e.Image.View.Height)*k+0.5),
+			gift.LanczosResampling,
+		))
 	}
 
 	if e.Image.GrayScale {

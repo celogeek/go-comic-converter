@@ -17,6 +17,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
 - Images are tiled only for the devices with a limit on the size of an image: Kindle (1200x1920, the SR resolution) and Apple Books (2288x2432, under the 5.6 million pixels limit).
   A bigger image is stored as a grid of tiles shown as one page, to keep the resolution on large devices. Other devices (Kobo, reMarkable) are never tiled
+- Zoom of the stored images (`-zoom`): they are stored bigger than the device (1.5 for Apple Books, as advised by Apple) for a better quality when you zoom
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
@@ -585,6 +586,11 @@ Config:
     	Background color in hexadecimal format RGB. Black=000000, White=FFFFFF, Light Gray=DDDDDD, Dark Gray=777777
   -resize or -resize=1 (to enabled), -resize=0 (to disabled) (default 1)
     	Reduce image size if exceed device size
+  -zoom=float
+    	Zoom of the images, between 1 and 3: they are stored bigger than the device for a better quality when you zoom
+    	  0 = zoom of the profile (1.5 for Apple Books, 1 for the others)
+    	  1 = size of the device
+    	The size of the EPUB grows with the square of the zoom
   -format=string (default "jpeg")
     	Format of output images: jpeg (lossy), png (lossless), copy (no processing)
   -aspect-ratio=float

@@ -152,6 +152,11 @@ func (o *Options) ShowConfig() string {
 		}
 	}
 
+	zoom := utils.FloatToString(o.Image.ZoomFactor(), -1)
+	if o.Image.Zoom == 0 {
+		zoom += " (profile)"
+	}
+
 	doublePageMode := ""
 	switch o.Image.DoublePageMode {
 	case epuboptions.DoublePageSplit:
@@ -221,6 +226,7 @@ func (o *Options) ShowConfig() string {
 		{"Background color", "#" + o.Image.View.Color.Background, true},
 		{"Resize", o.Image.Resize, o.Image.Format != "copy"},
 		{"Aspect ratio", aspectRatio, true},
+		{"Zoom", zoom, o.Image.Format != "copy" && o.Image.Resize},
 		{"Title page", titlePage, true},
 		{"Cover caption", o.CoverCaption, o.LimitMb != 0},
 		{"Font", font, true},

@@ -2,6 +2,12 @@ package epuboptions
 
 import "github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 
+// Limits of the zoom of the stored images, relative to the size of the view.
+const (
+	MinZoom = 1.0
+	MaxZoom = 3.0
+)
+
 // DeviceType groups profiles by device family.
 type DeviceType string
 
@@ -36,6 +42,11 @@ type Image struct {
 	GrayScaleMode             int    `yaml:"grayscale_mode" json:"gray_scale_mode"` // 0 = normal, 1 = average, 2 = luminance
 	Resize                    bool   `yaml:"resize" json:"resize"`
 	Format                    string `yaml:"format" json:"format"`
+	// Zoom of the stored images: they are bigger than the view, for a better quality when the reader zooms.
+	// 0 is the zoom of the profile.
+	Zoom float64 `yaml:"zoom" json:"zoom"`
+	// ProfileZoom is the zoom of the profile, it comes only from the profile.
+	ProfileZoom float64 `yaml:"-" json:"profile_zoom"`
 	// Device is the device family of the profile, it comes only from the profile.
 	Device DeviceType `yaml:"-" json:"device"`
 }
@@ -66,4 +77,15 @@ var deviceTiles = map[DeviceType]epubimage.TileSize{
 // Only the devices with a constraint have one, the other devices get no tile (the zero value).
 func (i Image) Tile() epubimage.TileSize {
 	return deviceTiles[i.Device]
+}
+
+// ZoomFactor zoom of the stored images: the option, or the zoom of the profile, or 1.
+func (i Image) ZoomFactor() float64 {
+	if i.Zoom > 0 {
+		return i.Zoom
+	}
+	if i.ProfileZoom > 0 {
+		return i.ProfileZoom
+	}
+	return 1
 }

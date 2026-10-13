@@ -34,6 +34,12 @@ func TestValidate(t *testing.T) {
 		{"grayscale off with the default profile", func(c *Converter) { c.Options.Image.GrayScale = false }, false},
 		{"grayscale on with grayscale profile", func(c *Converter) { c.Options.Profile = "K1"; c.Options.Image.GrayScale = true }, false},
 		{"grayscale off with grayscale profile", func(c *Converter) { c.Options.Profile = "K1"; c.Options.Image.GrayScale = false }, true},
+		{"zoom default", func(c *Converter) { c.Options.Image.Zoom = 0 }, false},
+		{"zoom min", func(c *Converter) { c.Options.Image.Zoom = 1 }, false},
+		{"zoom max", func(c *Converter) { c.Options.Image.Zoom = 3 }, false},
+		{"zoom too small", func(c *Converter) { c.Options.Image.Zoom = 0.5 }, true},
+		{"zoom too big", func(c *Converter) { c.Options.Image.Zoom = 3.1 }, true},
+		{"zoom negative", func(c *Converter) { c.Options.Image.Zoom = -1 }, true},
 		{"aspect ratio negative", func(c *Converter) { c.Options.Image.View.AspectRatio = -2 }, true},
 	} {
 		t.Run(c.name, func(t *testing.T) {
@@ -166,5 +172,32 @@ func TestProfilesZoom(t *testing.T) {
 		if p.Features.Zoom != want {
 			t.Errorf("%s: got zoom %v, want %v", p.Code, p.Features.Zoom, want)
 		}
+	}
+}
+
+// the zoom comes from the profile, unless it is set.
+func TestParseZoom(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		args []string
+		want float64
+	}{
+		{"kindle", []string{"-profile", "KS"}, 1},
+		{"apple", []string{"-profile", "AB"}, 1.5},
+		{"apple with zoom", []string{"-profile", "AB", "-zoom", "2"}, 2},
+		{"apple with zoom 1", []string{"-profile", "AB", "-zoom", "1"}, 1},
+		{"kindle with zoom", []string{"-profile", "KS", "-zoom", "1.5"}, 1.5},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			conv := New()
+			conv.InitParse()
+			old := os.Args
+			defer func() { os.Args = old }()
+			os.Args = append([]string{"go-comic-converter"}, c.args...)
+			conv.Parse()
+			if got := conv.Options.Image.ZoomFactor(); got != c.want {
+				t.Errorf("got zoom %v, want %v", got, c.want)
+			}
+		})
 	}
 }
