@@ -158,7 +158,6 @@ func (c *Converter) InitParse() {
 	c.AddBoolParam(&c.Options.GoodQuality, "goodquality", false, "Max quality: grayscale jpg q90")
 
 	c.AddSection("Compatibility")
-	c.AddReversibleBoolParam(&c.Options.Image.AppleBookCompatibility, "applebookcompatibility", c.Options.Image.AppleBookCompatibility, "Apple book compatibility")
 
 	c.AddSection("Other")
 	c.AddIntParam(&c.Options.Workers, "workers", runtime.NumCPU(), "Number of workers")
@@ -272,9 +271,10 @@ func (c *Converter) Parse() {
 		os.Exit(0)
 	}
 
-	// The panel view only comes from the profile.
+	// The panel view and the device come only from the profile.
 	if p := c.Options.GetProfile(); p != nil {
 		c.Options.Image.AddPanelView = p.Features.PanelView
+		c.Options.Image.Device = p.Type
 	}
 
 	if c.Options.MaxQuality {
@@ -307,7 +307,7 @@ func (c *Converter) Parse() {
 		c.Options.Image.Resize = false
 	}
 
-	if c.Options.Image.AppleBookCompatibility {
+	if c.Options.Image.Device == epuboptions.Apple {
 		c.Options.Image.DoublePageMode = epuboptions.DoublePageSplit
 		c.Options.Image.KeepSplitDoublePageAspect = true
 	}

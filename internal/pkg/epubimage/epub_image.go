@@ -7,15 +7,6 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
-// Maximum size of an image displayed as is (SR profile).
-//
-// A bigger image is stored as a grid of tiles, displayed side by side in the same page,
-// so each file stays within what the device can handle without downscaling.
-const (
-	MaxWidth  = 1200
-	MaxHeight = 1920
-)
-
 type EPUBImage struct {
 	Id         int
 	Part       int
@@ -26,7 +17,9 @@ type EPUBImage struct {
 	DoublePage bool
 	// Cols and Rows tell the image is stored in Cols x Rows files (see TileImgPath), row by row.
 	// Width and Height are the size of the whole image. 0 is the same as 1.
-	Cols, Rows          int
+	Cols, Rows int
+	// Tile is the max size of each file of the image, unset when the device has no constraint.
+	Tile                TileSize
 	Path                string
 	Name                string
 	Format              string
@@ -83,37 +76,6 @@ func (i EPUBImage) EPUBImgPath() string {
 	return "OEBPS/" + i.ImgPath()
 }
 
-// NeedStack tells if an image of this size is too big to be stored in one file.
-func NeedStack(width, height int) bool {
-	return height > 1 && (width > MaxWidth || height > MaxHeight)
-}
-
-// FitSize size of an image reduced to the max size, keeping its aspect ratio.
-// An image within the max size is returned as is.
-func FitSize(width, height int) (int, int) {
-	if width <= MaxWidth && height <= MaxHeight {
-		return width, height
-	}
-
-	wratio := float64(width) / MaxWidth
-	hratio := float64(height) / MaxHeight
-	if wratio > hratio {
-		return MaxWidth, max(1, min(MaxHeight, int(float64(height)/wratio+0.5)))
-	}
-
-	return max(1, min(MaxWidth, int(float64(width)/hratio+0.5))), MaxHeight
-}
-
-// Grid number of columns and rows needed to keep each tile of an image of this size within the max size.
-func Grid(width, height int) (cols, rows int) {
-	cols, rows = 1, 1
-	if NeedStack(width, height) {
-		cols = (width + MaxWidth - 1) / MaxWidth
-		rows = (height + MaxHeight - 1) / MaxHeight
-	}
-	return
-}
-
 // Tiles number of files used to store the image.
 func (i EPUBImage) Tiles() int {
 	return max(i.Cols, 1) * max(i.Rows, 1)
@@ -140,26 +102,21 @@ func edge(size, max, n, count, displayed int) int {
 
 // tileRect area of the tile idx, scaled to an image of the given size.
 //
-// The image is cut every MaxWidth and every MaxHeight, so each tile is at the max size except the last ones.
+// The image is cut every tile width and every tile height, so each tile is at the max size except the last ones.
 func (i EPUBImage) tileRect(idx, width, height int) image.Rectangle {
 	cols, rows := max(i.Cols, 1), max(i.Rows, 1)
 	c, r := idx%cols, idx/cols
+	t := i.Tile
 
 	return image.Rect(
-		edge(i.Width, MaxWidth, c, cols, width), edge(i.Height, MaxHeight, r, rows, height),
-		edge(i.Width, MaxWidth, c+1, cols, width), edge(i.Height, MaxHeight, r+1, rows, height),
+		edge(i.Width, t.Width, c, cols, width), edge(i.Height, t.Height, r, rows, height),
+		edge(i.Width, t.Width, c+1, cols, width), edge(i.Height, t.Height, r+1, rows, height),
 	)
 }
 
 // TileBounds area of the tile idx into the raw image.
 func (i EPUBImage) TileBounds(idx int, b image.Rectangle) image.Rectangle {
 	return i.tileRect(idx, i.Width, i.Height).Add(b.Min)
-}
-
-// Tiled image of the given size, with the grid needed to store it.
-func Tiled(width, height int) EPUBImage {
-	cols, rows := Grid(width, height)
-	return EPUBImage{Width: width, Height: height, Cols: cols, Rows: rows}
 }
 
 // TileName name of the tile idx of an image, the first one being the image itself

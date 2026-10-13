@@ -2,6 +2,7 @@ package converter
 
 import (
 	"errors"
+	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 	"os"
 	"path/filepath"
 	"testing"
@@ -111,5 +112,40 @@ func TestValidateProfileError(t *testing.T) {
 	conv.Options.Profile = ""
 	if err := conv.Validate(); !errors.Is(err, ErrProfileMissing) {
 		t.Errorf("got error %v, want a missing profile error", err)
+	}
+}
+
+// the device of the profile is passed to the options, and drives the tile size and the Apple Books mode.
+func TestParseDevice(t *testing.T) {
+	for _, c := range []struct {
+		profile    string
+		device     epuboptions.DeviceType
+		tileWidth  int
+		tileHeight int
+	}{
+		{"KS", epuboptions.Kindle, 1200, 1920},
+		{"KoCC", epuboptions.Kobo, 0, 0},
+		{"SR", epuboptions.Generic, 0, 0},
+		{"RM2", epuboptions.ReMarkable, 0, 0},
+	} {
+		t.Run(c.profile, func(t *testing.T) {
+			conv := New()
+			conv.InitParse()
+			old := os.Args
+			defer func() { os.Args = old }()
+			os.Args = []string{"go-comic-converter", "-profile", c.profile}
+			conv.Parse()
+
+			img := conv.Options.Image
+			if img.Device != c.device {
+				t.Errorf("got device %q, want %q", img.Device, c.device)
+			}
+			if tile := img.Tile(); tile.Width != c.tileWidth || tile.Height != c.tileHeight {
+				t.Errorf("got tile %dx%d, want %dx%d", tile.Width, tile.Height, c.tileWidth, c.tileHeight)
+			}
+			if c.device == epuboptions.Apple && (img.DoublePageMode != epuboptions.DoublePageSplit || !img.KeepSplitDoublePageAspect) {
+				t.Errorf("apple books must split the double page and keep its aspect")
+			}
+		})
 	}
 }

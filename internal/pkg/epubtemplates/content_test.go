@@ -27,14 +27,14 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 
 	for mode := range 3 {
 		for _, manga := range []bool{false, true} {
-			for _, apple := range []bool{false, true} {
+			for _, device := range []epuboptions.DeviceType{epuboptions.Kindle, epuboptions.Apple} {
 				for _, title := range []bool{false, true} {
 					for from := range book {
 						for to := from + 1; to <= len(book); to++ {
-							name := fmt.Sprintf("mode=%d manga=%v apple=%v title=%v [%d:%d]", mode, manga, apple, title, from, to)
+							name := fmt.Sprintf("mode=%d manga=%v device=%v title=%v [%d:%d]", mode, manga, device, title, from, to)
 							c := Content{
 								HasTitlePage: title,
-								ImageOptions: epuboptions.Image{DoublePageMode: mode, Manga: manga, AppleBookCompatibility: apple},
+								ImageOptions: epuboptions.Image{DoublePageMode: mode, Manga: manga, Device: device},
 								Images:       book[from:to],
 							}
 

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
@@ -110,7 +109,7 @@ func TestCopyRawDataToStorageUnreadableImage(t *testing.T) {
 			if img.Error == nil {
 				t.Error("the cause must be kept to be reported")
 			}
-			if img.Format != "jpeg" || img.Width != epubimage.MaxWidth || img.Height != epubimage.MaxHeight {
+			if img.Format != "jpeg" || img.Width != 1200 || img.Height != 1920 {
 				t.Errorf("got %s %dx%d", img.Format, img.Width, img.Height)
 			}
 			if img.Path != "ch1/" {

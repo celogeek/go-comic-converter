@@ -170,7 +170,7 @@ func (o Content) getManifest() []tag {
 		items = append(items,
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		)
-		items = append(items, imageItems("img_title", "Images/title", epubimage.Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
+		items = append(items, imageItems("img_title", "Images/title", o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
 
 		items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
 	}
@@ -229,7 +229,7 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 // spine part of the content
 func (o Content) getSpineAuto() []tag {
 	isOnTheRight := !o.ImageOptions.Manga
-	if o.ImageOptions.AppleBookCompatibility {
+	if o.ImageOptions.Device == epuboptions.Apple {
 		isOnTheRight = !isOnTheRight
 	}
 	getSpread := func(isDoublePage bool) string {
@@ -252,7 +252,7 @@ func (o Content) getSpineAuto() []tag {
 
 	var spine []tag
 	if o.HasTitlePage {
-		if !o.ImageOptions.AppleBookCompatibility {
+		if o.ImageOptions.Device != epuboptions.Apple {
 			spine = append(spine,
 				tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
 				tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},

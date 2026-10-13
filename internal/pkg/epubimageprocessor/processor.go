@@ -223,12 +223,13 @@ type subImager interface {
 
 // addImage compress the image into the storage.
 //
-// An image bigger than the SR resolution is stored as a grid of tiles, displayed together in the same page.
+// An image bigger than the tile size of the device is stored as a grid of tiles, displayed together in the same page.
 func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimage.EPUBImage) error {
 	img.Cols, img.Rows = 1, 1
+	img.Tile = e.Image.Tile()
 	sub, ok := img.Raw.(subImager)
 	if ok {
-		img.Cols, img.Rows = epubimage.Grid(img.Width, img.Height)
+		img.Cols, img.Rows = img.Tile.Grid(img.Width, img.Height)
 	}
 	if !ok || img.Tiles() == 1 {
 		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
@@ -400,14 +401,14 @@ func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Imag
 
 // CoverTitleData draws the title box on the source image (the cover or the title page background) and compresses it to jpeg.
 //
-// The title image bigger than the SR resolution is stored as a grid of tiles, like the pages.
+// The title image bigger than the tile size of the device is stored as a grid of tiles, like the pages.
 // The cover is only used as thumbnail, so it is never tiled, but it is always reduced to the max size,
 // whatever the device or the resize option.
 func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.Image, error) {
 	g := gift.New()
 	if o.Name == "cover" {
 		sb := o.Src.Bounds()
-		if w, h := epubimage.FitSize(sb.Dx(), sb.Dy()); w != sb.Dx() || h != sb.Dy() {
+		if w, h := e.Image.Tile().FitSize(sb.Dx(), sb.Dy()); w != sb.Dx() || h != sb.Dy() {
 			g.Add(gift.Resize(w, h, gift.LanczosResampling))
 		}
 	}
@@ -422,7 +423,7 @@ func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.I
 	g.Draw(dst, o.Src)
 
 	b := dst.Bounds()
-	tiled := epubimage.Tiled(b.Dx(), b.Dy())
+	tiled := e.Image.Tile().Tiled(b.Dx(), b.Dy())
 	sub, ok := dst.(subImager)
 	if !ok || o.Name == "cover" {
 		tiled.Cols, tiled.Rows = 1, 1

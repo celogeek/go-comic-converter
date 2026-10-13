@@ -15,7 +15,8 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Customize brightness and contrast
 - Auto contrast
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
-- Images bigger than the SR resolution (1200x1920), like with the KS or HR profile, are stored as a grid of tiles shown as one page, to keep the resolution on large devices
+- Images are tiled only for the devices with a limit on the size of an image: Kindle (1200x1920, the SR resolution) and Apple Books (2366x2366, under the 5.6 million pixels limit).
+  A bigger image is stored as a grid of tiles shown as one page, to keep the resolution on large devices. Other devices (Kobo, reMarkable, generic `HR` and `SR`) are never tiled
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
@@ -27,7 +28,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - 3 sorting methods (depending on your source, you can ensure the page go in the right order)
 - Save and reuse your own perfect settings
 - Multi tasks for fast conversion
-- Apple Book Compatibility Mode
+- Apple Books mode, set by the profile: the double page is split and keeps its aspect, the spread follows Apple Books, and the tile size follows its limit (`AB` profile)
 - JSON output for programmatic usage
 - Support cover caption with the part number when the EPUB is split
 - Support for own font for the title page and the cover caption
@@ -616,8 +617,6 @@ Shortcut:
     	Max quality: grayscale jpg q90
 
 Compatibility:
-  -applebookcompatibility or -applebookcompatibility=1 (to enabled), -applebookcompatibility=0 (to disabled)
-    	Apple book compatibility
 
 Other:
   -workers=int (default 12)

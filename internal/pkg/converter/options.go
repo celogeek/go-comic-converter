@@ -208,8 +208,8 @@ func (o *Options) ShowConfig() string {
 		{"Brightness", o.Image.Brightness, o.Image.Format != "copy" && o.Image.Brightness != 0},
 		{"Contrast", o.Image.Contrast, o.Image.Format != "copy" && o.Image.Contrast != 0},
 		{"Auto contrast", o.Image.AutoContrast, o.Image.Format != "copy"},
-		{"Double page mode", doublePageMode, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility},
-		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && !o.Image.AppleBookCompatibility && o.Image.SplitDoublePage()},
+		{"Double page mode", doublePageMode, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple},
+		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple && o.Image.SplitDoublePage()},
 		{"Combine split double page", o.Image.CombineSplitDoublePage, o.Image.Format != "copy"},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
@@ -224,7 +224,6 @@ func (o *Options) ShowConfig() string {
 		{"Title page", titlePage, true},
 		{"Cover caption", o.CoverCaption, o.LimitMb != 0},
 		{"Font", font, true},
-		{"Apple book compatibility", o.Image.AppleBookCompatibility, true},
 	} {
 		if v.Condition {
 			if bv, ok := v.Value.(bool); ok {

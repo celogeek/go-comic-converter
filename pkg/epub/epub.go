@@ -160,7 +160,7 @@ func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
 // write cover image, used as thumbnail only (it has no page)
 func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, coverText string) error {
 	// the cover is reduced to the max size, the font follows
-	coverWidth, _ := epubimage.FitSize(img.Raw.Bounds().Dx(), img.Raw.Bounds().Dy())
+	coverWidth, _ := e.Image.Tile().FitSize(img.Raw.Bounds().Dx(), img.Raw.Bounds().Dy())
 	fontSize := epubimagefilters.TitleFontSize(coverWidth)
 	coverTitle, err := e.imageProcessor.CoverTitleData(epubimageprocessor.CoverTitleDataOptions{
 		Src:  img.Raw,
@@ -218,7 +218,7 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		[]byte(e.render(textTemplate, map[string]any{
 			"Title":    title,
 			"ViewPort": e.Image.View.Port(),
-			"Images":   e.tileImages("title", epubimage.Tiled(e.Image.View.Width, e.Image.View.Height)),
+			"Images":   e.tileImages("title", e.Image.Tile().Tiled(e.Image.View.Width, e.Image.View.Height)),
 		})),
 	); err != nil {
 		return err

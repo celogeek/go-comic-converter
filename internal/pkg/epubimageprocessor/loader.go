@@ -21,12 +21,17 @@ import (
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 	"github.com/nwaples/rardecode/v2"
+)
+
+// size of the page shown in place of an unreadable image.
+const (
+	placeholderWidth  = 1200
+	placeholderHeight = 1920
 )
 
 type task struct {
@@ -96,7 +101,7 @@ func (e ePUBImageProcessor) corruptedImage(path, name string) image.Image {
 	foreground := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Foreground)
 	background := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Background)
 
-	src := image.NewRGBA(image.Rect(0, 0, epubimage.MaxWidth, epubimage.MaxHeight))
+	src := image.NewRGBA(image.Rect(0, 0, placeholderWidth, placeholderHeight))
 	draw.Draw(src, src.Bounds(), image.NewUniform(background), image.Point{}, draw.Src)
 
 	fontSize := epubimagefilters.TitleFontSize(src.Bounds().Dx())
