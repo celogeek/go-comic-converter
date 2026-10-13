@@ -27,6 +27,21 @@ type EPUBImage struct {
 	Error               error
 }
 
+// SpaceKey key name of the blank page before the image
+func (i EPUBImage) SpaceKey() string {
+	return "space_" + utils.IntToString(i.Id)
+}
+
+// SpacePath path of the blank page
+func (i EPUBImage) SpacePath() string {
+	return "Text/" + i.SpaceKey() + ".xhtml"
+}
+
+// EPUBSpacePath path of the blank page into the EPUB
+func (i EPUBImage) EPUBSpacePath() string {
+	return "OEBPS/" + i.SpacePath()
+}
+
 func (i EPUBImage) PartKey() string {
 	return utils.IntToString(i.Id) + "_p" + utils.IntToString(i.Part)
 }

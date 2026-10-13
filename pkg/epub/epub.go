@@ -75,6 +75,7 @@ func New(options epuboptions.EPUBOptions) EPUB {
 
 var (
 	textTemplate  = template.Must(template.New("text").Parse(epubtemplates.Text))
+	blankTemplate = template.Must(template.New("blank").Parse(epubtemplates.Blank))
 	styleTemplate = template.Must(template.New("style").Parse(epubtemplates.Style))
 
 	multipleNewLines = regexp.MustCompile("\n+")
@@ -143,6 +144,17 @@ func (e epub) panelView(img epubimage.EPUBImage, images []epubtemplates.Image) *
 		ZoomImages: zoomImages,
 		Corners:    corners,
 	}
+}
+
+// write blank page
+func (e epub) writeBlank(wz epubzip.EPUBZip, img epubimage.EPUBImage) error {
+	return wz.WriteContent(
+		img.EPUBSpacePath(),
+		[]byte(e.render(blankTemplate, map[string]any{
+			"Title":    "Blank Page " + utils.IntToString(img.Id),
+			"ViewPort": e.Image.View.Port(),
+		})),
+	)
 }
 
 // write cover image, used as thumbnail only (it has no page)
@@ -472,6 +484,13 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 	for _, img := range part.Images {
 		if err := e.writeImage(wz, img, imgStorage); err != nil {
+			return err
+		}
+	}
+
+	// the blank pages listed in the content: the spine refers to them
+	for _, img := range opf.Spaces() {
+		if err := e.writeBlank(wz, img); err != nil {
 			return err
 		}
 	}

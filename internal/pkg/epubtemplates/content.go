@@ -143,7 +143,7 @@ func imageItems(key, path string, img epubimage.EPUBImage) []tag {
 }
 
 func (o Content) getManifest() []tag {
-	var imageTags, pageTags []tag
+	var imageTags, pageTags, spaceTags []tag
 	addTag := func(img epubimage.EPUBImage) {
 		for idx := range img.Tiles() {
 			imageTags = append(imageTags,
@@ -176,17 +176,46 @@ func (o Content) getManifest() []tag {
 	for _, img := range o.Images {
 		addTag(img)
 	}
+	for _, img := range o.Spaces() {
+		spaceTags = append(spaceTags,
+			tag{"item", tagAttrs{"id": img.SpaceKey(), "href": img.SpacePath(), "media-type": "application/xhtml+xml"}, ""},
+		)
+	}
 
 	items = append(items, imageTags...)
 	items = append(items, pageTags...)
+	items = append(items, spaceTags...)
 
 	return items
+}
+
+// Spaces images followed by a blank page, one per image id: the blank pages of the spine.
+func (o Content) Spaces() []epubimage.EPUBImage {
+	need := map[string]bool{}
+	for _, t := range o.getSpineAuto() {
+		if key, ok := t.attrs["idref"]; ok {
+			need[key] = true
+		}
+	}
+
+	var spaces []epubimage.EPUBImage
+	for _, img := range o.Images {
+		if key := img.SpaceKey(); need[key] {
+			spaces = append(spaces, img)
+			need[key] = false
+		}
+	}
+
+	return spaces
 }
 
 // getSpineAuto spine part of the content.
 //
 // The normal pages have no side: a side on every page shows the "Preview double page" on every page on Kindle.
 // A double page is centered, and the 2 parts of a split double page are facing each other.
+//
+// A blank page is added before them when they would start on the wrong side:
+// the first part of the split on the first side (right for manga), the double page on a spread of its own.
 func (o Content) getSpineAuto() []tag {
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.Manga {
@@ -197,15 +226,28 @@ func (o Content) getSpineAuto() []tag {
 	if o.HasTitlePage {
 		spine = append(spine, tag{"itemref", tagAttrs{"idref": "page_title"}, ""})
 	}
+
+	// the page is on the second side of the spread
+	onSecondSide := false
 	for _, img := range o.Images {
+		if onSecondSide && (img.DoublePage || img.Part == 1) {
+			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": second + " layout-blank"}, ""})
+			onSecondSide = false
+		}
+
 		attrs := tagAttrs{"idref": img.PageKey()}
 		switch {
 		case img.DoublePage:
 			attrs["properties"] = "page-spread-center"
+			onSecondSide = false
 		case img.Part == 1:
 			attrs["properties"] = first
+			onSecondSide = true
 		case img.Part == 2:
 			attrs["properties"] = second
+			onSecondSide = false
+		default:
+			onSecondSide = !onSecondSide
 		}
 		spine = append(spine, tag{"itemref", attrs, ""})
 	}

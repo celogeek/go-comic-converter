@@ -57,30 +57,47 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 }
 
 // Only the double pages have a side: a side on every page shows the "Preview double page" on every page on Kindle.
+// A blank page fills the spread when the double page would start on the wrong side.
 func TestContentSideOnlyDoublePage(t *testing.T) {
-	book := []epubimage.EPUBImage{
-		{Id: 0, Format: "jpeg"},
-		{Id: 1, Part: 1, Format: "jpeg"},
-		{Id: 1, Part: 2, Format: "jpeg"},
-		{Id: 2, Format: "jpeg", DoublePage: true},
-		{Id: 3, Format: "jpeg"},
+	page := func(id int) epubimage.EPUBImage { return epubimage.EPUBImage{Id: id, Format: "jpeg"} }
+	split := func(id int) []epubimage.EPUBImage {
+		return []epubimage.EPUBImage{{Id: id, Part: 1, Format: "jpeg"}, {Id: id, Part: 2, Format: "jpeg"}}
 	}
+	double := func(id int) epubimage.EPUBImage { return epubimage.EPUBImage{Id: id, Format: "jpeg", DoublePage: true} }
 
 	for _, c := range []struct {
+		name  string
 		manga bool
+		book  []epubimage.EPUBImage
 		want  []string
 	}{
-		{false, []string{"", "page-spread-left", "page-spread-right", "page-spread-center", ""}},
-		{true, []string{"", "page-spread-right", "page-spread-left", "page-spread-center", ""}},
+		{"split on the first side", false, append([]epubimage.EPUBImage{page(0), page(1)}, append(split(2), page(3))...),
+			[]string{"", "", "page-spread-left", "page-spread-right", ""}},
+		{"split on the first side, manga", true, append([]epubimage.EPUBImage{page(0), page(1)}, append(split(2), page(3))...),
+			[]string{"", "", "page-spread-right", "page-spread-left", ""}},
+		{"split on the second side", false, append([]epubimage.EPUBImage{page(0)}, append(split(1), page(2))...),
+			[]string{"", "page-spread-right layout-blank", "page-spread-left", "page-spread-right", ""}},
+		{"split on the second side, manga", true, append([]epubimage.EPUBImage{page(0)}, append(split(1), page(2))...),
+			[]string{"", "page-spread-left layout-blank", "page-spread-right", "page-spread-left", ""}},
+		{"double page on the second side", true, []epubimage.EPUBImage{page(0), double(1), page(2)},
+			[]string{"", "page-spread-left layout-blank", "page-spread-center", ""}},
+		{"double page on the first side", true, []epubimage.EPUBImage{page(0), page(1), double(2), page(3)},
+			[]string{"", "", "page-spread-center", ""}},
+		// the double page starts a new spread: the next page is on the first side again
+		{"split after a double page", true, append([]epubimage.EPUBImage{page(0), double(1)}, append(split(2), page(3))...),
+			[]string{"", "page-spread-left layout-blank", "page-spread-center", "page-spread-right", "page-spread-left", ""}},
 	} {
-		content := Content{
-			ImageOptions: epuboptions.Image{Manga: c.manga},
-			Images:       book,
-		}
+		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga}, Images: c.book}
+
 		var got []string
+		ids := map[string]bool{}
+		for _, it := range content.getManifest() {
+			ids[it.attrs["id"]] = true
+		}
 		for _, ref := range content.getSpineAuto() {
 			got = append(got, ref.attrs["properties"])
+			assert.Contains(t, ids, ref.attrs["idref"], "%s: spine refers to a missing page", c.name)
 		}
-		assert.Equal(t, c.want, got, "manga=%v", c.manga)
+		assert.Equal(t, c.want, got, c.name)
 	}
 }
