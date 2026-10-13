@@ -76,10 +76,15 @@ func TestTileSizeApple(t *testing.T) {
 	for _, c := range []struct {
 		w, h, cols, rows int
 	}{
-		// the native iPad size stays in one file
+		// the native size of the iPad mini, iPad and iPad Pro 11" stays in one file
+		{1488, 2266, 1, 1},
 		{1640, 2360, 1, 1},
-		{2366, 2366, 1, 1},
-		{2367, 2366, 2, 1},
+		{1668, 2420, 1, 1},
+		{2288, 2432, 1, 1},
+		{2289, 2432, 2, 1},
+		{2288, 2433, 1, 2},
+		// the iPad Pro 13" is over 5.6 million pixels
+		{2064, 2752, 1, 2},
 		{2460, 3540, 2, 2},
 	} {
 		cols, rows := TileApple.Grid(c.w, c.h)
@@ -92,6 +97,10 @@ func TestTileSizeApple(t *testing.T) {
 				t.Errorf("tile %d of %dx%d has %d pixels, Apple Books accepts 5.6M", idx, c.w, c.h, r.Dx()*r.Dy())
 			}
 		}
+	}
+
+	if TileApple.Width%16 != 0 || TileApple.Height%16 != 0 {
+		t.Errorf("apple tile %dx%d must be a multiple of 16", TileApple.Width, TileApple.Height)
 	}
 
 	// the zero value has no constraint: never tiled, never reduced

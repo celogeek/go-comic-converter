@@ -15,7 +15,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Customize brightness and contrast
 - Auto contrast
 - Double page handling (never kept untouched): split, split + rotate, or rotate only
-- Images are tiled only for the devices with a limit on the size of an image: Kindle (1200x1920, the SR resolution) and Apple Books (2366x2366, under the 5.6 million pixels limit).
+- Images are tiled only for the devices with a limit on the size of an image: Kindle (1200x1920, the SR resolution) and Apple Books (2288x2432, under the 5.6 million pixels limit).
   A bigger image is stored as a grid of tiles shown as one page, to keep the resolution on large devices. Other devices (Kobo, reMarkable) are never tiled
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)

@@ -128,10 +128,10 @@ func TestParseDevice(t *testing.T) {
 		{"KoCC", epuboptions.Kobo, 0, 0},
 		{"SR", epuboptions.Kindle, 1200, 1920},
 		{"HR", epuboptions.Kindle, 1200, 1920},
-		{"AB", epuboptions.Apple, 2366, 2366},
-		{"ABP13", epuboptions.Apple, 2366, 2366},
-		{"ABI", epuboptions.Apple, 2366, 2366},
-		{"ABD", epuboptions.Apple, 2366, 2366},
+		{"AB", epuboptions.Apple, 2288, 2432},
+		{"ABP13", epuboptions.Apple, 2288, 2432},
+		{"ABI", epuboptions.Apple, 2288, 2432},
+		{"ABD", epuboptions.Apple, 2288, 2432},
 		{"RM2", epuboptions.ReMarkable, 0, 0},
 	} {
 		t.Run(c.profile, func(t *testing.T) {

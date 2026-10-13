@@ -12,8 +12,10 @@ type TileSize struct {
 var (
 	// TileKindle is the SR resolution, what the Kindle handles without downscaling.
 	TileKindle = TileSize{Width: 1200, Height: 1920}
-	// TileApple is the biggest square under the 5.6 million pixels Apple Books accepts for an image.
-	TileApple = TileSize{Width: 2366, Height: 2366}
+	// TileApple is under the 5.6 million pixels Apple Books accepts for an image (5.56 million).
+	// It is tall enough for the native page of the iPad mini, iPad, iPad Air and iPad Pro 11".
+	// Each side is a multiple of 16, the size of a JPEG block, so a cut never splits one.
+	TileApple = TileSize{Width: 2288, Height: 2432}
 )
 
 // Limited tells if the device has a constraint on the size of an image.
