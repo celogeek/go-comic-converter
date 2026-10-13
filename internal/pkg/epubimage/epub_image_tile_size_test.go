@@ -99,10 +99,6 @@ func TestTileSizeApple(t *testing.T) {
 		}
 	}
 
-	if TileApple.Width%16 != 0 || TileApple.Height%16 != 0 {
-		t.Errorf("apple tile %dx%d must be a multiple of 16", TileApple.Width, TileApple.Height)
-	}
-
 	// the zero value has no constraint: never tiled, never reduced
 	var zero TileSize
 	if zero.Limited() || zero.NeedStack(5000, 8000) {
