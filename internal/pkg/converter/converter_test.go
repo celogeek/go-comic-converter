@@ -209,7 +209,7 @@ func TestProfilesString(t *testing.T) {
 	if want := len(NewProfiles()) + 2; len(lines) != want {
 		t.Fatalf("got %d lines, want %d", len(lines), want)
 	}
-	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Description"} {
+	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Landscape", "Description"} {
 		if !strings.Contains(lines[0], h) {
 			t.Errorf("header %q missing: %q", h, lines[0])
 		}

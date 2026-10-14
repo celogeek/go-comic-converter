@@ -48,6 +48,8 @@ type Image struct {
 	Zoom float64 `yaml:"zoom" json:"zoom"`
 	// ProfileZoom is the zoom of the profile, it comes only from the profile.
 	ProfileZoom float64 `yaml:"-" json:"profile_zoom"`
+	// ProfileLandscape tells if the profile has the landscape only mode, it comes only from the profile.
+	ProfileLandscape bool `yaml:"-" json:"profile_landscape"`
 	// Device is the device family of the profile, it comes only from the profile.
 	Device DeviceType `yaml:"-" json:"device"`
 }
@@ -69,9 +71,10 @@ func (i Image) KeepDoublePage() bool {
 
 // LandscapeMode tells if the pages are spread left and right, with a blank page to keep them in pairs.
 //
-// It is only available on Kindle, the other devices balance the pages by themselves.
+// It is only available on the profiles with the feature (Kindle Scribe),
+// the other devices balance the pages by themselves.
 func (i Image) LandscapeMode() bool {
-	return i.Landscape && i.Device == Kindle
+	return i.Landscape && i.ProfileLandscape
 }
 
 // deviceTiles max size of the file an image is stored in, for the devices with a constraint.

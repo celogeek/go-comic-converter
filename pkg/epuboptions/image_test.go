@@ -35,3 +35,19 @@ func TestImageTile(t *testing.T) {
 		}
 	}
 }
+
+// the landscape only mode needs the option and a profile that has it.
+func TestLandscapeMode(t *testing.T) {
+	for _, c := range []struct {
+		landscape, profile, want bool
+	}{
+		{false, false, false},
+		{true, false, false},
+		{false, true, false},
+		{true, true, true},
+	} {
+		if got := (Image{Landscape: c.landscape, ProfileLandscape: c.profile}).LandscapeMode(); got != c.want {
+			t.Errorf("LandscapeMode(%v, %v) = %v, want %v", c.landscape, c.profile, got, c.want)
+		}
+	}
+}

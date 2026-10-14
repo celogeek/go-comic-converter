@@ -160,7 +160,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.CombineSplitDoublePage, "combinesplitdoublepage", c.Options.Image.CombineSplitDoublePage, "Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
-	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle only: the pages are spread left and right, with a blank page to keep the double pages facing each other")
+	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle Scribe only: the pages are spread left and right, with a blank page to keep the double pages facing each other")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
@@ -307,6 +307,7 @@ func (c *Converter) Parse() {
 		c.Options.Image.AddPanelView = p.Features.PanelView
 		c.Options.Image.Device = p.Type
 		c.Options.Image.ProfileZoom = p.Features.Zoom
+		c.Options.Image.ProfileLandscape = p.Features.Landscape
 	}
 
 	if c.Options.MaxQuality {

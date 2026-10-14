@@ -25,6 +25,8 @@ type Features struct {
 	Color bool `json:"color"`
 	// PanelView is true when the device has no native panel view: it is added to the pages by default.
 	PanelView bool `json:"panel_view"`
+	// Landscape is true when the device has the landscape only mode (Kindle Scribe).
+	Landscape bool `json:"landscape"`
 	// Zoom is the default zoom of the images: they are stored bigger than the view (1 = the size of the view).
 	// It is 1 when unset.
 	Zoom float64 `json:"zoom"`
@@ -42,14 +44,14 @@ func NewProfiles() Profiles {
 		// Kindle, the generic resolutions first, then by year of release, newest first
 		{"HR", epuboptions.Kindle, 0, 2400, 3840, "Kindle High Resolution", Features{Color: true}},
 		{"SR", epuboptions.Kindle, 0, 1200, 1920, "Kindle Standard Resolution", Features{Color: true}},
-		{"KS3", epuboptions.Kindle, 2025, 1980, 2640, "Kindle Scribe 3", Features{}},
-		{"KSC", epuboptions.Kindle, 2025, 1980, 2640, "Kindle Scribe Colorsoft", Features{Color: true}},
+		{"KS3", epuboptions.Kindle, 2025, 1980, 2640, "Kindle Scribe 3", Features{Landscape: true}},
+		{"KSC", epuboptions.Kindle, 2025, 1980, 2640, "Kindle Scribe Colorsoft", Features{Color: true, Landscape: true}},
 		{"K12", epuboptions.Kindle, 2024, 1072, 1448, "Kindle 12", Features{}},
 		{"KPW12", epuboptions.Kindle, 2024, 1264, 1680, "Kindle Paperwhite 12/Signature Edition", Features{}},
 		{"KCS", epuboptions.Kindle, 2024, 1264, 1680, "Kindle Colorsoft", Features{Color: true}},
-		{"KS2", epuboptions.Kindle, 2024, 1860, 2480, "Kindle Scribe 2", Features{}},
+		{"KS2", epuboptions.Kindle, 2024, 1860, 2480, "Kindle Scribe 2", Features{Landscape: true}},
 		{"K11", epuboptions.Kindle, 2022, 1072, 1448, "Kindle 11", Features{}},
-		{"KS", epuboptions.Kindle, 2022, 1860, 2480, "Kindle Scribe", Features{}},
+		{"KS", epuboptions.Kindle, 2022, 1860, 2480, "Kindle Scribe", Features{Landscape: true}},
 		{"KPW5", epuboptions.Kindle, 2021, 1236, 1648, "Kindle Paperwhite 5/Signature Edition", Features{PanelView: true}},
 		{"K10", epuboptions.Kindle, 2019, 600, 800, "Kindle 10", Features{PanelView: true}},
 		{"KO3", epuboptions.Kindle, 2019, 1264, 1680, "Kindle Oasis 3", Features{PanelView: true}},
@@ -123,7 +125,7 @@ func NewProfiles() Profiles {
 // String table of the profiles: a row per profile, with the features of the device.
 func (p Profiles) String() string {
 	rows := make([][]string, 0, len(p)+2)
-	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Description"})
+	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Landscape", "Description"})
 	rows = append(rows, nil) // separator
 	for _, v := range p {
 		year := ""
@@ -138,6 +140,7 @@ func (p Profiles) String() string {
 			"x" + utils.FloatToString(v.Features.Zoom, -1),
 			yesOrNot(v.Features.Color),
 			yesOrNot(v.Features.PanelView),
+			yesOrNot(v.Features.Landscape),
 			v.Description,
 		})
 	}

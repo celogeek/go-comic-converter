@@ -274,7 +274,7 @@ func (o Content) getSpineAuto() []tag {
 
 // getSpineLandscape the pages are spread left and right, alternately, with a blank page when needed:
 // the double page is centered, then the pages start back on the first side (right for manga).
-// It is a Kindle only mode, with the blank pages of the Kindle (layout-blank).
+// It is a Kindle Scribe only mode, with the blank pages of the Kindle (layout-blank).
 func (o Content) getSpineLandscape() []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	getSpread := func(isDoublePage bool) string {
