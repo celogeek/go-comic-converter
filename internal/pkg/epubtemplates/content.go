@@ -71,7 +71,7 @@ func (o Content) String() string {
 		spine.CreateAttr("page-progression-direction", "ltr")
 	}
 
-	addToElement(spine, o.getSpineAuto)
+	addToElement(spine, o.getSpine)
 
 	guide := pkg.CreateElement("guide")
 	addToElement(guide, o.getGuide)
@@ -196,7 +196,7 @@ func (o Content) getManifest() []tag {
 // Spaces images followed by a blank page, one per image id: the blank pages of the spine.
 func (o Content) Spaces() []epubimage.EPUBImage {
 	need := map[string]bool{}
-	for _, t := range o.getSpineAuto() {
+	for _, t := range o.getSpine() {
 		if key, ok := t.attrs["idref"]; ok {
 			need[key] = true
 		}
@@ -213,69 +213,95 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 	return spaces
 }
 
-// getSpineAuto spine part of the content.
-//
-// Kindle is centered by default, and a side on every page shows the "Preview double page" on every page:
-// only the double page is centered, and the 2 parts of a split double page are facing each other.
-//
-// The other devices (Apple Books for example) don't support the center, they balance the left and right pages by themselves:
-// the pages have no hint, and a blank page fills the spread when a double page
-// (or the first part of a split) would start on the wrong side.
-func (o Content) getSpineAuto() []tag {
-	if o.ImageOptions.LandscapeMode() {
-		return o.getSpineLandscape()
+// getSpine spine part of the content, the way to spread the pages depends on the device.
+func (o Content) getSpine() []tag {
+	switch {
+	case o.ImageOptions.LandscapeMode():
+		return o.getSpineKindleLandscape()
+	case o.ImageOptions.Device == epuboptions.Kindle:
+		return o.getSpineKindle()
+	case o.ImageOptions.Device == epuboptions.Apple:
+		return o.getSpineApple()
+	default:
+		return o.getSpineKobo()
 	}
+}
 
+// getSpineKindle Kindle is centered by default, and a side on every page shows the "Preview double page" on every page:
+// only the double page is centered, and the 2 parts of a split double page are facing each other.
+func (o Content) getSpineKindle() []tag {
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.Manga {
 		first, second = second, first
 	}
-	filler := o.ImageOptions.Device != epuboptions.Kindle
 
-	var spine []tag
-	if o.HasTitlePage {
-		spine = append(spine, tag{"itemref", tagAttrs{"idref": "page_title"}, ""})
-	}
-
-	// the page is on the second side of the spread
-	onSecondSide := false
+	spine := o.getSpineTitle()
 	for _, img := range o.Images {
 		attrs := tagAttrs{"idref": img.PageKey()}
-
-		if filler {
-			if onSecondSide && (img.DoublePage || img.Part == 1) {
-				spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey()}, ""})
-				onSecondSide = false
-			}
-			switch {
-			case img.DoublePage, img.Part == 2:
-				onSecondSide = false
-			case img.Part == 1:
-				onSecondSide = true
-			default:
-				onSecondSide = !onSecondSide
-			}
-		} else {
-			switch {
-			case img.DoublePage:
-				attrs["properties"] = "page-spread-center"
-			case img.Part == 1:
-				attrs["properties"] = first
-			case img.Part == 2:
-				attrs["properties"] = second
-			}
+		switch {
+		case img.DoublePage:
+			attrs["properties"] = "page-spread-center"
+		case img.Part == 1:
+			attrs["properties"] = first
+		case img.Part == 2:
+			attrs["properties"] = second
 		}
-
 		spine = append(spine, tag{"itemref", attrs, ""})
 	}
 
 	return spine
 }
 
-// getSpineLandscape the pages are spread left and right, alternately, with a blank page when needed:
+// getSpineApple Apple Books doesn't support the center, it balances the left and right pages by itself:
+// the pages have no hint, and a blank page fills the spread when a double page
+// (or the first part of a split) would start on the wrong side.
+//
+// The first page is on the second side of the spread (left for manga), after the title.
+func (o Content) getSpineApple() []tag {
+	return o.getSpineFiller(true)
+}
+
+// getSpineKobo the same as Apple Books, but the first page is on the first side of the spread (right for manga).
+func (o Content) getSpineKobo() []tag {
+	return o.getSpineFiller(false)
+}
+
+// getSpineFiller the pages have no hint, the reader balances them: a blank page fills the spread
+// when a double page (or the first part of a split) would start on the wrong side.
+func (o Content) getSpineFiller(firstOnSecondSide bool) []tag {
+	spine := o.getSpineTitle()
+	onSecondSide := firstOnSecondSide
+	for _, img := range o.Images {
+		if onSecondSide && (img.DoublePage || img.Part == 1) {
+			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey()}, ""})
+			onSecondSide = false
+		}
+		switch {
+		case img.DoublePage, img.Part == 2:
+			onSecondSide = false
+		case img.Part == 1:
+			onSecondSide = true
+		default:
+			onSecondSide = !onSecondSide
+		}
+		spine = append(spine, tag{"itemref", tagAttrs{"idref": img.PageKey()}, ""})
+	}
+
+	return spine
+}
+
+// getSpineTitle the title page, alone and without hint.
+func (o Content) getSpineTitle() []tag {
+	if !o.HasTitlePage {
+		return nil
+	}
+	return []tag{{"itemref", tagAttrs{"idref": "page_title"}, ""}}
+}
+
+// getSpineKindleLandscape the pages are spread left and right, alternately, with a blank page when needed:
 // the double page is centered, then the pages start back on the first side (right for manga).
 // It is a Kindle Scribe only mode, with the blank pages of the Kindle (layout-blank).
-func (o Content) getSpineLandscape() []tag {
+func (o Content) getSpineKindleLandscape() []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	getSpread := func(isDoublePage bool) string {
 		isOnTheRight = !isOnTheRight

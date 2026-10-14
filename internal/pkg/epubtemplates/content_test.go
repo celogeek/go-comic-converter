@@ -27,7 +27,7 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 
 	for mode := range 3 {
 		for _, manga := range []bool{false, true} {
-			for _, device := range []epuboptions.DeviceType{epuboptions.Kindle, epuboptions.Apple} {
+			for _, device := range []epuboptions.DeviceType{epuboptions.Kindle, epuboptions.Apple, epuboptions.Kobo} {
 				for _, title := range []bool{false, true} {
 					for from := range book {
 						for to := from + 1; to <= len(book); to++ {
@@ -45,7 +45,7 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 							for id, n := range ids {
 								assert.Equal(t, 1, n, "%s: duplicate manifest id %s", name, id)
 							}
-							for _, ref := range c.getSpineAuto() {
+							for _, ref := range c.getSpine() {
 								assert.Contains(t, ids, ref.attrs["idref"], "%s: spine refers to a missing page", name)
 							}
 						}
@@ -86,20 +86,23 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 			[]string{"page_0_p0", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0"}},
 		{"kindle double page", epuboptions.Kindle, true, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "page_1_p0:page-spread-center", "page_2_p0"}},
-		{"apple split on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
+		// Kobo: the first page is on the first side of the spread, Apple on the second side
+		{"kobo split on the second side", epuboptions.Kobo, true, false, join(one(page(0)), split(1), one(page(2))),
+			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
+		{"apple split on the first side", epuboptions.Apple, true, false, join(one(page(0)), split(1), one(page(2))),
+			[]string{"page_0_p0", "page_1_p1", "page_1_p2", "page_2_p0"}},
+		{"kobo split on the first side", epuboptions.Kobo, false, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
 			[]string{"page_0_p0", "page_1_p0", "page_2_p1", "page_2_p2", "page_3_p0"}},
-		{"apple split on the second side", epuboptions.Apple, true, false, join(one(page(0)), split(1), one(page(2))),
-			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
-		{"apple double page on the second side", epuboptions.Apple, false, false, join(one(page(0)), one(double(1)), one(page(2))),
+		{"apple split on the second side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
+			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p1", "page_2_p2", "page_3_p0"}},
+		{"remarkable is like kobo", epuboptions.ReMarkable, false, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
-		{"kobo double page on the second side", epuboptions.Kobo, true, false, join(one(page(0)), one(double(1)), one(page(2))),
-			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
-		{"remarkable split on the second side", epuboptions.ReMarkable, false, false, join(one(page(0)), split(1), one(page(2))),
-			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
+		{"apple double page on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(double(1)), one(page(2))),
+			[]string{"page_0_p0", "page_1_p0", "page_2_p0"}},
+		{"apple double page on the second side", epuboptions.Apple, true, false, join(one(page(0)), one(page(1)), one(double(2))),
+			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p0"}},
 		{"kindle scribe landscape", epuboptions.Kindle, true, true, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left layout-blank", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
-		{"apple double page on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), one(double(2))),
-			[]string{"page_0_p0", "page_1_p0", "page_2_p0"}},
 	} {
 		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga, Landscape: c.landscape, ProfileLandscape: c.landscape, Device: c.device}, Images: c.book}
 
@@ -108,7 +111,7 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 			ids[it.attrs["id"]] = true
 		}
 		var got []string
-		for _, ref := range content.getSpineAuto() {
+		for _, ref := range content.getSpine() {
 			item := ref.attrs["idref"]
 			if p := ref.attrs["properties"]; p != "" {
 				item += ":" + p
