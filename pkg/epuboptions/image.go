@@ -48,6 +48,10 @@ type Image struct {
 	Zoom float64 `yaml:"zoom" json:"zoom"`
 	// ProfileZoom is the zoom of the profile, it comes only from the profile.
 	ProfileZoom float64 `yaml:"-" json:"profile_zoom"`
+	// ProfileManga tells if the profile supports the manga mode, it comes only from the profile.
+	ProfileManga bool `yaml:"-" json:"profile_manga"`
+	// ProfileColor tells if the profile has a color screen, it comes only from the profile.
+	ProfileColor bool `yaml:"-" json:"profile_color"`
 	// ProfileLandscape tells if the profile has the landscape only mode, it comes only from the profile.
 	ProfileLandscape bool `yaml:"-" json:"profile_landscape"`
 	// Device is the device family of the profile, it comes only from the profile.
@@ -67,6 +71,16 @@ func (i Image) RotateDoublePage() bool {
 // KeepDoublePage tells if the double page itself (not only its parts) is part of the output.
 func (i Image) KeepDoublePage() bool {
 	return i.DoublePageMode != DoublePageSplit
+}
+
+// MangaMode tells if the pages are read from right to left: the option, and a profile that supports it.
+func (i Image) MangaMode() bool {
+	return i.Manga && i.ProfileManga
+}
+
+// IsGrayScale tells if the images are in grayscale: the option, or a profile without color screen.
+func (i Image) IsGrayScale() bool {
+	return i.GrayScale || !i.ProfileColor
 }
 
 // LandscapeMode tells if the pages are spread left and right, with a blank page to keep them in pairs.

@@ -108,6 +108,8 @@ func TestCombineSplitDoublePage(t *testing.T) {
 					Format:                 "jpeg",
 					Quality:                90,
 					Manga:                  c.manga,
+					ProfileManga:           true,
+					ProfileColor:           true,
 					DoublePageMode:         epuboptions.DoublePageRotate,
 					CombineSplitDoublePage: c.combine,
 				},

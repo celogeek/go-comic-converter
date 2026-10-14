@@ -98,8 +98,8 @@ func (e ePUBImageProcessor) corruptedImage(path, name string) image.Image {
 	txt += "\nis corrupted!"
 
 	colors := e.Image.View.Color
-	foreground := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Foreground)
-	background := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, colors.Background)
+	foreground := utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, colors.Foreground)
+	background := utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, colors.Background)
 
 	src := image.NewRGBA(image.Rect(0, 0, placeholderWidth, placeholderHeight))
 	draw.Draw(src, src.Bounds(), image.NewUniform(background), image.Point{}, draw.Src)

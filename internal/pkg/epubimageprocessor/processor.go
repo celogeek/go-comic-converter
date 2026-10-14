@@ -198,7 +198,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 // processImage transforms the image, stores it and sends it to the output, with its parts when it is a split double page.
 func (e ePUBImageProcessor) processImage(imgStorage epubzip.StorageImageWriter, input task, output chan<- epubimage.EPUBImage) error {
-	img := e.transformImage(input, 0, e.Image.Manga)
+	img := e.transformImage(input, 0, e.Image.MangaMode())
 
 	// A double page that is not kept is not stored, it is only sent in case it ends up as the cover:
 	// the collector knows which image comes first once the blank ones are removed.
@@ -215,7 +215,7 @@ func (e ePUBImageProcessor) processImage(imgStorage epubzip.StorageImageWriter, 
 		return nil
 	}
 
-	for i, b := range []bool{e.Image.Manga, !e.Image.Manga} {
+	for i, b := range []bool{e.Image.MangaMode(), !e.Image.MangaMode()} {
 		img = e.transformImage(input, i+1, b)
 		if err := e.addImage(imgStorage, &img); err != nil {
 			return err
@@ -265,7 +265,7 @@ func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimag
 }
 
 func (e ePUBImageProcessor) createImage(src image.Image, r image.Rectangle) draw.Image {
-	if e.EPUBOptions.Image.GrayScale {
+	if e.EPUBOptions.Image.IsGrayScale() {
 		return image.NewGray(r)
 	}
 
@@ -368,7 +368,7 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 		))
 	}
 
-	if e.Image.GrayScale {
+	if e.Image.IsGrayScale() {
 		g.Add(gift.ColorFunc(func(r0, g0, b0, a0 float32) (r float32, g float32, b float32, a float32) {
 			y := utils.RGBToGray(e.Image.GrayScaleMode, r0, g0, b0)
 			return y, y, y, a0
@@ -440,7 +440,7 @@ func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.I
 	g.Add(o.Title)
 
 	var dst draw.Image
-	if o.Name == "cover" && e.Image.GrayScale {
+	if o.Name == "cover" && e.Image.IsGrayScale() {
 		dst = e.cover16LevelOfGray(g.Bounds(o.Src.Bounds()))
 	} else {
 		dst = e.createImage(o.Src, g.Bounds(o.Src.Bounds()))

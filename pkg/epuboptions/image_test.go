@@ -51,3 +51,34 @@ func TestLandscapeMode(t *testing.T) {
 		}
 	}
 }
+
+// the features of the profile win over the options: the converter can be called without the checks of the command line.
+func TestMangaMode(t *testing.T) {
+	for _, c := range []struct {
+		manga, profile, want bool
+	}{
+		{false, false, false},
+		{true, false, false},
+		{false, true, false},
+		{true, true, true},
+	} {
+		if got := (Image{Manga: c.manga, ProfileManga: c.profile}).MangaMode(); got != c.want {
+			t.Errorf("MangaMode(%v, %v) = %v, want %v", c.manga, c.profile, got, c.want)
+		}
+	}
+}
+
+func TestIsGrayScale(t *testing.T) {
+	for _, c := range []struct {
+		grayscale, color, want bool
+	}{
+		{false, false, true}, // no color screen: always gray
+		{true, false, true},
+		{false, true, false},
+		{true, true, true},
+	} {
+		if got := (Image{GrayScale: c.grayscale, ProfileColor: c.color}).IsGrayScale(); got != c.want {
+			t.Errorf("IsGrayScale(%v, %v) = %v, want %v", c.grayscale, c.color, got, c.want)
+		}
+	}
+}

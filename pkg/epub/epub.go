@@ -134,7 +134,7 @@ func (e epub) panelView(img epubimage.EPUBImage, images []epubtemplates.Image) *
 
 	// Reading order of the corners: left to right, or right to left for manga.
 	corners := []epubtemplates.PanelCorner{{Key: "TL", Ordinal: 1}, {Key: "TR", Ordinal: 2}, {Key: "BL", Ordinal: 3}, {Key: "BR", Ordinal: 4}}
-	if e.Image.Manga {
+	if e.Image.MangaMode() {
 		corners = []epubtemplates.PanelCorner{{Key: "TL", Ordinal: 2}, {Key: "TR", Ordinal: 1}, {Key: "BL", Ordinal: 4}, {Key: "BR", Ordinal: 3}}
 	}
 
@@ -170,8 +170,8 @@ func (e epub) writeCoverImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, cover
 			Align:       "bottom",
 			FontSize:    fontSize,
 			BorderWidth: epubimagefilters.TitleBorderWidth(fontSize),
-			Foreground:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground),
-			Background:  utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background),
+			Foreground:  utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Foreground),
+			Background:  utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Background),
 			Font:        e.TrueTypeFont,
 		},
 	})
@@ -227,11 +227,11 @@ func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error
 		return err
 	}
 
-	foreground := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)
-	background := utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background)
+	foreground := utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Foreground)
+	background := utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Background)
 
 	var img draw.Image
-	if e.Image.GrayScale {
+	if e.Image.IsGrayScale() {
 		img = image.NewGray(image.Rect(0, 0, e.Image.View.Width, e.Image.View.Height))
 	} else {
 		img = image.NewRGBA(image.Rect(0, 0, e.Image.View.Width, e.Image.View.Height))
@@ -467,8 +467,8 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		{"OEBPS/Text/style.css", e.render(styleTemplate, map[string]any{
 			"Width":      e.Image.View.Width,
 			"Height":     e.Image.View.Height,
-			"Foreground": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Foreground)),
-			"Background": utils.ColorToHex(utils.StyleColor(e.Image.GrayScale, e.Image.GrayScaleMode, e.Image.View.Color.Background)),
+			"Foreground": utils.ColorToHex(utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Foreground)),
+			"Background": utils.ColorToHex(utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Background)),
 		})},
 	}
 

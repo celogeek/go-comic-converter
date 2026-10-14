@@ -121,7 +121,7 @@ func (e ePUBImageProcessor) combine(first, second task) (task, bool) {
 	}
 
 	left, right := first.Image, second.Image
-	if e.Image.Manga {
+	if e.Image.MangaMode() {
 		left, right = right, left
 	}
 

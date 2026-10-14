@@ -308,6 +308,8 @@ func (c *Converter) Parse() {
 		c.Options.Image.Device = p.Type
 		c.Options.Image.ProfileZoom = p.Features.Zoom
 		c.Options.Image.ProfileLandscape = p.Features.Landscape
+		c.Options.Image.ProfileManga = p.Features.Manga
+		c.Options.Image.ProfileColor = p.Features.Color
 	}
 
 	if c.Options.MaxQuality {
