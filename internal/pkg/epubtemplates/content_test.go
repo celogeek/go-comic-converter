@@ -125,3 +125,32 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 		assert.Equal(t, c.want, got, c.name)
 	}
 }
+
+// Apple Books: the title page is alone, so the first page is on the first side, as for the other devices.
+func TestContentAppleTitlePage(t *testing.T) {
+	var book []epubimage.EPUBImage
+	for id := range 5 {
+		book = append(book, epubimage.EPUBImage{Id: id, Format: "jpeg"})
+	}
+	book = append(book,
+		epubimage.EPUBImage{Id: 5, Part: 1, Format: "jpeg"},
+		epubimage.EPUBImage{Id: 5, Part: 2, Format: "jpeg"},
+	)
+
+	for _, c := range []struct {
+		title bool
+		want  []string
+	}{
+		// 5 pages then the split: it starts on the second side, a blank page fills the spread
+		{true, []string{"page_title", "page_0_p0", "page_1_p0", "page_2_p0", "page_3_p0", "page_4_p0", "space_5", "page_5_p1", "page_5_p2"}},
+		// the first page is alone, the split starts on the first side
+		{false, []string{"page_0_p0", "page_1_p0", "page_2_p0", "page_3_p0", "page_4_p0", "page_5_p1", "page_5_p2"}},
+	} {
+		content := Content{HasTitlePage: c.title, ImageOptions: epuboptions.Image{Device: epuboptions.Apple}, Images: book}
+		var got []string
+		for _, ref := range content.getSpine() {
+			got = append(got, ref.attrs["idref"])
+		}
+		assert.Equal(t, c.want, got, "title=%v", c.title)
+	}
+}

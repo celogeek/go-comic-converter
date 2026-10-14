@@ -258,9 +258,10 @@ func (o Content) getSpineKindle() []tag {
 // the pages have no hint, and a blank page fills the spread when a double page
 // (or the first part of a split) would start on the wrong side.
 //
-// The first page is on the second side of the spread (left for manga), after the title.
+// The title page is alone, then the first page is on the first side of the spread.
+// Without it, the first page is alone (the cover) on the second side (left for manga).
 func (o Content) getSpineApple() []tag {
-	return o.getSpineFiller(true)
+	return o.getSpineFiller(!o.HasTitlePage)
 }
 
 // getSpineKobo the same as Apple Books, but the first page is on the first side of the spread (right for manga).
