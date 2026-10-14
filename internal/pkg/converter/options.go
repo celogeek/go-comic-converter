@@ -220,6 +220,7 @@ func (o *Options) ShowConfig() string {
 		{"Combine split double page", o.Image.CombineSplitDoublePage, o.Image.Format != "copy"},
 		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
 		{"Manga", o.Image.Manga, true},
+		{"Landscape only", o.Image.Landscape, o.Image.Device == epuboptions.Kindle},
 		{"Add panel view", o.Image.AddPanelView, true},
 		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},
 		{"Strip first directory from toc", o.StripFirstDirectoryFromToc, true},

@@ -171,6 +171,10 @@ func (o Content) getManifest() []tag {
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		)
 		items = append(items, imageItems("img_title", "Images/title", o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
+
+		if o.ImageOptions.LandscapeMode() {
+			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})
+		}
 	}
 
 	for _, img := range o.Images {
@@ -218,6 +222,10 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 // the pages have no hint, and a blank page fills the spread when a double page
 // (or the first part of a split) would start on the wrong side.
 func (o Content) getSpineAuto() []tag {
+	if o.ImageOptions.LandscapeMode() {
+		return o.getSpineLandscape()
+	}
+
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.Manga {
 		first, second = second, first
@@ -259,6 +267,47 @@ func (o Content) getSpineAuto() []tag {
 		}
 
 		spine = append(spine, tag{"itemref", attrs, ""})
+	}
+
+	return spine
+}
+
+// getSpineLandscape the pages are spread left and right, alternately, with a blank page when needed:
+// the double page is centered, then the pages start back on the first side (right for manga).
+// It is a Kindle only mode, with the blank pages of the Kindle (layout-blank).
+func (o Content) getSpineLandscape() []tag {
+	isOnTheRight := !o.ImageOptions.Manga
+	getSpread := func(isDoublePage bool) string {
+		isOnTheRight = !isOnTheRight
+		if isDoublePage {
+			// Center the double page then start back to comic mode (manga/normal)
+			isOnTheRight = !o.ImageOptions.Manga
+			return "page-spread-center"
+		}
+		if isOnTheRight {
+			return "page-spread-right"
+		}
+		return "page-spread-left"
+	}
+	getSpreadBlank := func() string {
+		return getSpread(false) + " layout-blank"
+	}
+
+	var spine []tag
+	if o.HasTitlePage {
+		spine = append(spine,
+			tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
+			tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
+		)
+	}
+	for _, img := range o.Images {
+		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
+			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": getSpreadBlank()}, ""})
+		}
+		spine = append(spine, tag{"itemref", tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)}, ""})
+	}
+	if o.ImageOptions.Manga == isOnTheRight {
+		spine = append(spine, tag{"itemref", tagAttrs{"idref": o.Images[len(o.Images)-1].SpaceKey(), "properties": getSpread(false)}, ""})
 	}
 
 	return spine

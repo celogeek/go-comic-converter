@@ -202,6 +202,19 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 
 // write title image
 func (e epub) writeTitleImage(wz epubzip.EPUBZip, title, titlePage string) error {
+	// the blank page before the title: the landscape mode keeps the pages in pairs
+	if e.Image.LandscapeMode() {
+		if err := wz.WriteContent(
+			"OEBPS/Text/space_title.xhtml",
+			[]byte(e.render(blankTemplate, map[string]any{
+				"Title":    "Blank Page Title",
+				"ViewPort": e.Image.View.Port(),
+			})),
+		); err != nil {
+			return err
+		}
+	}
+
 	// The title image has the view size, so it fills the page.
 	if err := wz.WriteContent(
 		"OEBPS/Text/title.xhtml",

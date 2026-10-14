@@ -36,6 +36,7 @@ type Image struct {
 	CombineSplitDoublePage    bool   `yaml:"combine_split_double_page" json:"combine_split_double_page"`
 	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
 	Manga                     bool   `yaml:"manga" json:"manga"`
+	Landscape                 bool   `yaml:"landscape" json:"landscape"`
 	AddPanelView              bool   `yaml:"-" json:"add_panel_view"`
 	View                      View   `yaml:"view" json:"view"`
 	GrayScale                 bool   `yaml:"grayscale" json:"grayscale"`
@@ -64,6 +65,13 @@ func (i Image) RotateDoublePage() bool {
 // KeepDoublePage tells if the double page itself (not only its parts) is part of the output.
 func (i Image) KeepDoublePage() bool {
 	return i.DoublePageMode != DoublePageSplit
+}
+
+// LandscapeMode tells if the pages are spread left and right, with a blank page to keep them in pairs.
+//
+// It is only available on Kindle, the other devices balance the pages by themselves.
+func (i Image) LandscapeMode() bool {
+	return i.Landscape && i.Device == Kindle
 }
 
 // deviceTiles max size of the file an image is stored in, for the devices with a constraint.

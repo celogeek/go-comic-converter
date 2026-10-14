@@ -73,32 +73,37 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 	one := func(i epubimage.EPUBImage) []epubimage.EPUBImage { return []epubimage.EPUBImage{i} }
 
 	for _, c := range []struct {
-		name   string
-		device epuboptions.DeviceType
-		manga  bool
-		book   []epubimage.EPUBImage
-		want   []string // idref[:properties]
+		name      string
+		device    epuboptions.DeviceType
+		manga     bool
+		landscape bool
+		book      []epubimage.EPUBImage
+		want      []string // idref[:properties]
 	}{
-		{"kindle split", epuboptions.Kindle, false, join(one(page(0)), split(1), one(page(2))),
+		{"kindle split", epuboptions.Kindle, false, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "page_1_p1:page-spread-left", "page_1_p2:page-spread-right", "page_2_p0"}},
-		{"kindle split manga", epuboptions.Kindle, true, join(one(page(0)), split(1), one(page(2))),
+		{"kindle split manga", epuboptions.Kindle, true, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0"}},
-		{"kindle double page", epuboptions.Kindle, true, join(one(page(0)), one(double(1)), one(page(2))),
+		{"kindle double page", epuboptions.Kindle, true, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "page_1_p0:page-spread-center", "page_2_p0"}},
-		{"apple split on the first side", epuboptions.Apple, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
+		{"apple split on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
 			[]string{"page_0_p0", "page_1_p0", "page_2_p1", "page_2_p2", "page_3_p0"}},
-		{"apple split on the second side", epuboptions.Apple, true, join(one(page(0)), split(1), one(page(2))),
+		{"apple split on the second side", epuboptions.Apple, true, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
-		{"apple double page on the second side", epuboptions.Apple, false, join(one(page(0)), one(double(1)), one(page(2))),
+		{"apple double page on the second side", epuboptions.Apple, false, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
-		{"kobo double page on the second side", epuboptions.Kobo, true, join(one(page(0)), one(double(1)), one(page(2))),
+		{"kobo double page on the second side", epuboptions.Kobo, true, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
-		{"remarkable split on the second side", epuboptions.ReMarkable, false, join(one(page(0)), split(1), one(page(2))),
+		{"remarkable split on the second side", epuboptions.ReMarkable, false, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
-		{"apple double page on the first side", epuboptions.Apple, false, join(one(page(0)), one(page(1)), one(double(2))),
+		{"kindle landscape", epuboptions.Kindle, true, true, join(one(page(0)), split(1), one(page(2))),
+			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left layout-blank", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
+		{"landscape is only for kindle", epuboptions.Kobo, true, true, join(one(page(0)), one(double(1)), one(page(2))),
+			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
+		{"apple double page on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), one(double(2))),
 			[]string{"page_0_p0", "page_1_p0", "page_2_p0"}},
 	} {
-		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga, Device: c.device}, Images: c.book}
+		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga, Landscape: c.landscape, Device: c.device}, Images: c.book}
 
 		ids := map[string]bool{}
 		for _, it := range content.getManifest() {

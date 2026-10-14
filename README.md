@@ -21,6 +21,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - Manga or Normal mode
+- Landscape only mode for Kindle (`-landscape`, off by default): the pages are spread left and right, with a blank page to keep the double pages facing each other
 - Embedded panel view for the older devices that need it (set by the profile)
 - The cover is the first image that is not blank
 - An unreadable image is replaced by a page with its name, instead of stopping the conversion
@@ -596,6 +597,8 @@ Config:
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
+  -landscape or -landscape=1 (to enabled), -landscape=0 (to disabled)
+    	Landscape only mode, Kindle only: the pages are spread left and right, with a blank page to keep the double pages facing each other
   -limitmb=int (default 200)
     	Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited
   -strip or -strip=1 (to enabled), -strip=0 (to disabled)
