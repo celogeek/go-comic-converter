@@ -42,6 +42,22 @@ func TestValidate(t *testing.T) {
 		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = true }, true},
 		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = false }, false},
 		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Manga = true }, false},
+		{"landscape with the split", func(c *Converter) {
+			c.Options.Profile = "KS"
+			c.Options.Image.Landscape = true
+			c.Options.Image.DoublePageMode = 0
+		}, false},
+		{"landscape with split + rotate", func(c *Converter) {
+			c.Options.Profile = "KS"
+			c.Options.Image.Landscape = true
+			c.Options.Image.DoublePageMode = 1
+		}, true},
+		{"landscape with rotate", func(c *Converter) {
+			c.Options.Profile = "KS"
+			c.Options.Image.Landscape = true
+			c.Options.Image.DoublePageMode = 2
+		}, true},
+		{"rotate without landscape", func(c *Converter) { c.Options.Profile = "KS"; c.Options.Image.DoublePageMode = 2 }, false},
 		{"zoom default", func(c *Converter) { c.Options.Image.Zoom = 0 }, false},
 		{"zoom min", func(c *Converter) { c.Options.Image.Zoom = 1 }, false},
 		{"zoom max", func(c *Converter) { c.Options.Image.Zoom = 3 }, false},

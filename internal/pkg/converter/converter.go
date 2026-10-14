@@ -433,6 +433,9 @@ func (c *Converter) Validate() error {
 	if c.Options.Image.Landscape && !p.Features.Landscape {
 		return fmt.Errorf("profile %q doesn't support the landscape only mode", c.Options.Profile)
 	}
+	if c.Options.Image.Landscape && c.Options.Image.DoublePageMode != epuboptions.DoublePageSplit {
+		return errors.New("the landscape only mode doesn't support the rotation of the double pages: use doublepagemode=0")
+	}
 
 	// LimitMb
 	if c.Options.LimitMb < 20 && c.Options.LimitMb != 0 {

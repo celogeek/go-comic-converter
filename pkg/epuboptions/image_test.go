@@ -82,3 +82,19 @@ func TestIsGrayScale(t *testing.T) {
 		}
 	}
 }
+
+// the landscape only mode doesn't support the rotation: the double page is split, whatever the mode.
+func TestLandscapeModeSplitsDoublePage(t *testing.T) {
+	for _, mode := range []int{DoublePageSplit, DoublePageSplitRotate, DoublePageRotate} {
+		i := Image{DoublePageMode: mode, Landscape: true, ProfileLandscape: true}
+		if !i.SplitDoublePage() || i.RotateDoublePage() || i.KeepDoublePage() {
+			t.Errorf("mode %d in landscape: split=%v rotate=%v keep=%v", mode, i.SplitDoublePage(), i.RotateDoublePage(), i.KeepDoublePage())
+		}
+	}
+
+	// without the landscape mode the mode is the one of the option
+	i := Image{DoublePageMode: DoublePageRotate}
+	if i.SplitDoublePage() || !i.RotateDoublePage() || !i.KeepDoublePage() {
+		t.Error("the rotate mode should be kept without the landscape mode")
+	}
+}

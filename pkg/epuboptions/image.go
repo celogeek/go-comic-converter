@@ -58,19 +58,27 @@ type Image struct {
 	Device DeviceType `yaml:"-" json:"device"`
 }
 
+// doublePageMode the double page mode in use: the landscape only mode doesn't support the rotation, the double page is split.
+func (i Image) doublePageMode() int {
+	if i.LandscapeMode() {
+		return DoublePageSplit
+	}
+	return i.DoublePageMode
+}
+
 // SplitDoublePage tells if a double page is split in 2 pages.
 func (i Image) SplitDoublePage() bool {
-	return i.DoublePageMode != DoublePageRotate
+	return i.doublePageMode() != DoublePageRotate
 }
 
 // RotateDoublePage tells if a double page is rotated.
 func (i Image) RotateDoublePage() bool {
-	return i.DoublePageMode != DoublePageSplit
+	return i.doublePageMode() != DoublePageSplit
 }
 
 // KeepDoublePage tells if the double page itself (not only its parts) is part of the output.
 func (i Image) KeepDoublePage() bool {
-	return i.DoublePageMode != DoublePageSplit
+	return i.doublePageMode() != DoublePageSplit
 }
 
 // MangaMode tells if the pages are read from right to left: the option, and a profile that supports it.
