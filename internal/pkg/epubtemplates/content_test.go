@@ -97,6 +97,9 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p1", "page_2_p2", "page_3_p0"}},
 		{"remarkable is like kobo", epuboptions.ReMarkable, false, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
+		// the landscape mode is a Kindle spine for now
+		{"landscape is not for kobo", epuboptions.Kobo, true, true, join(one(page(0)), split(1), one(page(2))),
+			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
 		{"apple double page on the first side", epuboptions.Apple, false, false, join(one(page(0)), one(double(1)), one(page(2))),
 			[]string{"page_0_p0", "page_1_p0", "page_2_p0"}},
 		{"apple double page on the second side", epuboptions.Apple, true, false, join(one(page(0)), one(page(1)), one(double(2))),

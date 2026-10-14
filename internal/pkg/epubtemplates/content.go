@@ -215,12 +215,14 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 
 // getSpine spine part of the content, the way to spread the pages depends on the device.
 func (o Content) getSpine() []tag {
-	switch {
-	case o.ImageOptions.LandscapeMode():
-		return o.getSpineKindleLandscape()
-	case o.ImageOptions.Device == epuboptions.Kindle:
+	switch o.ImageOptions.Device {
+	case epuboptions.Kindle:
+		// the landscape mode of the other devices will have its own spine
+		if o.ImageOptions.LandscapeMode() {
+			return o.getSpineKindleLandscape()
+		}
 		return o.getSpineKindle()
-	case o.ImageOptions.Device == epuboptions.Apple:
+	case epuboptions.Apple:
 		return o.getSpineApple()
 	default:
 		return o.getSpineKobo()
