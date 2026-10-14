@@ -596,7 +596,7 @@ Config:
   -noblankimage or -noblankimage=1 (to enabled), -noblankimage=0 (to disabled) (default 1)
     	Remove blank image
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
-    	Manga mode (right to left)
+    	Manga mode (right to left), not supported by the reMarkable
   -landscape or -landscape=1 (to enabled), -landscape=0 (to disabled)
     	Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other
   -limitmb=int (default 200)

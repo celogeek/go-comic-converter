@@ -95,8 +95,8 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 			[]string{"page_0_p0", "page_1_p0", "page_2_p1", "page_2_p2", "page_3_p0"}},
 		{"apple split on the second side", epuboptions.Apple, false, false, join(one(page(0)), one(page(1)), split(2), one(page(3))),
 			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p1", "page_2_p2", "page_3_p0"}},
-		{"remarkable is like kobo", epuboptions.ReMarkable, false, false, join(one(page(0)), one(double(1)), one(page(2))),
-			[]string{"page_0_p0", "space_1", "page_1_p0", "page_2_p0"}},
+		{"remarkable has no spread, no filler", epuboptions.ReMarkable, false, false, join(one(page(0)), split(1), one(double(2)), one(page(3))),
+			[]string{"page_0_p0", "page_1_p1", "page_1_p2", "page_2_p0", "page_3_p0"}},
 		// the landscape mode is a Kindle spine for now
 		{"landscape is not for kobo", epuboptions.Kobo, true, true, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
@@ -157,5 +157,24 @@ func TestContentTitlePage(t *testing.T) {
 			got = append(got, ref.attrs["idref"])
 		}
 		assert.Equal(t, c.want, got, "%s title=%v", c.device, c.title)
+	}
+}
+
+// the reMarkable doesn't support the spread.
+func TestContentSpread(t *testing.T) {
+	for device, want := range map[epuboptions.DeviceType]string{
+		epuboptions.ReMarkable: "none",
+		epuboptions.Kindle:     "auto",
+		epuboptions.Kobo:       "auto",
+		epuboptions.Apple:      "auto",
+	} {
+		c := Content{ImageOptions: epuboptions.Image{Device: device}, Images: []epubimage.EPUBImage{{Format: "jpeg"}}}
+		var got string
+		for _, m := range c.getMeta() {
+			if m.attrs["property"] == "rendition:spread" {
+				got = m.value
+			}
+		}
+		assert.Equal(t, want, got, device)
 	}
 }

@@ -105,7 +105,7 @@ func (o Content) getMeta() []tag {
 
 	metas = append(metas, []tag{
 		{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
-		{"meta", tagAttrs{"property": "rendition:spread"}, "auto"},
+		{"meta", tagAttrs{"property": "rendition:spread"}, o.spread()},
 		{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
 	}...)
 
@@ -213,6 +213,14 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 	return spaces
 }
 
+// spread global rendition of the spread: the reMarkable doesn't support it.
+func (o Content) spread() string {
+	if o.ImageOptions.Device == epuboptions.ReMarkable {
+		return "none"
+	}
+	return "auto"
+}
+
 // getSpine spine part of the content, the way to spread the pages depends on the device.
 func (o Content) getSpine() []tag {
 	switch o.ImageOptions.Device {
@@ -224,6 +232,8 @@ func (o Content) getSpine() []tag {
 		return o.getSpineKindle()
 	case epuboptions.Apple:
 		return o.getSpineApple()
+	case epuboptions.ReMarkable:
+		return o.getSpineReMarkable()
 	default:
 		return o.getSpineKobo()
 	}
@@ -262,6 +272,17 @@ func (o Content) getSpineKindle() []tag {
 // Without it, the first page is alone (the cover) on the second side (left for manga).
 func (o Content) getSpineApple() []tag {
 	return o.getSpineFiller(!o.HasTitlePage)
+}
+
+// getSpineReMarkable the reMarkable doesn't support the spread: the pages are alone, in portrait and in landscape,
+// without hint nor blank page.
+func (o Content) getSpineReMarkable() []tag {
+	spine := o.getSpineTitle()
+	for _, img := range o.Images {
+		spine = append(spine, tag{"itemref", tagAttrs{"idref": img.PageKey()}, ""})
+	}
+
+	return spine
 }
 
 // getSpineKobo the same as Apple Books, but there is no cover alone: the title page takes the first side
