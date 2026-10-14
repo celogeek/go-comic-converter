@@ -106,7 +106,7 @@ func (o Content) getMeta() []tag {
 	metas = append(metas, []tag{
 		{"meta", tagAttrs{"property": "rendition:layout"}, "pre-paginated"},
 		{"meta", tagAttrs{"property": "rendition:spread"}, o.spread()},
-		{"meta", tagAttrs{"property": "rendition:orientation"}, "auto"},
+		{"meta", tagAttrs{"property": "rendition:orientation"}, o.orientation()},
 	}...)
 
 	if o.ImageOptions.MangaMode() {
@@ -217,6 +217,14 @@ func (o Content) Spaces() []epubimage.EPUBImage {
 func (o Content) spread() string {
 	if o.ImageOptions.Device == epuboptions.ReMarkable {
 		return "none"
+	}
+	return "auto"
+}
+
+// orientation global rendition of the orientation: the landscape only mode forces the landscape.
+func (o Content) orientation() string {
+	if o.ImageOptions.LandscapeMode() {
+		return "landscape"
 	}
 	return "auto"
 }

@@ -160,6 +160,32 @@ func TestContentTitlePage(t *testing.T) {
 	}
 }
 
+// the landscape only mode forces the landscape orientation.
+func TestContentOrientation(t *testing.T) {
+	for _, c := range []struct {
+		name      string
+		landscape bool // the option, with a profile that has the feature
+		profile   bool
+		want      string
+	}{
+		{"default", false, true, "auto"},
+		{"landscape mode", true, true, "landscape"},
+		{"profile without the feature", true, false, "auto"},
+	} {
+		content := Content{
+			ImageOptions: epuboptions.Image{Device: epuboptions.Kindle, Landscape: c.landscape, ProfileLandscape: c.profile},
+			Images:       []epubimage.EPUBImage{{Format: "jpeg"}},
+		}
+		var got string
+		for _, m := range content.getMeta() {
+			if m.attrs["property"] == "rendition:orientation" {
+				got = m.value
+			}
+		}
+		assert.Equal(t, c.want, got, c.name)
+	}
+}
+
 // the reMarkable doesn't support the spread.
 func TestContentSpread(t *testing.T) {
 	for device, want := range map[epuboptions.DeviceType]string{
