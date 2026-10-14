@@ -302,7 +302,7 @@ func (o Content) getSpineTitle() []tag {
 
 // getSpineKindleLandscape the pages are spread left and right, alternately, with a blank page when needed:
 // the double page is centered, then the pages start back on the first side (right for manga).
-// It is a Kindle Scribe only mode, with the blank pages of the Kindle (layout-blank).
+// It is a Kindle Scribe only mode. The blank pages are not layout-blank, it only hides them in portrait.
 func (o Content) getSpineKindleLandscape() []tag {
 	isOnTheRight := !o.ImageOptions.Manga
 	getSpread := func(isDoublePage bool) string {
@@ -317,20 +317,17 @@ func (o Content) getSpineKindleLandscape() []tag {
 		}
 		return "page-spread-left"
 	}
-	getSpreadBlank := func() string {
-		return getSpread(false) + " layout-blank"
-	}
 
 	var spine []tag
 	if o.HasTitlePage {
 		spine = append(spine,
-			tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpreadBlank()}, ""},
+			tag{"itemref", tagAttrs{"idref": "space_title", "properties": getSpread(false)}, ""},
 			tag{"itemref", tagAttrs{"idref": "page_title", "properties": getSpread(false)}, ""},
 		)
 	}
 	for _, img := range o.Images {
 		if (img.DoublePage || img.Part == 1) && o.ImageOptions.Manga == isOnTheRight {
-			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": getSpreadBlank()}, ""})
+			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": getSpread(false)}, ""})
 		}
 		spine = append(spine, tag{"itemref", tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)}, ""})
 	}

@@ -105,7 +105,7 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 		{"apple double page on the second side", epuboptions.Apple, true, false, join(one(page(0)), one(page(1)), one(double(2))),
 			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p0"}},
 		{"kindle scribe landscape", epuboptions.Kindle, true, true, join(one(page(0)), split(1), one(page(2))),
-			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left layout-blank", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
+			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
 	} {
 		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga, Landscape: c.landscape, ProfileLandscape: c.landscape, Device: c.device}, Images: c.book}
 
