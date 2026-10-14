@@ -598,7 +598,7 @@ Config:
   -manga or -manga=1 (to enabled), -manga=0 (to disabled)
     	Manga mode (right to left)
   -landscape or -landscape=1 (to enabled), -landscape=0 (to disabled)
-    	Landscape only mode, Kindle Scribe only: the pages are spread left and right, with a blank page to keep the double pages facing each other
+    	Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other
   -limitmb=int (default 200)
     	Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited
   -strip or -strip=1 (to enabled), -strip=0 (to disabled)

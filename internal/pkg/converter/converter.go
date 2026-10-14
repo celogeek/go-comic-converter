@@ -160,7 +160,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.CombineSplitDoublePage, "combinesplitdoublepage", c.Options.Image.CombineSplitDoublePage, "Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
 	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left)")
-	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle Scribe only: the pages are spread left and right, with a blank page to keep the double pages facing each other")
+	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
 	c.AddIntParam(&c.Options.SortPathMode, "sort", c.Options.SortPathMode, "Sort path mode\n0 = alpha for path and file\n1 = alphanumeric for path and alpha for file\n2 = alphanumeric for path and file")
@@ -420,6 +420,11 @@ func (c *Converter) Validate() error {
 	// Grayscale
 	if !p.Features.Color && !c.Options.Image.GrayScale {
 		return fmt.Errorf("profile %q doesn't support color, grayscale can't be turned off", c.Options.Profile)
+	}
+
+	// Landscape
+	if c.Options.Image.Landscape && !p.Features.Landscape {
+		return fmt.Errorf("profile %q doesn't support the landscape only mode", c.Options.Profile)
 	}
 
 	// LimitMb
