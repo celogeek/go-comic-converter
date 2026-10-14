@@ -10,6 +10,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Support input from zip, cbz, rar, cbr, pdf, directory
 - Support all Kindle, Kobo and reMarkable devices
 - Support Landscape and Portrait mode
+- The pages are spread the way each device reads them best (see "How the pages are spread")
 - Customize output image quality
 - Intelligent cropping (support removing even page numbers)
 - Customize brightness and contrast
@@ -20,8 +21,9 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Zoom of the stored images (`-zoom`): they are stored bigger than the device (1.5 for Apple Books, as advised by Apple) for a better quality when you zoom
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
-- Manga or Normal mode
-- Landscape only mode for Kindle Scribe (`-landscape`, off by default): the pages are spread left and right, with a blank page to keep the double pages facing each other
+- Manga or Normal mode (a feature of the profile: not supported by the reMarkable)
+- Landscape only mode for the Kindle Scribe profiles (`-landscape`, off by default): the orientation is forced to landscape, and the pages are spread left and right with a blank page to keep the double pages facing each other.
+  The double pages are split, the rotation is not supported. It is an error with the other profiles
 - Embedded panel view for the older devices that need it (set by the profile)
 - The cover is the first image that is not blank
 - An unreadable image is replaced by a page with its name, instead of stopping the conversion
@@ -30,7 +32,9 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - 3 sorting methods (depending on your source, you can ensure the page go in the right order)
 - Save and reuse your own perfect settings
 - Multi tasks for fast conversion
-- Apple Books mode, set by the profile: the double page is split and keeps its aspect, the spread follows Apple Books, and the tile size follows its limit (`AB` profile)
+- Apple Books mode, set by the profile: the double page is split and keeps its aspect, the pages are balanced by Apple Books with a blank page when needed, and the tile size follows its limit (`AB` profile)
+- The features of the profile (color, panel view, zoom, manga, landscape) are checked where the options are used, so they also apply when the converter is called without the checks of the command line
+- reMarkable: one image per page, no spread, no tile and no manga mode
 - JSON output for programmatic usage
 - Support cover caption with the part number when the EPUB is split
 - Support for own font for the title page and the cover caption
@@ -43,6 +47,26 @@ The panel view is handled natively by recent Kindles, for example the Kindle Scr
 The embedded panel view comes only from the profile: it is enabled for the older devices that need it, and can't be changed from the command line or the saved config.
 
 The grayscale can only be turned off (`-grayscale=0`) with a profile of a color device (the `Color` column of the profiles, see `-profile`).
+
+# How the pages are spread
+
+The way to spread the pages depends on the device, because they don't read the EPUB the same way:
+
+| Device | Normal page | Double page | Split double page | Blank page |
+|---|---|---|---|---|
+| Kindle | no side (centered by default) | centered | 2 parts facing each other | never |
+| Kindle Scribe with `-landscape` | left / right, alternately | centered | 2 parts facing each other | when a double page would start on the wrong side |
+| Apple Books | no hint, balanced by the reader | no hint | no hint | before a double page, or a split, that would start on the wrong side |
+| Kobo and the other devices | no hint, balanced by the reader | no hint | no hint | same as Apple Books |
+| reMarkable | no spread | no spread | no spread | never |
+
+- Kindle: a side on every page makes the Kindle show the "Preview double page" on every page, so only the double pages have one.
+- The landscape only mode forces the orientation to landscape. It is only available for the Kindle Scribe profiles.
+- Apple Books: the title page is alone, so the first page is on the first side of the spread (right for manga).
+  Without a title page the first page is the cover, alone on the second side.
+- Kobo and the others: the title page takes the first side, so the first page is on the second side.
+  Without a title page the first page is on the first side.
+- reMarkable: `rendition:spread` is `none`, each page has one image (no tile), and the manga mode is refused.
 
 # Installation
 
@@ -205,6 +229,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -300,6 +325,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -329,6 +355,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -357,6 +384,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -388,6 +416,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : auto
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
@@ -436,10 +465,10 @@ Options:
     Quality                         : 90
     Grayscale                       : 1
     Grayscale mode                  : luminance
-    Double page mode                : split
-    Combine split double page       : 1
+    Auto contrast                   : 1
     Double page mode                : split
     Keep split double page aspect   : 1
+    Combine split double page       : 1
     No blank image                  : 1
     Manga                           : 1
     Limit                           : 200 Mb
@@ -448,6 +477,7 @@ Options:
     Background color                : #FFFFFF
     Resize                          : 1
     Aspect ratio                    : 1:1.60
+    Zoom                            : 1 (profile)
     Title page                      : always
     Cover caption                   : 1
     Font                            : Literata (embedded)
