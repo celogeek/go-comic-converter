@@ -264,9 +264,11 @@ func (o Content) getSpineApple() []tag {
 	return o.getSpineFiller(!o.HasTitlePage)
 }
 
-// getSpineKobo the same as Apple Books, but the first page is on the first side of the spread (right for manga).
+// getSpineKobo the same as Apple Books, but there is no cover alone: the title page takes the first side
+// of the spread, and the first page is on the second side (left for manga).
+// Without a title page, the first page is on the first side (right for manga).
 func (o Content) getSpineKobo() []tag {
-	return o.getSpineFiller(false)
+	return o.getSpineFiller(o.HasTitlePage)
 }
 
 // getSpineFiller the pages have no hint, the reader balances them: a blank page fills the spread
@@ -293,7 +295,7 @@ func (o Content) getSpineFiller(firstOnSecondSide bool) []tag {
 	return spine
 }
 
-// getSpineTitle the title page, alone and without hint.
+// getSpineTitle the title page, without hint.
 func (o Content) getSpineTitle() []tag {
 	if !o.HasTitlePage {
 		return nil
