@@ -76,8 +76,8 @@ func (p *webtoonPager) rowSpread(y int) int {
 
 // webtoonGap a gap between 2 panels: where to cut it, and its number of rows.
 //
-// A page ends with a small margin of the gap, the rest is left to the next page where it is trimmed:
-// a black panel is a gap too, cut in the middle it would be shown at the end of the previous page.
+// A page ends where the gap starts, the gap is left to the next page where it is trimmed:
+// a black background is a gap too, it would be shown at the end of the previous page.
 type webtoonGap struct {
 	at, rows int
 }
@@ -101,7 +101,7 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 					run++
 				}
 			}
-			gaps = append(gaps, webtoonGap{at: start + min(run/2, p.pageH*webtoonMargin/100), rows: run})
+			gaps = append(gaps, webtoonGap{at: start, rows: run})
 		}
 		run = 0
 	}
