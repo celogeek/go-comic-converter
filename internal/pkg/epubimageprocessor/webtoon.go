@@ -37,9 +37,9 @@ const (
 	webtoonEdgeMainColor = 75
 	// gaps that differ by more than this (from 0 to 255) are 2 different backgrounds: a black scene and a white one
 	webtoonBackgroundChange = 64
-	// the new background is a gap of at least this height (in percent of the page height):
-	// a shorter one is a flat part of a drawing (a sky)
-	webtoonBackgroundMinRows = 3
+	// a gutter between 2 panels is a gap of at least this height (in percent of the page height),
+	// a shorter one can be a flat part of a drawing (a sky): it is only cut when there is no gutter
+	webtoonGutterMinRows = 3
 	// the page can be longer than the view (up to this ratio, in percent of its height) to end with its scene:
 	// the speed lines of a black scene that fade in the white of the next one are not shown on a white page
 	webtoonSceneStretch = 150
@@ -190,8 +190,9 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 //
 // A panel is never cut when there is a gap to cut in, in this order:
 //   - the first change of background on the page (see background), even a bit after the end of the page,
-//   - the biggest gap of the window at the end of the page,
-//   - the last gap before the window, the page is shorter than the view,
+//   - the biggest gutter of the window at the end of the page,
+//   - the last gutter before the window, the page is shorter than the view,
+//   - the same with the gaps that are not gutters (see gutter),
 //   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
 //   - otherwise the cut goes through the drawing, at the end of the page (hard).
 //
@@ -208,24 +209,28 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	}
 	if bg := p.background(limit); bg != nil {
 		for _, g := range p.gaps(minEnd, sceneEnd) {
-			if abs(g.gray-grayOf(bg)) > webtoonBackgroundChange && g.rows*100 >= p.pageH*webtoonBackgroundMinRows {
+			if abs(g.gray-grayOf(bg)) > webtoonBackgroundChange && p.gutter(g) {
 				return g.at, false, true
 			}
 		}
 	}
 
-	if gaps := p.gaps(from, limit); len(gaps) > 0 {
-		best := gaps[0]
-		for _, g := range gaps[1:] {
-			if g.rows >= best.rows {
-				best = g
+	window, before := p.gaps(from, limit), p.gaps(minEnd, from)
+	for _, gutter := range []bool{true, false} {
+		var best *webtoonGap
+		for _, g := range window {
+			if (!gutter || p.gutter(g)) && (best == nil || g.rows >= best.rows) {
+				best = &g
 			}
 		}
-		return best.at, false, true
-	}
-
-	if gaps := p.gaps(minEnd, from); len(gaps) > 0 {
-		return gaps[len(gaps)-1].at, false, true
+		if best != nil {
+			return best.at, false, true
+		}
+		for _, g := range slices.Backward(before) {
+			if !gutter || p.gutter(g) {
+				return g.at, false, true
+			}
+		}
 	}
 
 	maxEnd := p.top + p.pageH*webtoonMaxStretch/100
@@ -237,6 +242,11 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	}
 
 	return limit, true, true
+}
+
+// gutter tells if the gap is tall enough to be between 2 panels.
+func (p *webtoonPager) gutter(g webtoonGap) bool {
+	return g.rows*100 >= p.pageH*webtoonGutterMinRows
 }
 
 // background color of the page that starts at p.top: the one of the gap it starts in or after,
