@@ -8,7 +8,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 
 # Features
 - Support input from zip, cbz, rar, cbr, pdf, directory
-- Support all Kindle, Kobo and reMarkable devices
+- Support all Kindle, Kobo and reMarkable devices, and Apple Books
 - Support Landscape and Portrait mode
 - The pages are spread the way each device reads them best (see "How the pages are spread")
 - Customize output image quality
@@ -141,7 +141,7 @@ $ go install github.com/celogeek/go-comic-converter/v3@v3.0.0
 
 # Supported image files
 
-The supported image files are jpeg and png from the sources.
+The supported image files are jpeg, png, webp and tiff from the sources.
 
 The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`.
 
@@ -163,7 +163,7 @@ By default, it will output: ~/Download/MyComic.epub
 
 ## Convert CBZ, ZIP, CBR, RAR, PDF
 
-Convert every supported image files found in the input directory:
+Convert every supported image files found in the archive, or every page of the PDF:
 
 ```
 $ go-comic-converter -profile SR -input ~/Download/MyComic.[CBZ,ZIP,CBR,RAR,PDF]
@@ -324,6 +324,7 @@ Options:
     Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
+    Mode                            : comic
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -383,6 +384,7 @@ Options:
     Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
+    Mode                            : comic
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -415,6 +417,7 @@ Options:
     Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
+    Mode                            : comic
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -461,8 +464,19 @@ and every option that differs from the built-in default. The options at their de
 After playing around with the options, I have my perfect settings for all my devices.
 
 ```
-$ go-comic-converter -reset
-$ go-comic-converter -profile KS -quality 90 -mode 1 -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -titlepage=1 -covercaption=1 -combinesplitdoublepage=1 --doublepagemode=0 -autocontrast=1 -save
+$ go-comic-converter -ignore-config \
+  -profile=KS \
+  -quality=90 \
+  -grayscale-mode=2 \
+  -crop=0 \
+  -autocontrast=1 \
+  -keepsplitdoublepageaspect=0 \
+  -combinesplitdoublepage=1 \
+  -mode=1 \
+  -aspect-ratio=1.6 \
+  -save
+
+Go Comic Converter
 
 Options:
     Profile                         : KS - Kindle Scribe - 1860x2480
@@ -472,7 +486,6 @@ Options:
     Grayscale mode                  : luminance
     Auto contrast                   : 1
     Double page mode                : split
-    Keep split double page aspect   : 1
     Combine split double page       : 1
     No blank image                  : 1
     Mode                            : manga (right to left)
@@ -635,7 +648,7 @@ Config:
     	0 = comic (left to right)
     	1 = manga (right to left), not supported by all the devices (the reMarkable for example)
     	2 = webtoon: the images of each directory are joined, and cut into pages of the size of the view, in the gaps between the panels
-    	    the options about the double pages, the crop and the blank images are ignored (default 0)
+    	    the options about the double pages, the crop and the blank images are ignored
   -landscape or -landscape=1 (to enabled), -landscape=0 (to disabled)
     	Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other
   -limitmb=int (default 200)
