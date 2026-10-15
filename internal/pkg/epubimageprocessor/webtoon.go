@@ -137,6 +137,19 @@ func (p *webtoonPager) gapColor(y int) color.Color {
 	return p.rowColor(y)
 }
 
+// gapAbove color of the gap the page that starts at y was cut in: the row above, or the first row of the page
+// when the page starts where the gap ends. nil without a gap.
+//
+// The row above comes first: the first row can be the border of the panel, that is flat too.
+func (p *webtoonPager) gapAbove(y int) color.Color {
+	if y > 0 {
+		if c := p.gapColor(y - 1); c != nil {
+			return c
+		}
+	}
+	return p.gapColor(y)
+}
+
 // webtoonGap a gap between 2 panels: where to cut it, and its number of rows.
 //
 // A page ends where the gap starts, the gap is left to the next page where it is trimmed:
@@ -226,11 +239,12 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	return limit, true, true
 }
 
-// background color of the page that starts at p.top: the one of its top when it is flat, or of its first gap before limit.
+// background color of the page that starts at p.top: the one of the gap it starts in or after,
+// or of its first gap before limit.
 //
 // A page doesn't mix 2 backgrounds: a white panel after a black scene starts a new page.
 func (p *webtoonPager) background(limit int) color.Color {
-	if c := p.gapColor(p.top); c != nil {
+	if c := p.gapAbove(p.top); c != nil {
 		return c
 	}
 	if gaps := p.gaps(p.top, limit); len(gaps) > 0 {
@@ -284,18 +298,22 @@ func (p *webtoonPager) trim() (blank bool) {
 }
 
 // grow takes the rows of the gaps around the page [y0, y1), up to the height of the view, centered when possible:
-// a short panel is shown with the real background around it. A side is only grown when it is allowed.
-func (p *webtoonPager) grow(y0, y1 int, growAbove, growBelow bool) (int, int) {
+// a short panel is shown with the real background around it. A side is only grown with the rows of its color (nil: not grown),
+// the border of the next panel is flat too.
+func (p *webtoonPager) grow(y0, y1 int, top, bottom color.Color) (int, int) {
 	need := p.pageH - (y1 - y0)
 	if need <= 0 {
 		return y0, y1
 	}
 
+	same := func(y int, c color.Color) bool {
+		return c != nil && p.rowSpread(y) <= webtoonGapTolerance && abs(p.rowGray(y)-grayOf(c)) <= webtoonGapTolerance
+	}
 	above, below := 0, 0
-	for growAbove && above < need && y0-above-1 >= p.floor && p.rowSpread(y0-above-1) <= webtoonGapTolerance {
+	for above < need && y0-above-1 >= p.floor && same(y0-above-1, top) {
 		above++
 	}
-	for growBelow && below < need && y1+below < p.end && p.rowSpread(y1+below) <= webtoonGapTolerance {
+	for below < need && y1+below < p.end && same(y1+below, bottom) {
 		below++
 	}
 
@@ -345,14 +363,9 @@ func (p *webtoonPager) frame(y0, y1 int) (webtoonPage, int) {
 		return nil
 	}
 
-	// the top of the page is the margin kept from the gap above, or the page starts where the gap ends
-	gapAbove := p.gapColor(y0)
-	if gapAbove == nil && y0 > p.floor {
-		gapAbove = p.gapColor(y0 - 1)
-	}
-	top, bottom := side(gapAbove, y0), side(p.gapColor(y1), y1-1)
+	top, bottom := side(p.gapAbove(y0), y0), side(p.gapColor(y1), y1-1)
 
-	y0, y1 = p.grow(y0, y1, top != nil, bottom != nil)
+	y0, y1 = p.grow(y0, y1, top, bottom)
 	if top == nil {
 		top = bg
 	}
