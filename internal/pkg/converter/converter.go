@@ -169,7 +169,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddFloatParam(&c.Options.Image.Zoom, "zoom", c.Options.Image.Zoom, "Zoom of the images, between 1 and 3: they are stored bigger than the device for a better quality when you zoom\n  0 = zoom of the profile (1.5 for Apple Books, 1 for the others)\n  1 = size of the device\nThe size of the EPUB grows with the square of the zoom")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
-	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
+	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source, not supported by the webtoon mode\n1.6 = amazon advice for kindle")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 	c.AddReversibleBoolParam(&c.Options.CoverCaption, "covercaption", c.Options.CoverCaption, "Set cover caption when the epub is split")
 	c.AddStringParam(&c.Options.Font, "font", c.Options.Font, "Path to a TrueType font (.ttf) for the cover caption and title page. Default: embedded Literata")
@@ -484,6 +484,12 @@ func (c *Converter) Validate() error {
 	// the webtoon is cut into pages: the images must be processed
 	if c.Options.Image.WebtoonMode() && c.Options.Image.Format == "copy" {
 		return errors.New("the webtoon mode doesn't support the copy format: use jpeg or png")
+	}
+
+	// the source of a webtoon is a long strip, its aspect ratio is not the one of a page
+	if c.Options.Image.WebtoonMode() && c.Options.Image.View.AspectRatio == 0 {
+		return fmt.Errorf("the webtoon mode doesn't support the aspect ratio of the source (0): use -1 for the device, or a ratio between %v and %v",
+			epuboptions.MinAspectRatio, epuboptions.MaxAspectRatio)
 	}
 
 	// Aspect Ratio

@@ -22,7 +22,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - One reading mode (`-mode`): comic (left to right), manga (right to left, a feature of the profile: not supported by the reMarkable) or webtoon (long vertical strips, cut into pages; the double page, crop and blank image options are ignored)
-- Webtoon (`-mode 2`): the images of each directory are joined into a chapter, then cut into pages with the aspect ratio of the view (`-aspect-ratio`, or the device when it is 0 or -1), in the gaps between the panels.
+- Webtoon (`-mode 2`): the images of each directory are joined into a chapter, then cut into pages with the aspect ratio of the view (`-aspect-ratio`: -1 for the device, or a ratio, the ratio of the source (0) is refused), in the gaps between the panels.
   - A large panel is kept on one page and shrunk to fit (up to 3 times the height of the view). A taller one is cut in pages that overlap the same, so no line of the text is lost
   - A change of background (a black scene after a white one) starts a new page, even a bit after the end of the view: the scenes are not mixed on a page
   - A page shorter than the view takes the real background around it, and is filled with the color of its background
@@ -663,7 +663,7 @@ Config:
   -aspect-ratio=float
     	Aspect ratio (height/width) of the output, between 0.5 and 3
     	 -1 = same as device
-    	  0 = same as source
+    	  0 = same as source, not supported by the webtoon mode
     	1.6 = amazon advice for kindle
   -titlepage=int (default 1)
     	Title page
