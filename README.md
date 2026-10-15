@@ -21,7 +21,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Zoom of the stored images (`-zoom`): they are stored bigger than the device (1.5 for Apple Books, as advised by Apple) for a better quality when you zoom
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
-- Manga or Normal mode (a feature of the profile: not supported by the reMarkable)
+- One reading mode (`-mode`): comic (left to right), manga (right to left, a feature of the profile: not supported by the reMarkable) or webtoon (long vertical strips, cut into pages; the double page, crop and blank image options are ignored)
 - Landscape only mode for the Kindle Scribe profiles (`-landscape`, off by default): the orientation is forced to landscape, and the pages are spread left and right with a blank page to keep the double pages facing each other.
   The double pages are split, the rotation is not supported. It is an error with the other profiles
 - Embedded panel view for the older devices that need it (set by the profile)
@@ -203,7 +203,7 @@ The cover caption and the title page use the embedded [Literata](https://github.
 If you want to preview what will be set during the conversion without running the conversion, then you can use the `-dry` option.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -manga -limitmb 200 -dry
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -mode 1 -limitmb 200 -dry
 Go Comic Converter
 
 Options:
@@ -222,7 +222,7 @@ Options:
     Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
-    Manga                           : 1
+    Mode                            : manga (right to left)
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -264,7 +264,7 @@ You can choose different way to sort path and files, depending on your source.
 The option `sort` allow you to change the sorting order.
 
 ```
-$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -manga -limitmb 200 -dry -sort 2
+$ go-comic-converter -input ~/Downloads/mymanga.cbr -profile SR -mode 1 -limitmb 200 -dry -sort 2
 Go Comic Converter
 
 Options:
@@ -333,7 +333,7 @@ Options:
 
 ### Change default settings
 ```
-$ go-comic-converter -manga -profile SR -limitmb 200 -save
+$ go-comic-converter -mode 1 -profile SR -limitmb 200 -save
 
 Go Comic Converter
 
@@ -348,7 +348,7 @@ Options:
     Double page mode                : split
     Keep split double page aspect   : 1
     No blank image                  : 1
-    Manga                           : 1
+    Mode                            : manga (right to left)
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -365,7 +365,7 @@ Saving to ~/.go-comic-converter.yaml
 
 If you want to change a setting, you can change only one of them
 ```
-$ go-comic-converter -manga=0 -save
+$ go-comic-converter -mode=0 -save
 
 Options:
     Profile                         : SR - Kindle Standard Resolution - 1200x1920
@@ -439,12 +439,12 @@ To get a command line that gives the same result whatever the saved parameters o
 (to share it, or to keep it), use `-show-command`:
 
 ```
-$ go-comic-converter -profile AB -manga -quality 70 -input MyComic.cbz -show-command
+$ go-comic-converter -profile AB -mode 1 -quality 70 -input MyComic.cbz -show-command
 go-comic-converter -ignore-config \
   -input=MyComic.cbz \
   -profile=AB \
   -quality=70 \
-  -manga=1
+  -mode=1
 ```
 
 It starts with `-ignore-config`, so the saved parameters of the one who runs it don't matter, then the profile,
@@ -457,7 +457,7 @@ After playing around with the options, I have my perfect settings for all my dev
 
 ```
 $ go-comic-converter -reset
-$ go-comic-converter -profile KS -quality 90 -manga -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -titlepage=1 -covercaption=1 -combinesplitdoublepage=1 --doublepagemode=0 -autocontrast=1 -save
+$ go-comic-converter -profile KS -quality 90 -mode 1 -aspect-ratio 1.6 -limitmb 200 -crop=0 -grayscale=1 -grayscale-mode=2 -titlepage=1 -covercaption=1 -combinesplitdoublepage=1 --doublepagemode=0 -autocontrast=1 -save
 
 Options:
     Profile                         : KS - Kindle Scribe - 1860x2480
@@ -470,7 +470,7 @@ Options:
     Keep split double page aspect   : 1
     Combine split double page       : 1
     No blank image                  : 1
-    Manga                           : 1
+    Mode                            : manga (right to left)
     Limit                           : 200 Mb
     Sort path mode                  : path=alphanumeric, file=alpha
     Foreground color                : #000000
@@ -488,7 +488,7 @@ Saving to ~/.go-comic-converter.yaml
 Explanation:
 - `-profile KS`: my big device. put yours for best result.
 - `-quality 90`: JPEG output quality of images
-- `-manga`: manga mode, read right to left
+- `-mode 1`: manga mode, read right to left
 - `-aspect-ratio`: ensure aspect ratio is 1:1.6, best for kindle devices.
 - `-limitmb 200`: size limit to 200MB allowing upload from SendToKindle website
 - `-crop=0`: do not remove anything
@@ -625,8 +625,12 @@ Config:
     	Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)
   -noblankimage or -noblankimage=1 (to enabled), -noblankimage=0 (to disabled) (default 1)
     	Remove blank image
-  -manga or -manga=1 (to enabled), -manga=0 (to disabled)
-    	Manga mode (right to left), not supported by all the devices (the reMarkable for example)
+  -mode=int
+    	Reading mode
+    	0 = comic (left to right)
+    	1 = manga (right to left), not supported by all the devices (the reMarkable for example)
+    	2 = webtoon: the images of each directory are joined, and cut into pages of the size of the view, in the gaps between the panels
+    	    the options about the double pages, the crop and the blank images are ignored (default 0)
   -landscape or -landscape=1 (to enabled), -landscape=0 (to disabled)
     	Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other
   -limitmb=int (default 200)

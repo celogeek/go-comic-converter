@@ -18,6 +18,13 @@ const (
 	Apple      DeviceType = "Apple"
 )
 
+// Reading modes: the direction of the pages, and the webtoon that is a different kind of source.
+const (
+	ModeComic   = 0 // left to right
+	ModeManga   = 1 // right to left, when the profile supports it
+	ModeWebtoon = 2 // long vertical strips cut into pages: no double page, no crop, no blank page removal
+)
+
 // Features of the device, they drive the default and the allowed options.
 type Features struct {
 	// Color is true when the screen displays colors: otherwise the grayscale can't be turned off.
@@ -41,22 +48,23 @@ const (
 )
 
 type Image struct {
-	Crop                      Crop   `yaml:"crop" json:"crop"`
-	Quality                   int    `yaml:"quality" json:"quality"`
-	Brightness                int    `yaml:"brightness" json:"brightness"`
-	Contrast                  int    `yaml:"contrast" json:"contrast"`
-	AutoContrast              bool   `yaml:"auto_contrast" json:"auto_contrast"`
-	DoublePageMode            int    `yaml:"double_page_mode" json:"double_page_mode"` // 0 = split, 1 = split + rotate, 2 = rotate
-	KeepSplitDoublePageAspect bool   `yaml:"keep_split_double_page_aspect" json:"keep_split_double_page_aspect"`
-	CombineSplitDoublePage    bool   `yaml:"combine_split_double_page" json:"combine_split_double_page"`
-	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
-	Manga                     bool   `yaml:"manga" json:"manga"`
-	Landscape                 bool   `yaml:"landscape" json:"landscape"`
-	View                      View   `yaml:"view" json:"view"`
-	GrayScale                 bool   `yaml:"grayscale" json:"grayscale"`
-	GrayScaleMode             int    `yaml:"grayscale_mode" json:"gray_scale_mode"` // 0 = normal, 1 = average, 2 = luminance
-	Resize                    bool   `yaml:"resize" json:"resize"`
-	Format                    string `yaml:"format" json:"format"`
+	Crop                      Crop `yaml:"crop" json:"crop"`
+	Quality                   int  `yaml:"quality" json:"quality"`
+	Brightness                int  `yaml:"brightness" json:"brightness"`
+	Contrast                  int  `yaml:"contrast" json:"contrast"`
+	AutoContrast              bool `yaml:"auto_contrast" json:"auto_contrast"`
+	DoublePageMode            int  `yaml:"double_page_mode" json:"double_page_mode"` // 0 = split, 1 = split + rotate, 2 = rotate
+	KeepSplitDoublePageAspect bool `yaml:"keep_split_double_page_aspect" json:"keep_split_double_page_aspect"`
+	CombineSplitDoublePage    bool `yaml:"combine_split_double_page" json:"combine_split_double_page"`
+	NoBlankImage              bool `yaml:"no_blank_image" json:"no_blank_image"`
+	// Mode is the reading mode: comic, manga or webtoon.
+	Mode          int    `yaml:"mode" json:"mode"`
+	Landscape     bool   `yaml:"landscape" json:"landscape"`
+	View          View   `yaml:"view" json:"view"`
+	GrayScale     bool   `yaml:"grayscale" json:"grayscale"`
+	GrayScaleMode int    `yaml:"grayscale_mode" json:"gray_scale_mode"` // 0 = normal, 1 = average, 2 = luminance
+	Resize        bool   `yaml:"resize" json:"resize"`
+	Format        string `yaml:"format" json:"format"`
 	// Zoom of the stored images: they are bigger than the view, for a better quality when the reader zooms.
 	// 0 is the zoom of the profile.
 	Zoom float64 `yaml:"zoom" json:"zoom"`
@@ -91,7 +99,29 @@ func (i Image) KeepDoublePage() bool {
 
 // MangaMode tells if the pages are read from right to left: the option, and a profile that supports it.
 func (i Image) MangaMode() bool {
-	return i.Manga && i.Features.Manga
+	return i.Mode == ModeManga && i.Features.Manga
+}
+
+// WebtoonMode tells if the images are long vertical strips: they are joined, and cut into pages of the size of the view.
+//
+// The options about the double pages, the crop and the blank pages don't apply.
+func (i Image) WebtoonMode() bool {
+	return i.Mode == ModeWebtoon
+}
+
+// CropPages tells if the margins of the pages are cropped.
+func (i Image) CropPages() bool {
+	return i.Crop.Enabled && !i.WebtoonMode()
+}
+
+// RemoveBlankPages tells if the blank pages are removed.
+func (i Image) RemoveBlankPages() bool {
+	return i.NoBlankImage && !i.WebtoonMode()
+}
+
+// CombineDoublePages tells if the pages that are the 2 halves of a double page are merged.
+func (i Image) CombineDoublePages() bool {
+	return i.CombineSplitDoublePage && !i.WebtoonMode()
 }
 
 // IsGrayScale tells if the images are in grayscale: the option, or a profile without color screen.

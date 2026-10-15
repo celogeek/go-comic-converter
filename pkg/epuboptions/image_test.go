@@ -62,7 +62,11 @@ func TestMangaMode(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{Manga: c.manga, Features: Features{Manga: c.profile}}).MangaMode(); got != c.want {
+		mode := ModeComic
+		if c.manga {
+			mode = ModeManga
+		}
+		if got := (Image{Mode: mode, Features: Features{Manga: c.profile}}).MangaMode(); got != c.want {
 			t.Errorf("MangaMode(%v, %v) = %v, want %v", c.manga, c.profile, got, c.want)
 		}
 	}
@@ -96,5 +100,18 @@ func TestLandscapeModeSplitsDoublePage(t *testing.T) {
 	i := Image{DoublePageMode: DoublePageRotate}
 	if i.SplitDoublePage() || !i.RotateDoublePage() || !i.KeepDoublePage() {
 		t.Error("the rotate mode should be kept without the landscape mode")
+	}
+}
+
+// the webtoon ignores the options about the double pages, the crop and the blank pages.
+func TestWebtoonMode(t *testing.T) {
+	img := Image{Crop: Crop{Enabled: true}, NoBlankImage: true, CombineSplitDoublePage: true}
+	if !img.CropPages() || !img.RemoveBlankPages() || !img.CombineDoublePages() || img.WebtoonMode() {
+		t.Errorf("the options must apply to a comic: %+v", img)
+	}
+
+	img.Mode = ModeWebtoon
+	if img.CropPages() || img.RemoveBlankPages() || img.CombineDoublePages() || !img.WebtoonMode() {
+		t.Errorf("the options must not apply to a webtoon: %+v", img)
 	}
 }

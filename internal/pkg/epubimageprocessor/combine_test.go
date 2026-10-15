@@ -106,7 +106,7 @@ func TestCombineSplitDoublePage(t *testing.T) {
 				Image: epuboptions.Image{
 					Format:                 "jpeg",
 					Quality:                90,
-					Manga:                  c.manga,
+					Mode:                   testMode(c.manga),
 					Features:               epuboptions.Features{Manga: true, Color: true},
 					DoublePageMode:         epuboptions.DoublePageRotate,
 					CombineSplitDoublePage: c.combine,
@@ -175,4 +175,12 @@ func TestCombineSplitDoublePageSplitMode(t *testing.T) {
 	if widths[0] != widths[1] || widths[0] != halfW {
 		t.Errorf("got widths %v, want 2 parts of %d", widths, halfW)
 	}
+}
+
+// testMode the reading mode for the manga flag of the cases.
+func testMode(manga bool) int {
+	if manga {
+		return epuboptions.ModeManga
+	}
+	return epuboptions.ModeComic
 }

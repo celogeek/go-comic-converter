@@ -39,9 +39,9 @@ func TestValidate(t *testing.T) {
 		{"landscape off with a profile that has not it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = false }, false},
 		{"landscape with a kindle without it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = true }, true},
 		{"landscape with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Landscape = true }, true},
-		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = true }, true},
-		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = false }, false},
-		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Manga = true }, false},
+		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeManga }, true},
+		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeComic }, false},
+		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Mode = epuboptions.ModeManga }, false},
 		{"landscape with the split", func(c *Converter) {
 			c.Options.Profile = "KS"
 			c.Options.Image.Landscape = true

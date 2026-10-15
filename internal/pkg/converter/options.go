@@ -161,6 +161,14 @@ func (o *Options) ShowConfig() string {
 		zoom += " (profile)"
 	}
 
+	mode := "comic"
+	switch o.Image.Mode {
+	case epuboptions.ModeManga:
+		mode = "manga (right to left)"
+	case epuboptions.ModeWebtoon:
+		mode = "webtoon"
+	}
+
 	doublePageMode := ""
 	switch o.Image.DoublePageMode {
 	case epuboptions.DoublePageSplit:
@@ -205,7 +213,7 @@ func (o *Options) ShowConfig() string {
 		{"Quality", o.Image.Quality, o.Image.Format == "jpeg"},
 		{"Grayscale", o.Image.IsGrayScale(), o.Image.Format != "copy"},
 		{"Grayscale mode", grayscaleMode, o.Image.Format != "copy" && o.Image.IsGrayScale()},
-		{"Crop", o.Image.Crop.Enabled, o.Image.Format != "copy"},
+		{"Crop", o.Image.Crop.Enabled, o.Image.Format != "copy" && !o.Image.WebtoonMode()},
 		{"Crop ratio",
 			utils.IntToString(o.Image.Crop.Left) + " Left - " +
 				utils.IntToString(o.Image.Crop.Up) + " Up - " +
@@ -213,15 +221,15 @@ func (o *Options) ShowConfig() string {
 				utils.IntToString(o.Image.Crop.Bottom) + " Bottom - " +
 				"Limit " + utils.IntToString(o.Image.Crop.Limit) + "% - " +
 				"Skip " + utils.BoolToString(o.Image.Crop.SkipIfLimitReached),
-			o.Image.Format != "copy" && o.Image.Crop.Enabled},
+			o.Image.Format != "copy" && o.Image.CropPages()},
 		{"Brightness", o.Image.Brightness, o.Image.Format != "copy" && o.Image.Brightness != 0},
 		{"Contrast", o.Image.Contrast, o.Image.Format != "copy" && o.Image.Contrast != 0},
 		{"Auto contrast", o.Image.AutoContrast, o.Image.Format != "copy"},
-		{"Double page mode", doublePageMode, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple},
-		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple && o.Image.SplitDoublePage()},
-		{"Combine split double page", o.Image.CombineSplitDoublePage, o.Image.Format != "copy"},
-		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy"},
-		{"Manga", o.Image.MangaMode(), o.Image.Features.Manga},
+		{"Double page mode", doublePageMode, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple && !o.Image.WebtoonMode()},
+		{"Keep split double page aspect", o.Image.KeepSplitDoublePageAspect, o.Image.Format != "copy" && o.Image.Device != epuboptions.Apple && o.Image.SplitDoublePage() && !o.Image.WebtoonMode()},
+		{"Combine split double page", o.Image.CombineSplitDoublePage, o.Image.Format != "copy" && !o.Image.WebtoonMode()},
+		{"No blank image", o.Image.NoBlankImage, o.Image.Format != "copy" && !o.Image.WebtoonMode()},
+		{"Mode", mode, true},
 		{"Landscape only", o.Image.Landscape, o.Image.Features.Landscape},
 		{"Add panel view", o.Image.Features.PanelView, true},
 		{"Limit", utils.IntToString(o.LimitMb) + " Mb", o.LimitMb != 0},

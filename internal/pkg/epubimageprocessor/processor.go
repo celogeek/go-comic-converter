@@ -84,9 +84,16 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 
 	var source <-chan task = imageInput
 
+	// the webtoon stage reports its own progress, by source image: it doesn't know yet how many pages it makes
+	reportPage := true
+	if e.Image.WebtoonMode() {
+		source = e.webtoonPages(source, progress)
+		reportPage = false
+	}
+
 	// 2 pages merged count as 2 in the progress
-	if e.Image.CombineSplitDoublePage {
-		source = e.combineSplitDoublePages(imageInput, progress)
+	if e.Image.CombineDoublePages() {
+		source = e.combineSplitDoublePages(source, progress)
 	}
 
 	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
@@ -145,10 +152,10 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	// Images come in any order: the raw data of the best candidate so far is released when a better one arrives.
 	cover := -1
 	for img := range imageOutput {
-		if img.Part == 0 {
+		if img.Part == 0 && reportPage {
 			progress()
 		}
-		if e.Image.NoBlankImage && img.IsBlank {
+		if e.Image.RemoveBlankPages() && img.IsBlank {
 			continue
 		}
 
@@ -301,7 +308,7 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	}
 
 	// Lookup for margin if crop is enable or if we want to remove blank image
-	if e.Image.Crop.Enabled || e.Image.NoBlankImage {
+	if e.Image.CropPages() || e.Image.RemoveBlankPages() {
 		f := epubimagefilters.AutoCrop(
 			src,
 			g.Bounds(src.Bounds()),
@@ -318,7 +325,7 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 		isBlank := size.Dx() == 0 && size.Dy() == 0
 
 		// crop is enable or if blank image with noblankimage options
-		if e.Image.Crop.Enabled || (e.Image.NoBlankImage && isBlank) {
+		if e.Image.CropPages() || (e.Image.RemoveBlankPages() && isBlank) {
 			g.Add(f)
 		}
 	}
@@ -332,7 +339,8 @@ func (e ePUBImageProcessor) transformImage(input task, part int, right bool) epu
 	dstBounds := g.Bounds(src.Bounds())
 	// Original && Cropped version need to landscape oriented
 	// Only part 0 can be a double page
-	isDoublePage := part == 0 && srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
+	// A page of a webtoon is never a double page, whatever the aspect ratio of the view
+	isDoublePage := part == 0 && !e.Image.WebtoonMode() && srcBounds.Dx() > srcBounds.Dy() && dstBounds.Dx() > dstBounds.Dy()
 
 	if e.Image.RotateDoublePage() && isDoublePage {
 		g.Add(gift.Rotate90())

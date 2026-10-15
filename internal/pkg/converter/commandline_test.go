@@ -30,8 +30,8 @@ func TestCommandLineArgs(t *testing.T) {
 	t.Setenv("HOME", home)
 
 	// the options at their default are not in the command line, except the profile
-	args := parseArgs(t, "-profile", "AB", "-manga", "-title", "My Comic", "-input", "/tmp/in").CommandLineArgs()
-	want := []string{"-ignore-config", "-input=/tmp/in", "-title=My Comic", "-profile=AB", "-manga=1"}
+	args := parseArgs(t, "-profile", "AB", "-mode", "1", "-title", "My Comic", "-input", "/tmp/in").CommandLineArgs()
+	want := []string{"-ignore-config", "-input=/tmp/in", "-title=My Comic", "-profile=AB", "-mode=1"}
 	if !reflect.DeepEqual(args, want) {
 		t.Errorf("got %v, want %v", args, want)
 	}
@@ -48,7 +48,7 @@ func TestCommandLineArgs(t *testing.T) {
 		want     []string
 		unwanted []string
 	}{
-		{"quality", []string{"-quality", "70", "-crop=0"}, []string{"-quality=70", "-crop=0"}, []string{"-grayscale", "-manga"}},
+		{"quality", []string{"-quality", "70", "-crop=0"}, []string{"-quality=70", "-crop=0"}, []string{"-grayscale", "-mode"}},
 		{"zoom of the profile", []string{"-profile", "AB", "-zoom", "1.5"}, nil, []string{"-zoom"}},
 		{"zoom 1 on apple", []string{"-profile", "AB", "-zoom", "1"}, []string{"-zoom=1"}, nil},
 		{"zoom on kindle", []string{"-profile", "KS", "-zoom", "2"}, []string{"-zoom=2"}, nil},
@@ -83,7 +83,7 @@ func TestCommandLineSameOptions(t *testing.T) {
 	t.Setenv("HOME", home)
 	if err := os.WriteFile(
 		filepath.Join(home, ".go-comic-converter.yaml"),
-		[]byte("profile: KS\nepuboptions:\n  image:\n    quality: 50\n    zoom: 2\n    manga: true\n"),
+		[]byte("profile: KS\nepuboptions:\n  image:\n    quality: 50\n    zoom: 2\n    mode: 1\n"),
 		0o600,
 	); err != nil {
 		t.Fatal(err)

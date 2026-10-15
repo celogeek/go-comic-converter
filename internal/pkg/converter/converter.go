@@ -159,7 +159,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
 	c.AddReversibleBoolParam(&c.Options.Image.CombineSplitDoublePage, "combinesplitdoublepage", c.Options.Image.CombineSplitDoublePage, "Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
-	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left), not supported by all the devices (the reMarkable for example)")
+	c.AddIntParam(&c.Options.Image.Mode, "mode", c.Options.Image.Mode, "Reading mode\n0 = comic (left to right)\n1 = manga (right to left), not supported by all the devices (the reMarkable for example)\n2 = webtoon: the images of each directory are joined, and cut into pages of the size of the view, in the gaps between the panels\n    the options about the double pages, the crop and the blank images are ignored")
 	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
@@ -420,8 +420,11 @@ func (c *Converter) Validate() error {
 		return fmt.Errorf("profile %q doesn't support color, grayscale can't be turned off", c.Options.Profile)
 	}
 
-	// Manga
-	if c.Options.Image.Manga && !p.Features.Manga {
+	// Mode
+	if c.Options.Image.Mode < epuboptions.ModeComic || c.Options.Image.Mode > epuboptions.ModeWebtoon {
+		return errors.New("mode should be 0, 1 or 2")
+	}
+	if c.Options.Image.Mode == epuboptions.ModeManga && !p.Features.Manga {
 		return fmt.Errorf("profile %q doesn't support the manga mode", c.Options.Profile)
 	}
 
