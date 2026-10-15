@@ -100,7 +100,7 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, imgStorage
 	}
 
 	var panel *epubtemplates.PanelView
-	if e.Image.AddPanelView {
+	if e.Image.Features.PanelView {
 		panel = e.panelView(img, images)
 	}
 
@@ -471,7 +471,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		})},
 	}
 
-	if e.Image.AddPanelView {
+	if e.Image.Features.PanelView {
 		content = append(content, zipContent{"OEBPS/Text/panelview.css", epubtemplates.PanelViewStyle})
 	}
 

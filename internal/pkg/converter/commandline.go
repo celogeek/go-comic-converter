@@ -54,7 +54,7 @@ func (c *Converter) CommandLineArgs() []string {
 func (c *Converter) isDefault(def, f *flag.Flag, value string) bool {
 	if f.Name == "zoom" {
 		// the default is the one of the profile, an explicit zoom as the profile is useless
-		return c.Options.Image.ZoomFactor() == max(c.Options.Image.ProfileZoom, 1)
+		return c.Options.Image.ZoomFactor() == max(c.Options.Image.Features.Zoom, 1)
 	}
 	return def != nil && value == def.DefValue
 }

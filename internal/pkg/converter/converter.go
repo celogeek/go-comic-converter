@@ -302,14 +302,10 @@ func (c *Converter) Parse() {
 		os.Exit(0)
 	}
 
-	// The panel view and the device come only from the profile.
+	// The device and its features come only from the profile.
 	if p := c.Options.GetProfile(); p != nil {
-		c.Options.Image.AddPanelView = p.Features.PanelView
 		c.Options.Image.Device = p.Type
-		c.Options.Image.ProfileZoom = p.Features.Zoom
-		c.Options.Image.ProfileLandscape = p.Features.Landscape
-		c.Options.Image.ProfileManga = p.Features.Manga
-		c.Options.Image.ProfileColor = p.Features.Color
+		c.Options.Image.Features = p.Features
 	}
 
 	if c.Options.MaxQuality {

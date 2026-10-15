@@ -162,7 +162,7 @@ func (o Content) getManifest() []tag {
 		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg", "properties": "cover-image"}, ""},
 	}
 
-	if o.ImageOptions.AddPanelView {
+	if o.ImageOptions.Features.PanelView {
 		items = append(items, tag{"item", tagAttrs{"id": "panelview_css", "href": "Text/panelview.css", "media-type": "text/css"}, ""})
 	}
 

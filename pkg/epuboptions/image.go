@@ -18,6 +18,21 @@ const (
 	Apple      DeviceType = "Apple"
 )
 
+// Features of the device, they drive the default and the allowed options.
+type Features struct {
+	// Color is true when the screen displays colors: otherwise the grayscale can't be turned off.
+	Color bool `json:"color"`
+	// PanelView is true when the device has no native panel view: it is added to the pages by default.
+	PanelView bool `json:"panel_view"`
+	// Manga is true when the device supports the manga mode (right to left), it is not the case of the reMarkable.
+	Manga bool `json:"manga"`
+	// Landscape is true when the device has the landscape only mode (Kindle Scribe).
+	Landscape bool `json:"landscape"`
+	// Zoom is the default zoom of the images: they are stored bigger than the view (1 = the size of the view).
+	// It is 1 when unset.
+	Zoom float64 `json:"zoom"`
+}
+
 // Double page modes: a double page (width > height) is never kept untouched.
 const (
 	DoublePageSplit       = 0 // split in 2 pages
@@ -37,7 +52,6 @@ type Image struct {
 	NoBlankImage              bool   `yaml:"no_blank_image" json:"no_blank_image"`
 	Manga                     bool   `yaml:"manga" json:"manga"`
 	Landscape                 bool   `yaml:"landscape" json:"landscape"`
-	AddPanelView              bool   `yaml:"-" json:"add_panel_view"`
 	View                      View   `yaml:"view" json:"view"`
 	GrayScale                 bool   `yaml:"grayscale" json:"grayscale"`
 	GrayScaleMode             int    `yaml:"grayscale_mode" json:"gray_scale_mode"` // 0 = normal, 1 = average, 2 = luminance
@@ -46,14 +60,8 @@ type Image struct {
 	// Zoom of the stored images: they are bigger than the view, for a better quality when the reader zooms.
 	// 0 is the zoom of the profile.
 	Zoom float64 `yaml:"zoom" json:"zoom"`
-	// ProfileZoom is the zoom of the profile, it comes only from the profile.
-	ProfileZoom float64 `yaml:"-" json:"profile_zoom"`
-	// ProfileManga tells if the profile supports the manga mode, it comes only from the profile.
-	ProfileManga bool `yaml:"-" json:"profile_manga"`
-	// ProfileColor tells if the profile has a color screen, it comes only from the profile.
-	ProfileColor bool `yaml:"-" json:"profile_color"`
-	// ProfileLandscape tells if the profile has the landscape only mode, it comes only from the profile.
-	ProfileLandscape bool `yaml:"-" json:"profile_landscape"`
+	// Features are the features of the profile, they come only from the profile.
+	Features Features `yaml:"-" json:"features"`
 	// Device is the device family of the profile, it comes only from the profile.
 	Device DeviceType `yaml:"-" json:"device"`
 }
@@ -83,12 +91,12 @@ func (i Image) KeepDoublePage() bool {
 
 // MangaMode tells if the pages are read from right to left: the option, and a profile that supports it.
 func (i Image) MangaMode() bool {
-	return i.Manga && i.ProfileManga
+	return i.Manga && i.Features.Manga
 }
 
 // IsGrayScale tells if the images are in grayscale: the option, or a profile without color screen.
 func (i Image) IsGrayScale() bool {
-	return i.GrayScale || !i.ProfileColor
+	return i.GrayScale || !i.Features.Color
 }
 
 // LandscapeMode tells if the pages are spread left and right, with a blank page to keep them in pairs.
@@ -96,7 +104,7 @@ func (i Image) IsGrayScale() bool {
 // It is only available on the profiles with the feature (Kindle Scribe),
 // the other devices balance the pages by themselves.
 func (i Image) LandscapeMode() bool {
-	return i.Landscape && i.ProfileLandscape
+	return i.Landscape && i.Features.Landscape
 }
 
 // deviceTiles max size of the file an image is stored in, for the devices with a constraint.
@@ -117,8 +125,8 @@ func (i Image) ZoomFactor() float64 {
 	if i.Zoom > 0 {
 		return i.Zoom
 	}
-	if i.ProfileZoom > 0 {
-		return i.ProfileZoom
+	if i.Features.Zoom > 0 {
+		return i.Features.Zoom
 	}
 	return 1
 }

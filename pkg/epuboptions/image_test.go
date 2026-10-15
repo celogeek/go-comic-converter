@@ -46,7 +46,7 @@ func TestLandscapeMode(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{Landscape: c.landscape, ProfileLandscape: c.profile}).LandscapeMode(); got != c.want {
+		if got := (Image{Landscape: c.landscape, Features: Features{Landscape: c.profile}}).LandscapeMode(); got != c.want {
 			t.Errorf("LandscapeMode(%v, %v) = %v, want %v", c.landscape, c.profile, got, c.want)
 		}
 	}
@@ -62,7 +62,7 @@ func TestMangaMode(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{Manga: c.manga, ProfileManga: c.profile}).MangaMode(); got != c.want {
+		if got := (Image{Manga: c.manga, Features: Features{Manga: c.profile}}).MangaMode(); got != c.want {
 			t.Errorf("MangaMode(%v, %v) = %v, want %v", c.manga, c.profile, got, c.want)
 		}
 	}
@@ -77,7 +77,7 @@ func TestIsGrayScale(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{GrayScale: c.grayscale, ProfileColor: c.color}).IsGrayScale(); got != c.want {
+		if got := (Image{GrayScale: c.grayscale, Features: Features{Color: c.color}}).IsGrayScale(); got != c.want {
 			t.Errorf("IsGrayScale(%v, %v) = %v, want %v", c.grayscale, c.color, got, c.want)
 		}
 	}
@@ -86,7 +86,7 @@ func TestIsGrayScale(t *testing.T) {
 // the landscape only mode doesn't support the rotation: the double page is split, whatever the mode.
 func TestLandscapeModeSplitsDoublePage(t *testing.T) {
 	for _, mode := range []int{DoublePageSplit, DoublePageSplitRotate, DoublePageRotate} {
-		i := Image{DoublePageMode: mode, Landscape: true, ProfileLandscape: true}
+		i := Image{DoublePageMode: mode, Landscape: true, Features: Features{Landscape: true}}
 		if !i.SplitDoublePage() || i.RotateDoublePage() || i.KeepDoublePage() {
 			t.Errorf("mode %d in landscape: split=%v rotate=%v keep=%v", mode, i.SplitDoublePage(), i.RotateDoublePage(), i.KeepDoublePage())
 		}

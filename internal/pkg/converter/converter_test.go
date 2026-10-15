@@ -120,7 +120,7 @@ func TestParsePanelView(t *testing.T) {
 			defer func() { os.Args = old }()
 			os.Args = append([]string{"go-comic-converter"}, c.args...)
 			conv.Parse()
-			if got := conv.Options.Image.AddPanelView; got != c.want {
+			if got := conv.Options.Image.Features.PanelView; got != c.want {
 				t.Errorf("got panel view %v, want %v", got, c.want)
 			}
 		})
