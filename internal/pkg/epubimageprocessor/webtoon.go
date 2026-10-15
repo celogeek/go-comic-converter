@@ -53,6 +53,8 @@ type webtoonPager struct {
 	strips       []webtoonStrip
 	// position of the next page, and the end of the strips
 	top, end int
+	// end of the last page: the next one can't take the rows above it
+	floor int
 }
 
 func (p *webtoonPager) add(img image.Image) {
@@ -89,24 +91,41 @@ func (p *webtoonPager) rowSpread(y int) int {
 	return rowSpread(img, b.Min.X, b.Max.X, sy)
 }
 
-// rowColor color of the middle of a row of the chapter: the color of a gap.
+// rowColor main color of a row of the chapter: the color of a gap.
+//
+// A gap is flat, but not to the pixel: the middle of the row can be a light shade (the circle behind a title).
 func (p *webtoonPager) rowColor(y int) color.Color {
 	img, sy, ok := p.strip(y)
 	if !ok {
 		return color.Black
 	}
 	b := img.Bounds()
-	return img.At(b.Min.X+b.Dx()/2, sy)
+	x := b.Min.X + b.Dx()/2
+	if _, mx, ok := mainGray(img, b.Min.X, b.Max.X, sy); ok {
+		x = mx
+	}
+	return img.At(x, sy)
 }
 
-// rowGray gray of the middle of a row of the chapter.
+// rowGray main gray of a row of the chapter.
 func (p *webtoonPager) rowGray(y int) int {
-	return int(color.GrayModel.Convert(p.rowColor(y)).(color.Gray).Y)
+	return grayOf(p.rowColor(y))
+}
+
+// rowMain main gray of a row of the chapter, when most of it has it (see mainGray).
+func (p *webtoonPager) rowMain(y int) (int, bool) {
+	img, sy, ok := p.strip(y)
+	if !ok {
+		return 0, false
+	}
+	b := img.Bounds()
+	g, _, ok := mainGray(img, b.Min.X, b.Max.X, sy)
+	return g, ok
 }
 
 // gapColor color of the row y when it is in a gap, nil otherwise.
 func (p *webtoonPager) gapColor(y int) color.Color {
-	if y < p.top || y >= p.end || p.rowSpread(y) > webtoonGapTolerance {
+	if y >= p.end || p.rowSpread(y) > webtoonGapTolerance {
 		return nil
 	}
 	return p.rowColor(y)
@@ -164,9 +183,9 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	from := limit - p.pageH*webtoonCutWindow/100
 	minEnd := p.top + p.pageH*webtoonMinFill/100
 
-	if bg, ok := p.background(limit); ok {
+	if bg := p.background(limit); bg != nil {
 		for _, g := range p.gaps(minEnd, limit) {
-			if abs(g.gray-bg) > webtoonBackgroundChange {
+			if abs(g.gray-grayOf(bg)) > webtoonBackgroundChange {
 				return g.at, false, true
 			}
 		}
@@ -200,14 +219,14 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 // background color of the page that starts at p.top: the one of its top when it is flat, or of its first gap before limit.
 //
 // A page doesn't mix 2 backgrounds: a white panel after a black scene starts a new page.
-func (p *webtoonPager) background(limit int) (int, bool) {
-	if p.rowSpread(p.top) <= webtoonGapTolerance {
-		return p.rowGray(p.top), true
+func (p *webtoonPager) background(limit int) color.Color {
+	if c := p.gapColor(p.top); c != nil {
+		return c
 	}
 	if gaps := p.gaps(p.top, limit); len(gaps) > 0 {
-		return gaps[0].gray, true
+		return p.rowColor(gaps[0].at)
 	}
-	return 0, false
+	return nil
 }
 
 // page copy the rows [y0, y1) of the chapter.
@@ -254,10 +273,83 @@ func (p *webtoonPager) trim() (blank bool) {
 	return y >= p.end
 }
 
-// webtoonPage a page of a webtoon, with the colors of the gaps around it: nil when it is not cut in a gap.
+// grow takes the rows of the gaps around the page [y0, y1), up to the height of the view, centered when possible:
+// a short panel is shown with the real background around it. A side is only grown when it is allowed.
+func (p *webtoonPager) grow(y0, y1 int, growAbove, growBelow bool) (int, int) {
+	need := p.pageH - (y1 - y0)
+	if need <= 0 {
+		return y0, y1
+	}
+
+	above, below := 0, 0
+	for growAbove && above < need && y0-above-1 >= p.floor && p.rowSpread(y0-above-1) <= webtoonGapTolerance {
+		above++
+	}
+	for growBelow && below < need && y1+below < p.end && p.rowSpread(y1+below) <= webtoonGapTolerance {
+		below++
+	}
+
+	half := need / 2
+	switch {
+	case above >= half && below >= need-half:
+		above, below = half, need-half
+	case above < half:
+		below = min(below, need-above)
+	default:
+		above = min(above, need-below)
+	}
+	return y0 - above, y1 + below
+}
+
+// webtoonPage a page of a webtoon, with the colors to fill it up to the view: nil when they are not known.
 type webtoonPage struct {
 	img         *image.RGBA
 	top, bottom color.Color
+}
+
+// frame the page [y0, y1), with the background around it when the page is shorter than the view.
+//
+// A gap above or below the page is its background when it has the color of the page (see background),
+// or of the edge of the page on this side (the speed lines of a black scene that end in a white gap),
+// or when the page has no background.
+// Otherwise it is the background of the next scene: a black scene after a white panel is not shown below it.
+// The page takes the rows of its background (see grow), and the color of the side to fill the rest:
+// its background, or the one of the page. It returns the end of the page with the rows taken below.
+func (p *webtoonPager) frame(y0, y1 int) (webtoonPage, int) {
+	bg := p.background(y1)
+	side := func(gap color.Color, edge int) color.Color {
+		if gap == nil {
+			return nil
+		}
+		// without a background, the gap is the best guess
+		if bg == nil {
+			return gap
+		}
+		// the same color, as flat as a gap
+		if abs(grayOf(gap)-grayOf(bg)) <= webtoonGapTolerance {
+			return gap
+		}
+		if g, ok := p.rowMain(edge); ok && abs(grayOf(gap)-g) <= webtoonGapTolerance {
+			return gap
+		}
+		return nil
+	}
+
+	// the top of the page is the margin kept from the gap above, or the page starts where the gap ends
+	gapAbove := p.gapColor(y0)
+	if gapAbove == nil && y0 > p.floor {
+		gapAbove = p.gapColor(y0 - 1)
+	}
+	top, bottom := side(gapAbove, y0), side(p.gapColor(y1), y1-1)
+
+	y0, y1 = p.grow(y0, y1, top != nil, bottom != nil)
+	if top == nil {
+		top = bg
+	}
+	if bottom == nil {
+		bottom = bg
+	}
+	return webtoonPage{img: p.page(y0, y1), top: top, bottom: bottom}, y1
 }
 
 // next the next page of the chapter, when there is enough to fill it, or when it is the end (last).
@@ -278,9 +370,9 @@ func (p *webtoonPager) next(last bool) (webtoonPage, bool) {
 		if !ok {
 			return webtoonPage{}, false
 		}
-		// the top is the margin kept from the gap above, the gap below starts at y
-		page := webtoonPage{img: p.page(p.top, y), top: p.gapColor(p.top), bottom: p.gapColor(y)}
-		p.top = y
+		// the rows taken below are not shown again
+		page, end := p.frame(p.top, y)
+		p.top, p.floor = end, end
 		// nothing to overlap at the end of the chapter
 		if hard && y < p.end {
 			p.top -= p.pageH * webtoonOverlap / 100
@@ -292,8 +384,8 @@ func (p *webtoonPager) next(last bool) (webtoonPage, bool) {
 	}
 
 	// the end of the chapter
-	page := webtoonPage{img: p.page(p.top, p.end), top: p.gapColor(p.top)}
-	p.top = p.end
+	page, _ := p.frame(p.top, p.end)
+	p.top, p.floor = p.end, p.end
 	p.drop()
 	return page, true
 }
@@ -313,24 +405,11 @@ func padWebtoonPage(p webtoonPage, pageH int, background color.Color) image.Imag
 	}
 
 	edge := func(y int) (color.Color, bool) {
-		grays := make([]int, b.Dx())
-		for x := range grays {
-			grays[x] = int(color.GrayModel.Convert(page.At(b.Min.X+x, y)).(color.Gray).Y)
-		}
-		sorted := slices.Clone(grays)
-		slices.Sort(sorted)
-		median := sorted[len(sorted)/2]
-
-		near := 0
-		for _, v := range grays {
-			if abs(v-median) <= webtoonGapTolerance {
-				near++
-			}
-		}
-		if near*100 < len(grays)*webtoonEdgeMainColor {
+		_, x, ok := mainGray(page, b.Min.X, b.Max.X, y)
+		if !ok {
 			return nil, false
 		}
-		return page.At(b.Min.X+slices.Index(grays, median), y), true
+		return page.At(x, y), true
 	}
 	top, topFlat := p.top, p.top != nil
 	if !topFlat {
@@ -441,6 +520,34 @@ func (e ePUBImageProcessor) webtoonPages(in <-chan task, progress func()) <-chan
 	}()
 
 	return out
+}
+
+// grayOf the gray of a color, from 0 to 255.
+func grayOf(c color.Color) int {
+	return int(color.GrayModel.Convert(c).(color.Gray).Y)
+}
+
+// mainGray the main gray of the row y, from x0 to x1 (excluded), when most of the row has it (webtoonEdgeMainColor),
+// and the x of a pixel of this gray.
+func mainGray(img image.Image, x0, x1, y int) (gray, x int, ok bool) {
+	grays := make([]int, x1-x0)
+	for i := range grays {
+		grays[i] = grayOf(img.At(x0+i, y))
+	}
+	sorted := slices.Clone(grays)
+	slices.Sort(sorted)
+	median := sorted[len(sorted)/2]
+
+	near := 0
+	for _, v := range grays {
+		if abs(v-median) <= webtoonGapTolerance {
+			near++
+		}
+	}
+	if near*100 < len(grays)*webtoonEdgeMainColor {
+		return 0, 0, false
+	}
+	return median, x0 + slices.Index(grays, median), true
 }
 
 // rowSpread difference between the lightest and the darkest pixel of the row y, from x0 to x1 (excluded).

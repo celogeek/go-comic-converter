@@ -46,9 +46,9 @@ func TestWebtoonPagerCutsInTheGap(t *testing.T) {
 	p.add(testStrip(100, 100, [2]int{0, 80}, [2]int{95, 100}))
 	p.add(testStrip(100, 100, [2]int{0, 100}))
 
-	// the first page ends at the start of the gap,
+	// the first page ends at the start of the gap, and takes it (the page has no background of its own),
 	// the second one has no gap to cut in: it goes through the drawing and the next one overlaps it (4 rows)
-	assert.Equal(t, []int{80, 100, 12}, testPages(p))
+	assert.Equal(t, []int{95, 100, 9}, testPages(p))
 }
 
 func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
@@ -56,8 +56,8 @@ func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
 	// a gap of 10 rows at 60, no gap at the end of the page [75, 100)
 	p.add(testStrip(100, 300, [2]int{0, 60}, [2]int{70, 300}))
 
-	// the first page ends in the gap, before the end of the view
-	assert.Equal(t, []int{60, 100, 100, 41}, testPages(p))
+	// the first page ends in the gap, before the end of the view, and takes it
+	assert.Equal(t, []int{70, 100, 100, 38}, testPages(p))
 }
 
 func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
@@ -94,7 +94,7 @@ func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
 	assert.Equal(t, []int{55, 100, 100, 41}, testPages(p))
 }
 
-func TestWebtoonPagerGivesTheColorsOfTheGaps(t *testing.T) {
+func TestWebtoonPagerTakesTheBackgroundAroundTheBox(t *testing.T) {
 	p := &webtoonPager{width: 100, pageH: 100}
 	// a box on white: its bottom row is gray, but the white of its rounded corners
 	img := testStrip(100, 300, [2]int{10, 29}).(*image.Gray)
@@ -105,9 +105,26 @@ func TestWebtoonPagerGivesTheColorsOfTheGaps(t *testing.T) {
 	if !ok {
 		t.Fatal("a page is expected")
 	}
-	// the margin of the white gap above, and the white gap below the box
-	assert.Equal(t, image.Rect(0, 0, 100, 23), page.img.Bounds())
+	// the box [10, 30) is shorter than the view: the page takes the white gap below it, the one above is kept by the trim
+	assert.Equal(t, image.Rect(0, 0, 100, 100), page.img.Bounds())
+	assert.Equal(t, uint8(255), color.GrayModel.Convert(page.img.At(50, 99)).(color.Gray).Y)
 	assert.Equal(t, color.Gray{Y: 255}, page.top)
+	assert.Equal(t, color.Gray{Y: 255}, page.bottom)
+}
+
+func TestWebtoonPagerDoesntTakeTheBackgroundOfTheNextScene(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a white gap, a panel, then a black scene
+	img := testStrip(100, 300, [2]int{10, 50}, [2]int{80, 300}).(*image.Gray)
+	draw.Draw(img, image.Rect(0, 50, 100, 80), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	p.add(img)
+
+	page, ok := p.next(true)
+	if !ok {
+		t.Fatal("a page is expected")
+	}
+	// the page takes the white above it, ends at the black, and doesn't take it: the rest is filled with the white of the page
+	assert.Equal(t, image.Rect(0, 0, 100, 50), page.img.Bounds())
 	assert.Equal(t, color.Gray{Y: 255}, page.bottom)
 }
 
@@ -116,16 +133,17 @@ func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
 	p.add(testStrip(100, 100, [2]int{0, 50}))
 	p.add(testStrip(100, 40))
 
-	// the page ends at the start of the blank, that starts before the end of the page: nothing is left after it
-	assert.Equal(t, []int{50}, testPages(p))
+	// the page ends at the start of the blank, that starts before the end of the page, and takes it up to the view:
+	// nothing is left after it
+	assert.Equal(t, []int{100}, testPages(p))
 }
 
 func TestWebtoonPagerTrimsBlankStart(t *testing.T) {
 	p := &webtoonPager{width: 100, pageH: 100}
 	p.add(testStrip(100, 300, [2]int{250, 300}))
 
-	// the blank is skipped but a margin of 3 rows: [247, 300)
-	assert.Equal(t, []int{53}, testPages(p))
+	// the blank is skipped but a margin of 3 rows: [247, 300), then the page takes the blank above it up to the view
+	assert.Equal(t, []int{100}, testPages(p))
 }
 
 func TestWebtoonPagerJoinsStripsOfAnyWidth(t *testing.T) {
