@@ -13,6 +13,12 @@ import (
 const (
 	// the cut is looked for in the last part of the page (in percent of its height)
 	webtoonCutWindow = 25
+	// without a gap there, the page can be shorter than the view (down to this ratio, in percent of its height),
+	// the end of the page is left blank
+	webtoonMinFill = 60
+	// or longer than the view (up to this ratio): the page is then shrunk to fit the view,
+	// better than a panel cut in 2 pages
+	webtoonMaxStretch = 150
 	// rows that differ by less than this (from 0 to 255) from end to end are a gap between 2 panels:
 	// the compression of the jpeg adds some noise to a flat background
 	webtoonGapTolerance = 12
@@ -68,31 +74,59 @@ func (p *webtoonPager) rowSpread(y int) int {
 	return 255
 }
 
-// cut position of the end of the page that starts at p.top, where the end is the bottom of the content.
-//
-// It is in the biggest gap of the window at the end of the page, or at the end of the page when there is none.
-// hard tells that the cut goes through a drawing.
-func (p *webtoonPager) cut() (y int, hard bool) {
-	limit := p.top + p.pageH
-	from := limit - p.pageH*webtoonCutWindow/100
+// webtoonGap a gap between 2 panels: its middle, and its number of rows.
+type webtoonGap struct {
+	mid, rows int
+}
 
-	bestLen, bestMid := 0, 0
+// gaps the gaps in the rows [from, to) of the chapter, from the top to the bottom.
+func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
+	to = min(to, p.end)
 	run := 0
-	for r := from; r <= limit; r++ {
-		if r < limit && p.rowSpread(r) <= webtoonGapTolerance {
+	for r := from; r <= to; r++ {
+		if r < to && p.rowSpread(r) <= webtoonGapTolerance {
 			run++
 			continue
 		}
 		// a run of gap ends at r (excluded)
-		if run >= webtoonGapMinRows && run >= bestLen {
-			bestLen, bestMid = run, r-run/2
+		if run >= webtoonGapMinRows {
+			gaps = append(gaps, webtoonGap{mid: r - run/2, rows: run})
 		}
 		run = 0
 	}
-	if bestLen == 0 {
-		return limit, true
+	return
+}
+
+// cut position of the end of the page that starts at p.top.
+//
+// A panel is never cut when there is a gap to cut in, in this order:
+//   - the biggest gap of the window at the end of the page,
+//   - the last gap before the window, the page is shorter than the view,
+//   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
+//   - otherwise the cut goes through the drawing, at the end of the page (hard).
+func (p *webtoonPager) cut() (y int, hard bool) {
+	limit := p.top + p.pageH
+	from := limit - p.pageH*webtoonCutWindow/100
+
+	if gaps := p.gaps(from, limit); len(gaps) > 0 {
+		best := gaps[0]
+		for _, g := range gaps[1:] {
+			if g.rows >= best.rows {
+				best = g
+			}
+		}
+		return best.mid, false
 	}
-	return bestMid, false
+
+	if gaps := p.gaps(p.top+p.pageH*webtoonMinFill/100, from); len(gaps) > 0 {
+		return gaps[len(gaps)-1].mid, false
+	}
+
+	if gaps := p.gaps(limit, p.top+p.pageH*webtoonMaxStretch/100); len(gaps) > 0 {
+		return gaps[0].mid, false
+	}
+
+	return limit, true
 }
 
 // page copy the rows [y0, y1) of the chapter.
@@ -152,7 +186,8 @@ func (p *webtoonPager) next(last bool) (image.Image, bool) {
 	switch {
 	case rest <= 0:
 		return nil, false
-	case rest >= p.pageH:
+	// the gap after the end of the page needs the rows that follow, until the end of the chapter
+	case rest >= p.pageH*webtoonMaxStretch/100 || (last && rest >= p.pageH):
 		y, hard := p.cut()
 		page := p.page(p.top, y)
 		p.top = y
