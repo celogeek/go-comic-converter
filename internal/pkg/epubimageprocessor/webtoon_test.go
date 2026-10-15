@@ -30,11 +30,11 @@ func testStrip(w, h int, bands ...[2]int) image.Image {
 func testPages(p *webtoonPager) (heights []int) {
 	for last := range []bool{false, true} {
 		for {
-			img, ok := p.next(last == 1)
+			page, ok := p.next(last == 1)
 			if !ok {
 				break
 			}
-			heights = append(heights, img.Bounds().Dy())
+			heights = append(heights, page.img.Bounds().Dy())
 		}
 	}
 	return
@@ -92,6 +92,23 @@ func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
 
 	// the first page ends where the black starts, not in the white gap of the window
 	assert.Equal(t, []int{55, 100, 100, 41}, testPages(p))
+}
+
+func TestWebtoonPagerGivesTheColorsOfTheGaps(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a box on white: its bottom row is gray, but the white of its rounded corners
+	img := testStrip(100, 300, [2]int{10, 29}).(*image.Gray)
+	draw.Draw(img, image.Rect(5, 29, 95, 30), image.NewUniform(color.Gray{Y: 100}), image.Point{}, draw.Src)
+	p.add(img)
+
+	page, ok := p.next(true)
+	if !ok {
+		t.Fatal("a page is expected")
+	}
+	// the margin of the white gap above, and the white gap below the box
+	assert.Equal(t, image.Rect(0, 0, 100, 23), page.img.Bounds())
+	assert.Equal(t, color.Gray{Y: 255}, page.top)
+	assert.Equal(t, color.Gray{Y: 255}, page.bottom)
 }
 
 func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
@@ -174,23 +191,27 @@ func TestPadWebtoonPage(t *testing.T) {
 	for _, c := range []struct {
 		name        string
 		page        *image.RGBA
+		gapTop      color.Color
+		gapBottom   color.Color
 		top, bottom uint8
 	}{
-		{"black scene", page(color.Black, color.Black), 0, 0},
-		{"white gutter above a black scene", page(color.White, color.Black), 255, 0},
+		{"black scene", page(color.Black, color.Black), nil, nil, 0, 0},
+		// the bottom of a box: its edge is mostly brown, the page is cut in the white gap below it
+		{"the gaps win over the edges", page(color.Black, gray128), color.Black, color.White, 0, 255},
+		{"white gutter above a black scene", page(color.White, color.Black), nil, nil, 255, 0},
 		{"the bottom is not flat", func() *image.RGBA {
 			img := page(color.Black, color.Black)
 			for x := 0; x < 100; x += 2 {
 				draw.Draw(img, image.Rect(x, 39, x+1, 40), image.NewUniform(color.White), image.Point{}, draw.Src)
 			}
 			return img
-		}(), 0, 0},
+		}(), nil, nil, 0, 0},
 		{"a cut through a text on white", func() *image.RGBA {
 			img := page(color.Black, color.White)
 			// 10% of the bottom edge is the text
 			draw.Draw(img, image.Rect(0, 39, 10, 40), image.NewUniform(color.Black), image.Point{}, draw.Src)
 			return img
-		}(), 0, 255},
+		}(), nil, nil, 0, 255},
 		{"no flat edge: the background", func() *image.RGBA {
 			img := page(color.Black, color.Black)
 			for x := 0; x < 100; x += 2 {
@@ -198,10 +219,10 @@ func TestPadWebtoonPage(t *testing.T) {
 				draw.Draw(img, image.Rect(x, 39, x+1, 40), image.NewUniform(color.White), image.Point{}, draw.Src)
 			}
 			return img
-		}(), 128, 128},
+		}(), nil, nil, 128, 128},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			got := padWebtoonPage(c.page, 100, gray128)
+			got := padWebtoonPage(webtoonPage{img: c.page, top: c.gapTop, bottom: c.gapBottom}, 100, gray128)
 			// centered: 30 rows added above, 30 below
 			assert.Equal(t, image.Rect(0, 0, 100, 100), got.Bounds())
 			assert.Equal(t, c.top, gray(got, 0), "top")
@@ -212,5 +233,5 @@ func TestPadWebtoonPage(t *testing.T) {
 
 	// a page as high as the view is kept
 	full := image.NewRGBA(image.Rect(0, 0, 100, 100))
-	assert.Same(t, full, padWebtoonPage(full, 100, gray128))
+	assert.Same(t, full, padWebtoonPage(webtoonPage{img: full}, 100, gray128))
 }
