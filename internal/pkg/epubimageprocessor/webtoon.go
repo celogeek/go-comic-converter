@@ -74,9 +74,12 @@ func (p *webtoonPager) rowSpread(y int) int {
 	return 255
 }
 
-// webtoonGap a gap between 2 panels: its middle, and its number of rows.
+// webtoonGap a gap between 2 panels: where to cut it, and its number of rows.
+//
+// A page ends with a small margin of the gap, the rest is left to the next page where it is trimmed:
+// a black panel is a gap too, cut in the middle it would be shown at the end of the previous page.
 type webtoonGap struct {
-	mid, rows int
+	at, rows int
 }
 
 // gaps the gaps in the rows [from, to) of the chapter, from the top to the bottom.
@@ -90,7 +93,15 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 		}
 		// a run of gap ends at r (excluded)
 		if run >= webtoonGapMinRows {
-			gaps = append(gaps, webtoonGap{mid: r - run/2, rows: run})
+			start := r - run
+			// it started before the rows looked at: the page ends where the gap really starts
+			if start == from {
+				for start > p.top && p.rowSpread(start-1) <= webtoonGapTolerance {
+					start--
+					run++
+				}
+			}
+			gaps = append(gaps, webtoonGap{at: start + min(run/2, p.pageH*webtoonMargin/100), rows: run})
 		}
 		run = 0
 	}
@@ -118,16 +129,16 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 				best = g
 			}
 		}
-		return best.mid, false, true
+		return best.at, false, true
 	}
 
 	if gaps := p.gaps(p.top+p.pageH*webtoonMinFill/100, from); len(gaps) > 0 {
-		return gaps[len(gaps)-1].mid, false, true
+		return gaps[len(gaps)-1].at, false, true
 	}
 
 	maxEnd := p.top + p.pageH*webtoonMaxStretch/100
 	if gaps := p.gaps(limit, maxEnd); len(gaps) > 0 {
-		return gaps[0].mid, false, true
+		return gaps[0].at, false, true
 	}
 	if !last && p.end < maxEnd {
 		return 0, false, false

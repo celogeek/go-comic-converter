@@ -42,9 +42,9 @@ func TestWebtoonPagerCutsInTheGap(t *testing.T) {
 	p.add(testStrip(100, 100, [2]int{0, 80}, [2]int{95, 100}))
 	p.add(testStrip(100, 100, [2]int{0, 100}))
 
-	// the first page ends in the middle of the gap,
+	// the first page ends at the start of the gap, with a margin of 3 rows,
 	// the second one has no gap to cut in: it goes through the drawing and the next one overlaps it (4 rows)
-	assert.Equal(t, []int{88, 100, 12}, testPages(p))
+	assert.Equal(t, []int{83, 100, 12}, testPages(p))
 }
 
 func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
@@ -53,7 +53,7 @@ func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
 	p.add(testStrip(100, 300, [2]int{0, 60}, [2]int{70, 300}))
 
 	// the first page ends in the gap, before the end of the view
-	assert.Equal(t, []int{65, 100, 100, 41}, testPages(p))
+	assert.Equal(t, []int{63, 100, 100, 41}, testPages(p))
 }
 
 func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
@@ -61,7 +61,7 @@ func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
 	// a panel of 120 rows, then a gap: the page is longer than the view
 	p.add(testStrip(100, 300, [2]int{0, 120}, [2]int{130, 300}))
 
-	assert.Equal(t, []int{125, 100, 77}, testPages(p))
+	assert.Equal(t, []int{123, 100, 77}, testPages(p))
 }
 
 func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
@@ -75,8 +75,8 @@ func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
 	}
 
 	p.add(testStrip(100, 160, [2]int{0, 10}, [2]int{20, 160}))
-	// the page is the whole panel, up to the middle of the gap [250, 260)
-	assert.Equal(t, []int{255, 100, 47}, testPages(p))
+	// the page is the whole panel, up to the start of the gap [250, 260)
+	assert.Equal(t, []int{253, 100, 47}, testPages(p))
 }
 
 func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
@@ -84,8 +84,8 @@ func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
 	p.add(testStrip(100, 100, [2]int{0, 50}))
 	p.add(testStrip(100, 40))
 
-	// nothing is left but the blank after the cut
-	assert.Equal(t, []int{88}, testPages(p))
+	// the page ends at the start of the blank, that starts before the end of the page: nothing is left after it
+	assert.Equal(t, []int{53}, testPages(p))
 }
 
 func TestWebtoonPagerTrimsBlankStart(t *testing.T) {
