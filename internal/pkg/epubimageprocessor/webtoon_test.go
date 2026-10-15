@@ -83,6 +83,17 @@ func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
 	assert.Equal(t, []int{250, 100, 47}, testPages(p))
 }
 
+func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a white scene with a white gap at 40, then a black one from 55, that has a white gap in the window at 85
+	img := testStrip(100, 300, [2]int{0, 40}, [2]int{48, 55}, [2]int{70, 85}, [2]int{92, 300}).(*image.Gray)
+	draw.Draw(img, image.Rect(0, 55, 100, 70), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	p.add(img)
+
+	// the first page ends where the black starts, not in the white gap of the window
+	assert.Equal(t, []int{55, 100, 100, 41}, testPages(p))
+}
+
 func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
 	p := &webtoonPager{width: 100, pageH: 100}
 	p.add(testStrip(100, 100, [2]int{0, 50}))

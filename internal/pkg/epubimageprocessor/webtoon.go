@@ -35,6 +35,8 @@ const (
 	webtoonMargin = 3
 	// the edge of a page has a main color when this ratio of its pixels has it (in percent)
 	webtoonEdgeMainColor = 75
+	// gaps that differ by more than this (from 0 to 255) are 2 different backgrounds: a black scene and a white one
+	webtoonBackgroundChange = 64
 )
 
 // webtoonStrip a piece of the webtoon, with its position in the chapter.
@@ -66,17 +68,35 @@ func (p *webtoonPager) add(img image.Image) {
 	p.end += b.Dy()
 }
 
-// rowSpread difference between the lightest and the darkest pixel of a row of the chapter.
-func (p *webtoonPager) rowSpread(y int) int {
+// strip the strip of the row y of the chapter, and the row in it.
+func (p *webtoonPager) strip(y int) (image.Image, int, bool) {
 	for i := len(p.strips) - 1; i >= 0; i-- {
 		s := p.strips[i]
-		if y < s.y0 {
-			continue
+		if y >= s.y0 {
+			return s.img, s.img.Bounds().Min.Y + y - s.y0, true
 		}
-		b := s.img.Bounds()
-		return rowSpread(s.img, b.Min.X, b.Max.X, b.Min.Y+y-s.y0)
 	}
-	return 255
+	return nil, 0, false
+}
+
+// rowSpread difference between the lightest and the darkest pixel of a row of the chapter.
+func (p *webtoonPager) rowSpread(y int) int {
+	img, sy, ok := p.strip(y)
+	if !ok {
+		return 255
+	}
+	b := img.Bounds()
+	return rowSpread(img, b.Min.X, b.Max.X, sy)
+}
+
+// rowGray gray of the middle of a row of the chapter: the color of a gap.
+func (p *webtoonPager) rowGray(y int) int {
+	img, sy, ok := p.strip(y)
+	if !ok {
+		return 0
+	}
+	b := img.Bounds()
+	return int(color.GrayModel.Convert(img.At(b.Min.X+b.Dx()/2, sy)).(color.Gray).Y)
 }
 
 // webtoonGap a gap between 2 panels: where to cut it, and its number of rows.
@@ -85,6 +105,8 @@ func (p *webtoonPager) rowSpread(y int) int {
 // a black background is a gap too, it would be shown at the end of the previous page.
 type webtoonGap struct {
 	at, rows int
+	// gray is the color of the gap where it starts
+	gray int
 }
 
 // gaps the gaps in the rows [from, to) of the chapter, from the top to the bottom.
@@ -106,7 +128,7 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 					run++
 				}
 			}
-			gaps = append(gaps, webtoonGap{at: start, rows: run})
+			gaps = append(gaps, webtoonGap{at: start, rows: run, gray: p.rowGray(start)})
 		}
 		run = 0
 	}
@@ -116,6 +138,7 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 // cut position of the end of the page that starts at p.top.
 //
 // A panel is never cut when there is a gap to cut in, in this order:
+//   - the first change of background on the page (see background), the page is shorter than the view,
 //   - the biggest gap of the window at the end of the page,
 //   - the last gap before the window, the page is shorter than the view,
 //   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
@@ -126,6 +149,15 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	limit := p.top + p.pageH
 	from := limit - p.pageH*webtoonCutWindow/100
+	minEnd := p.top + p.pageH*webtoonMinFill/100
+
+	if bg, ok := p.background(limit); ok {
+		for _, g := range p.gaps(minEnd, limit) {
+			if abs(g.gray-bg) > webtoonBackgroundChange {
+				return g.at, false, true
+			}
+		}
+	}
 
 	if gaps := p.gaps(from, limit); len(gaps) > 0 {
 		best := gaps[0]
@@ -137,7 +169,7 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 		return best.at, false, true
 	}
 
-	if gaps := p.gaps(p.top+p.pageH*webtoonMinFill/100, from); len(gaps) > 0 {
+	if gaps := p.gaps(minEnd, from); len(gaps) > 0 {
 		return gaps[len(gaps)-1].at, false, true
 	}
 
@@ -150,6 +182,19 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	}
 
 	return limit, true, true
+}
+
+// background color of the page that starts at p.top: the one of its top when it is flat, or of its first gap before limit.
+//
+// A page doesn't mix 2 backgrounds: a white panel after a black scene starts a new page.
+func (p *webtoonPager) background(limit int) (int, bool) {
+	if p.rowSpread(p.top) <= webtoonGapTolerance {
+		return p.rowGray(p.top), true
+	}
+	if gaps := p.gaps(p.top, limit); len(gaps) > 0 {
+		return gaps[0].gray, true
+	}
+	return 0, false
 }
 
 // page copy the rows [y0, y1) of the chapter.
