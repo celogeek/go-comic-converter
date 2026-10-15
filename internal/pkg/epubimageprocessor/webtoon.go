@@ -18,7 +18,7 @@ const (
 	webtoonMinFill = 60
 	// or longer than the view (up to this ratio): the page is then shrunk to fit the view,
 	// better than a panel cut in 2 pages
-	webtoonMaxStretch = 150
+	webtoonMaxStretch = 300
 	// rows that differ by less than this (from 0 to 255) from end to end are a gap between 2 panels:
 	// the compression of the jpeg adds some noise to a flat background
 	webtoonGapTolerance = 12
@@ -104,7 +104,10 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 //   - the last gap before the window, the page is shorter than the view,
 //   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
 //   - otherwise the cut goes through the drawing, at the end of the page (hard).
-func (p *webtoonPager) cut() (y int, hard bool) {
+//
+// The last one needs the rows that follow the end of the page: ok is false when they are not all known yet,
+// and the cut must wait for more rows (it never waits at the end of the chapter, last).
+func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	limit := p.top + p.pageH
 	from := limit - p.pageH*webtoonCutWindow/100
 
@@ -115,18 +118,22 @@ func (p *webtoonPager) cut() (y int, hard bool) {
 				best = g
 			}
 		}
-		return best.mid, false
+		return best.mid, false, true
 	}
 
 	if gaps := p.gaps(p.top+p.pageH*webtoonMinFill/100, from); len(gaps) > 0 {
-		return gaps[len(gaps)-1].mid, false
+		return gaps[len(gaps)-1].mid, false, true
 	}
 
-	if gaps := p.gaps(limit, p.top+p.pageH*webtoonMaxStretch/100); len(gaps) > 0 {
-		return gaps[0].mid, false
+	maxEnd := p.top + p.pageH*webtoonMaxStretch/100
+	if gaps := p.gaps(limit, maxEnd); len(gaps) > 0 {
+		return gaps[0].mid, false, true
+	}
+	if !last && p.end < maxEnd {
+		return 0, false, false
 	}
 
-	return limit, true
+	return limit, true, true
 }
 
 // page copy the rows [y0, y1) of the chapter.
@@ -186,9 +193,11 @@ func (p *webtoonPager) next(last bool) (image.Image, bool) {
 	switch {
 	case rest <= 0:
 		return nil, false
-	// the gap after the end of the page needs the rows that follow, until the end of the chapter
-	case rest >= p.pageH*webtoonMaxStretch/100 || (last && rest >= p.pageH):
-		y, hard := p.cut()
+	case rest >= p.pageH:
+		y, hard, ok := p.cut(last)
+		if !ok {
+			return nil, false
+		}
 		page := p.page(p.top, y)
 		p.top = y
 		// nothing to overlap at the end of the chapter

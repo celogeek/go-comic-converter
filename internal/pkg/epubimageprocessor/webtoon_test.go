@@ -64,6 +64,21 @@ func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
 	assert.Equal(t, []int{125, 100, 77}, testPages(p))
 }
 
+func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a panel of 250 rows, then a gap
+	p.add(testStrip(100, 240, [2]int{0, 240}))
+
+	// the gap is not known yet: no page
+	if _, ok := p.next(false); ok {
+		t.Fatal("the page must wait for the end of the panel")
+	}
+
+	p.add(testStrip(100, 160, [2]int{0, 10}, [2]int{20, 160}))
+	// the page is the whole panel, up to the middle of the gap [250, 260)
+	assert.Equal(t, []int{255, 100, 47}, testPages(p))
+}
+
 func TestWebtoonPagerSkipsBlankEnd(t *testing.T) {
 	p := &webtoonPager{width: 100, pageH: 100}
 	p.add(testStrip(100, 100, [2]int{0, 50}))
