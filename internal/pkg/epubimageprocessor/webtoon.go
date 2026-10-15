@@ -37,6 +37,12 @@ const (
 	webtoonEdgeMainColor = 75
 	// gaps that differ by more than this (from 0 to 255) are 2 different backgrounds: a black scene and a white one
 	webtoonBackgroundChange = 64
+	// the new background is a gap of at least this height (in percent of the page height):
+	// a shorter one is a flat part of a drawing (a sky)
+	webtoonBackgroundMinRows = 3
+	// the page can be longer than the view (up to this ratio, in percent of its height) to end with its scene:
+	// the speed lines of a black scene that fade in the white of the next one are not shown on a white page
+	webtoonSceneStretch = 150
 )
 
 // webtoonStrip a piece of the webtoon, with its position in the chapter.
@@ -170,22 +176,26 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 // cut position of the end of the page that starts at p.top.
 //
 // A panel is never cut when there is a gap to cut in, in this order:
-//   - the first change of background on the page (see background), the page is shorter than the view,
+//   - the first change of background on the page (see background), even a bit after the end of the page,
 //   - the biggest gap of the window at the end of the page,
 //   - the last gap before the window, the page is shorter than the view,
 //   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
 //   - otherwise the cut goes through the drawing, at the end of the page (hard).
 //
-// The last one needs the rows that follow the end of the page: ok is false when they are not all known yet,
+// The first and the last ones need the rows that follow the end of the page: ok is false when they are not all known yet,
 // and the cut must wait for more rows (it never waits at the end of the chapter, last).
 func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	limit := p.top + p.pageH
 	from := limit - p.pageH*webtoonCutWindow/100
 	minEnd := p.top + p.pageH*webtoonMinFill/100
 
+	sceneEnd := p.top + p.pageH*webtoonSceneStretch/100
+	if !last && p.end < sceneEnd {
+		return 0, false, false
+	}
 	if bg := p.background(limit); bg != nil {
-		for _, g := range p.gaps(minEnd, limit) {
-			if abs(g.gray-grayOf(bg)) > webtoonBackgroundChange {
+		for _, g := range p.gaps(minEnd, sceneEnd) {
+			if abs(g.gray-grayOf(bg)) > webtoonBackgroundChange && g.rows*100 >= p.pageH*webtoonBackgroundMinRows {
 				return g.at, false, true
 			}
 		}

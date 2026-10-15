@@ -94,6 +94,21 @@ func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
 	assert.Equal(t, []int{55, 100, 100, 41}, testPages(p))
 }
 
+func TestWebtoonPagerEndsWithItsScene(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a black scene up to 130, with a black gap in the window at 80, then a white one from 130
+	img := testStrip(100, 300, [2]int{150, 300}).(*image.Gray)
+	draw.Draw(img, image.Rect(0, 0, 100, 130), image.NewUniform(color.Black), image.Point{}, draw.Src)
+	for x := 0; x < 100; x += 2 {
+		draw.Draw(img, image.Rect(x, 5, x+1, 80), image.NewUniform(color.White), image.Point{}, draw.Src)
+		draw.Draw(img, image.Rect(x, 90, x+1, 130), image.NewUniform(color.White), image.Point{}, draw.Src)
+	}
+	p.add(img)
+
+	// the first page ends where the white starts, and will be shrunk: the end of the black scene is not shown on a white page
+	assert.Equal(t, []int{128, 100, 57}, testPages(p))
+}
+
 func TestWebtoonPagerTakesTheBackgroundAroundTheBox(t *testing.T) {
 	p := &webtoonPager{width: 100, pageH: 100}
 	// a box on white: its bottom row is gray, but the white of its rounded corners
