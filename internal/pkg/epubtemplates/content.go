@@ -65,6 +65,7 @@ func (o Content) String() string {
 	addToElement(manifest, o.getManifest)
 
 	spine := pkg.CreateElement("spine")
+	spine.CreateAttr("toc", "ncx")
 	if o.ImageOptions.MangaMode() {
 		spine.CreateAttr("page-progression-direction", "rtl")
 	} else {
@@ -157,6 +158,7 @@ func (o Content) getManifest() []tag {
 
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
+		{"item", tagAttrs{"id": "ncx", "href": "toc.ncx", "media-type": "application/x-dtbncx+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 		// The cover is only the thumbnail of the book, it has no page.
 		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg", "properties": "cover-image"}, ""},

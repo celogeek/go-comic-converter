@@ -462,11 +462,21 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		Current:      currentPart,
 		Total:        totalParts,
 	}
+	toc := epubtemplates.Toc{
+		Title:               title,
+		HasTitlePage:        hasTitlePage,
+		StripFirstDirectory: e.StripFirstDirectoryFromToc,
+		Images:              part.Images,
+	}
+	if e.Image.Device == epuboptions.Kindle {
+		toc.MaxDepth = epubtemplates.KindleTocMaxDepth
+	}
 	content := []zipContent{
 		{"META-INF/container.xml", epubtemplates.Container},
 		{"META-INF/com.apple.ibooks.display-options.xml", epubtemplates.AppleBooks},
 		{"OEBPS/content.opf", opf.String()},
-		{"OEBPS/toc.xhtml", epubtemplates.Toc(title, hasTitlePage, e.StripFirstDirectoryFromToc, part.Images)},
+		{"OEBPS/toc.xhtml", toc.Nav()},
+		{"OEBPS/toc.ncx", toc.Ncx(e.UID)},
 		{"OEBPS/Text/style.css", e.render(styleTemplate, map[string]any{
 			"Width":      e.Image.View.Width,
 			"Height":     e.Image.View.Height,
