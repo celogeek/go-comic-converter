@@ -27,9 +27,12 @@ const (
 	webtoonGapTolerance = 20
 	// min rows of a gap, shorter ones are inside a drawing (a flat sky, a speech bubble)
 	webtoonGapMinRows = 6
-	// without any gap, the cut goes through the drawing: the pages overlap (in percent of the page height)
+	// without any gap, the panel is cut in pages that overlap by at least this (in percent of the page height)
 	// so no line of the text is lost
 	webtoonOverlap = 4
+	// a panel is looked for its end up to this ratio of the page height (in percent), to be cut in pages of the same overlap:
+	// a longer one is cut in pieces of this height
+	webtoonMaxPanel = 1000
 	// a page doesn't start with more blank than this (in percent of the page height):
 	// the webtoons use a lot of blank to pace the story, that is only a waste of pages on a reader
 	webtoonMargin = 3
@@ -61,6 +64,8 @@ type webtoonPager struct {
 	top, end int
 	// end of the last page: the next one can't take the rows above it
 	floor int
+	// a panel without gap cut in pages: its end, and the step from a page to the next one
+	panelEnd, panelStep int
 }
 
 func (p *webtoonPager) add(img image.Image) {
@@ -193,10 +198,10 @@ func (p *webtoonPager) gaps(from, to int) (gaps []webtoonGap) {
 //   - the biggest gutter of the window at the end of the page,
 //   - the last gutter before the window, the page is shorter than the view,
 //   - the same with the gaps that are not gutters (see gutter),
-//   - the first gap after the end of the page, the page is longer than the view and will be shrunk,
-//   - otherwise the cut goes through the drawing, at the end of the page (hard).
+//   - the first gap after the end of the page, or the end of the chapter, the page is longer than the view and will be shrunk,
+//   - otherwise the panel is cut through the drawing in pages that overlap (hard, see split).
 //
-// The first and the last ones need the rows that follow the end of the page: ok is false when they are not all known yet,
+// They need the rows that follow the end of the page: ok is false when they are not all known yet,
 // and the cut must wait for more rows (it never waits at the end of the chapter, last).
 func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	limit := p.top + p.pageH
@@ -240,13 +245,38 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 	if !last && p.end < maxEnd {
 		return 0, false, false
 	}
+	if p.end <= maxEnd {
+		return p.end, false, true
+	}
 
-	return limit, true, true
+	return p.split(maxEnd, last)
 }
 
 // gutter tells if the gap is tall enough to be between 2 panels.
 func (p *webtoonPager) gutter(g webtoonGap) bool {
 	return g.rows*100 >= p.pageH*webtoonGutterMinRows
+}
+
+// split cuts a panel taller than the view, without a gap to cut in, in pages of the size of the view
+// that overlap the same (at least webtoonOverlap), the last page ends with the panel.
+// It returns the end of the first page, the next ones follow it (see next).
+func (p *webtoonPager) split(from int, last bool) (y int, hard, ok bool) {
+	end := p.top + p.pageH*webtoonMaxPanel/100
+	if gaps := p.gaps(from, end); len(gaps) > 0 {
+		end = gaps[0].at
+	} else if !last && p.end < end {
+		return 0, false, false
+	}
+	end = min(end, p.end)
+	if end-p.top <= p.pageH {
+		return end, false, true
+	}
+
+	overlap := p.pageH * webtoonOverlap / 100
+	pages := max(2, (end-p.top-overlap+p.pageH-overlap-1)/(p.pageH-overlap))
+	// rounded up: the last page is moved to the end of the panel
+	p.panelEnd, p.panelStep = end, (end-p.top-p.pageH+pages-2)/(pages-1)
+	return p.top + p.pageH, true, true
 }
 
 // background color of the page that starts at p.top: the one of the gap it starts in or after,
@@ -398,18 +428,32 @@ func (p *webtoonPager) next(last bool) (webtoonPage, bool) {
 	switch {
 	case rest <= 0:
 		return webtoonPage{}, false
+	case p.top < p.panelEnd:
+		// the next page of a panel cut in pages (see split)
+		y := min(p.top+p.pageH, p.panelEnd)
+		page := webtoonPage{img: p.page(p.top, y)}
+		p.floor = y
+		if y < p.panelEnd {
+			p.top = min(p.top+p.panelStep, p.panelEnd-p.pageH)
+		} else {
+			p.top = y
+		}
+		p.drop()
+		return page, true
 	case rest >= p.pageH:
 		y, hard, ok := p.cut(last)
 		if !ok {
 			return webtoonPage{}, false
 		}
+		if hard {
+			page := webtoonPage{img: p.page(p.top, y)}
+			p.top, p.floor = min(p.top+p.panelStep, p.panelEnd-p.pageH), y
+			p.drop()
+			return page, true
+		}
 		// the rows taken below are not shown again
 		page, end := p.frame(p.top, y)
 		p.top, p.floor = end, end
-		// nothing to overlap at the end of the chapter
-		if hard && y < p.end {
-			p.top -= p.pageH * webtoonOverlap / 100
-		}
 		p.drop()
 		return page, true
 	case !last:

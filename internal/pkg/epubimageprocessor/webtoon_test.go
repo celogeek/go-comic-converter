@@ -47,8 +47,8 @@ func TestWebtoonPagerCutsInTheGap(t *testing.T) {
 	p.add(testStrip(100, 100, [2]int{0, 100}))
 
 	// the first page ends at the start of the gap, and takes it (the page has no background of its own),
-	// the second one has no gap to cut in: it goes through the drawing and the next one overlaps it (4 rows)
-	assert.Equal(t, []int{95, 100, 9}, testPages(p))
+	// the rest has no gap to cut in: it ends with the chapter, and will be shrunk
+	assert.Equal(t, []int{95, 105}, testPages(p))
 }
 
 func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
@@ -57,7 +57,7 @@ func TestWebtoonPagerShortensThePageToKeepThePanel(t *testing.T) {
 	p.add(testStrip(100, 300, [2]int{0, 60}, [2]int{70, 300}))
 
 	// the first page ends in the gap, before the end of the view, and takes it
-	assert.Equal(t, []int{70, 100, 100, 38}, testPages(p))
+	assert.Equal(t, []int{70, 230}, testPages(p))
 }
 
 func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
@@ -65,7 +65,7 @@ func TestWebtoonPagerStretchesThePageToKeepThePanel(t *testing.T) {
 	// a panel of 120 rows, then a gap: the page is longer than the view
 	p.add(testStrip(100, 300, [2]int{0, 120}, [2]int{130, 300}))
 
-	assert.Equal(t, []int{120, 100, 77}, testPages(p))
+	assert.Equal(t, []int{120, 173}, testPages(p))
 }
 
 func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
@@ -80,7 +80,36 @@ func TestWebtoonPagerWaitsForTheGapOfALargePanel(t *testing.T) {
 
 	p.add(testStrip(100, 160, [2]int{0, 10}, [2]int{20, 160}))
 	// the page is the whole panel, up to the start of the gap [250, 260)
-	assert.Equal(t, []int{250, 100, 47}, testPages(p))
+	assert.Equal(t, []int{250, 143}, testPages(p))
+}
+
+func TestWebtoonPagerSplitsATallPanel(t *testing.T) {
+	p := &webtoonPager{width: 100, pageH: 100}
+	// a panel of 350 rows without any gap, too tall to be shrunk: white columns, and odd ones of the gray of half the row
+	img := image.NewGray(image.Rect(0, 0, 100, 350))
+	for y := range 350 {
+		for x := range 100 {
+			v := 255
+			if x%2 == 1 {
+				v = y / 2
+			}
+			img.SetGray(x, y, color.Gray{Y: uint8(v)})
+		}
+	}
+	p.add(img)
+
+	// 4 pages that overlap the same, the last one ends with the panel
+	var tops []int
+	for {
+		page, ok := p.next(true)
+		if !ok {
+			break
+		}
+		assert.Equal(t, 100, page.img.Bounds().Dy())
+		tops = append(tops, int(color.GrayModel.Convert(page.img.At(1, 0)).(color.Gray).Y))
+	}
+	// the half of the rows 0, 84, 168 and 250
+	assert.Equal(t, []int{0, 42, 84, 125}, tops)
 }
 
 func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
@@ -91,7 +120,7 @@ func TestWebtoonPagerCutsAtAChangeOfBackground(t *testing.T) {
 	p.add(img)
 
 	// the first page ends where the black starts, not in the white gap of the window
-	assert.Equal(t, []int{55, 100, 100, 41}, testPages(p))
+	assert.Equal(t, []int{55, 233}, testPages(p))
 }
 
 func TestWebtoonPagerEndsWithItsScene(t *testing.T) {
@@ -106,7 +135,7 @@ func TestWebtoonPagerEndsWithItsScene(t *testing.T) {
 	p.add(img)
 
 	// the first page ends where the white starts, and will be shrunk: the end of the black scene is not shown on a white page
-	assert.Equal(t, []int{128, 100, 57}, testPages(p))
+	assert.Equal(t, []int{128, 153}, testPages(p))
 }
 
 func TestWebtoonPagerTakesTheBackgroundAroundTheBox(t *testing.T) {
@@ -193,15 +222,12 @@ func TestWebtoonPages(t *testing.T) {
 		got = append(got, fmt.Sprintf("%d %s/%s %d %v", p.Id, p.Path, p.Name, p.Image.Bounds().Dy(), p.Error))
 	}
 
-	// pages of 200 rows, without gap: cut through the drawing with an overlap of 8 rows,
-	// the last one (108 rows) is filled up to the height of the view.
+	// pages of 200 rows: a chapter without gap that is not taller than 3 pages is 1 page, that will be shrunk.
 	// The corrupted image is a page of its own, with its error.
 	assert.Equal(t, []string{
-		"0 a/1.jpg-0001 200 <nil>",
-		"1 a/1.jpg-0002 200 <nil>",
-		"2 a/2.jpg 10 corrupted",
-		"3 b/1.jpg-0001 200 <nil>",
-		"4 b/1.jpg-0002 200 <nil>",
+		"0 a/1.jpg-0001 300 <nil>",
+		"1 a/2.jpg 10 corrupted",
+		"2 b/1.jpg-0001 300 <nil>",
 	}, got)
 }
 
