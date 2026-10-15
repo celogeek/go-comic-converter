@@ -1,12 +1,16 @@
 package epubimageprocessor
 
 import (
+	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
 
 // testStrip is a white image of the given size, with a band of black stripes for each [from, to) rows.
@@ -103,4 +107,38 @@ func TestWebtoonPagerJoinsStripsOfAnyWidth(t *testing.T) {
 
 	// the second strip is stretched to the width of the chapter
 	assert.Equal(t, []int{100}, testPages(p))
+}
+
+func TestWebtoonPages(t *testing.T) {
+	e := ePUBImageProcessor{epuboptions.EPUBOptions{
+		Workers: 1,
+		Image: epuboptions.Image{
+			Mode: epuboptions.ModeWebtoon,
+			// the aspect ratio of the view wins over the one of the device
+			View: epuboptions.View{Width: 100, Height: 100, AspectRatio: 2},
+		},
+	}}
+	corrupted := errors.New("corrupted")
+
+	in := make(chan task, 4)
+	// given in any order
+	in <- task{Id: 2, Image: testStrip(100, 300, [2]int{0, 300}), Path: "b", Name: "1.jpg"}
+	in <- task{Id: 0, Image: testStrip(100, 300, [2]int{0, 300}), Path: "a", Name: "1.jpg"}
+	in <- task{Id: 1, Image: testStrip(10, 10), Path: "a", Name: "2.jpg", Error: corrupted}
+	close(in)
+
+	var got []string
+	for p := range e.webtoonPages(in, func() {}) {
+		got = append(got, fmt.Sprintf("%d %s/%s %d %v", p.Id, p.Path, p.Name, p.Image.Bounds().Dy(), p.Error))
+	}
+
+	// pages of 200 rows, without gap: cut through the drawing with an overlap of 8 rows.
+	// The corrupted image is a page of its own, with its error.
+	assert.Equal(t, []string{
+		"0 a/1.jpg-0001 200 <nil>",
+		"1 a/1.jpg-0002 108 <nil>",
+		"2 a/2.jpg 10 corrupted",
+		"3 b/1.jpg-0001 200 <nil>",
+		"4 b/1.jpg-0002 108 <nil>",
+	}, got)
 }

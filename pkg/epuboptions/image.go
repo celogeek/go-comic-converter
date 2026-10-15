@@ -124,6 +124,18 @@ func (i Image) CombineDoublePages() bool {
 	return i.CombineSplitDoublePage && !i.WebtoonMode()
 }
 
+// WebtoonAspectRatio aspect ratio (height/width) of the pages a webtoon is cut into: the one of the view when it is set,
+// otherwise the one of the device (the pages have no aspect ratio of their own to take the one of the source).
+func (i Image) WebtoonAspectRatio() float64 {
+	if ar := i.View.AspectRatio; ar > 0 {
+		return min(max(ar, MinAspectRatio), MaxAspectRatio)
+	}
+	if i.View.Width > 0 && i.View.Height > 0 {
+		return float64(i.View.Height) / float64(i.View.Width)
+	}
+	return 4.0 / 3
+}
+
 // IsGrayScale tells if the images are in grayscale: the option, or a profile without color screen.
 func (i Image) IsGrayScale() bool {
 	return i.GrayScale || !i.Features.Color

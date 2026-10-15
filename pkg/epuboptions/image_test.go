@@ -115,3 +115,21 @@ func TestWebtoonMode(t *testing.T) {
 		t.Errorf("the options must not apply to a webtoon: %+v", img)
 	}
 }
+
+// the pages of a webtoon have the aspect ratio of the view when it is set, otherwise the one of the device.
+func TestWebtoonAspectRatio(t *testing.T) {
+	for _, c := range []struct {
+		aspectRatio float64
+		want        float64
+	}{
+		{-1, 2},
+		{0, 2},
+		{1.6, 1.6},
+		{10, MaxAspectRatio},
+	} {
+		img := Image{View: View{Width: 100, Height: 200, AspectRatio: c.aspectRatio}}
+		if got := img.WebtoonAspectRatio(); got != c.want {
+			t.Errorf("WebtoonAspectRatio(%v) = %v, want %v", c.aspectRatio, got, c.want)
+		}
+	}
+}

@@ -231,7 +231,7 @@ func (p *webtoonPager) next(last bool) (image.Image, bool) {
 // webtoonPages cuts the webtoon into pages of the size of the view.
 //
 // The images of a directory are the pieces of a long vertical strip: they are put back in order and
-// joined, then cut into pages with the aspect ratio of the view, in the gaps between the panels when possible.
+// joined, then cut into pages with the aspect ratio of the view (see WebtoonAspectRatio), in the gaps between the panels when possible.
 // Each directory is a chapter, the pages keep the path of the directory, and are named after the first image
 // they come from. progress is called for each source image read.
 func (e ePUBImageProcessor) webtoonPages(in <-chan task, progress func()) <-chan task {
@@ -278,25 +278,21 @@ func (e ePUBImageProcessor) webtoonPages(in <-chan task, progress func()) <-chan
 		forEachInOrder(in, out, func(t task) {
 			defer progress()
 
-			// can't be part of the strip: a placeholder is a page of its own
+			// can't be part of the strip: a placeholder is a page of its own, that keeps the error and the name of the image
 			if t.Image == nil || t.Error != nil {
 				flush()
-				count = 0
-				path, name = t.Path, t.Name
-				send(t.Image)
+				t.Id = id
+				out <- t
+				id++
 				return
 			}
 
 			if pager == nil || t.Path != path {
 				flush()
-				b := t.Image.Bounds()
-				w, h := e.Image.View.Width, e.Image.View.Height
-				if w <= 0 || h <= 0 {
-					w, h = 3, 4
-				}
+				w := t.Image.Bounds().Dx()
 				pager = &webtoonPager{
-					width: b.Dx(),
-					pageH: max(1, b.Dx()*h/w),
+					width: w,
+					pageH: max(1, int(float64(w)*e.Image.WebtoonAspectRatio()+0.5)),
 				}
 				path, name, count = t.Path, t.Name, 0
 			}

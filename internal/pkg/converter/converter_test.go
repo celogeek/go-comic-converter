@@ -42,6 +42,10 @@ func TestValidate(t *testing.T) {
 		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeManga }, true},
 		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeComic }, false},
 		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Mode = epuboptions.ModeManga }, false},
+		{"webtoon with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeWebtoon }, false},
+		{"webtoon with jpeg", func(c *Converter) { c.Options.Image.Mode = epuboptions.ModeWebtoon; c.Options.Image.Format = "jpeg" }, false},
+		{"webtoon with copy", func(c *Converter) { c.Options.Image.Mode = epuboptions.ModeWebtoon; c.Options.Image.Format = "copy" }, true},
+		{"mode unknown", func(c *Converter) { c.Options.Image.Mode = 3 }, true},
 		{"landscape with the split", func(c *Converter) {
 			c.Options.Profile = "KS"
 			c.Options.Image.Landscape = true

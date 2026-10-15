@@ -398,6 +398,10 @@ func (e epub) computeViewPort(epubParts []epubPart) (int, int) {
 	// readjusting view port
 	bestAspectRatio := e.Image.View.AspectRatio
 	if bestAspectRatio == 0 {
+		// the pages of a webtoon are cut with the aspect ratio of the device, every page has its own height
+		if e.Image.WebtoonMode() {
+			return e.Image.View.Width, e.Image.View.Height
+		}
 		bestAspectRatio = e.computeAspectRatio(epubParts)
 	}
 	// the ratio of the source can be extreme, as for a 1 pixel wide image

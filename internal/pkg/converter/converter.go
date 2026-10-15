@@ -481,6 +481,11 @@ func (c *Converter) Validate() error {
 		return errors.New("format should be jpeg, png or copy")
 	}
 
+	// the webtoon is cut into pages: the images must be processed
+	if c.Options.Image.WebtoonMode() && c.Options.Image.Format == "copy" {
+		return errors.New("the webtoon mode doesn't support the copy format: use jpeg or png")
+	}
+
 	// Aspect Ratio
 	if ar := c.Options.Image.View.AspectRatio; ar != -1 && ar != 0 &&
 		(ar < epuboptions.MinAspectRatio || ar > epuboptions.MaxAspectRatio) {
