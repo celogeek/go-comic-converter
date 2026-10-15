@@ -41,11 +41,7 @@ func (e ePUBImageProcessor) combineSplitDoublePages(in <-chan task, onMerge func
 	go func() {
 		defer close(out)
 
-		var (
-			pending = make(map[int]task)
-			next    int
-			held    *task
-		)
+		var held *task
 
 		// a page that can be the first half of a double page waits for the next one
 		step := func(t task) {
@@ -66,34 +62,7 @@ func (e ePUBImageProcessor) combineSplitDoublePages(in <-chan task, onMerge func
 			out <- t
 		}
 
-		for t := range in {
-			// can't be ordered, nothing is expected after it
-			if t.Fatal != nil {
-				out <- t
-				continue
-			}
-
-			pending[t.Id] = t
-			for {
-				p, ok := pending[next]
-				if !ok {
-					break
-				}
-				delete(pending, next)
-				next++
-				step(p)
-			}
-		}
-
-		// ids are expected to be continuous, flush whatever is left in order
-		ids := make([]int, 0, len(pending))
-		for id := range pending {
-			ids = append(ids, id)
-		}
-		sort.Ints(ids)
-		for _, id := range ids {
-			step(pending[id])
-		}
+		forEachInOrder(in, out, step)
 
 		if held != nil {
 			out <- *held
@@ -101,6 +70,42 @@ func (e ePUBImageProcessor) combineSplitDoublePages(in <-chan task, onMerge func
 	}()
 
 	return out
+}
+
+// forEachInOrder calls step with the tasks in the order of their id, as soon as the previous ones are known.
+//
+// A fatal error can't be ordered, it is sent as is to out.
+// The ids are expected to be continuous, whatever is left at the end is flushed in order.
+func forEachInOrder(in <-chan task, out chan<- task, step func(task)) {
+	pending := make(map[int]task)
+	next := 0
+
+	for t := range in {
+		if t.Fatal != nil {
+			out <- t
+			continue
+		}
+
+		pending[t.Id] = t
+		for {
+			p, ok := pending[next]
+			if !ok {
+				break
+			}
+			delete(pending, next)
+			next++
+			step(p)
+		}
+	}
+
+	ids := make([]int, 0, len(pending))
+	for id := range pending {
+		ids = append(ids, id)
+	}
+	sort.Ints(ids)
+	for _, id := range ids {
+		step(pending[id])
+	}
 }
 
 // isCombineCandidate tells if the page can be one half of a double page: a readable portrait page.

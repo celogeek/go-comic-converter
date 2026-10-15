@@ -152,7 +152,7 @@ func TestLoadCover(t *testing.T) {
 // The corrupted image is a full size page with the name of the file in a box, in the colors of the view.
 func TestCorruptedImage(t *testing.T) {
 	opts := epuboptions.EPUBOptions{TrueTypeFont: fonts.Default}
-	opts.Image.ProfileColor = true
+	opts.Image.Features.Color = true
 	opts.Image.View.Color = epuboptions.Color{Foreground: "FF0000", Background: "00FF00"}
 	e := ePUBImageProcessor{opts}
 

@@ -159,7 +159,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.KeepSplitDoublePageAspect, "keepsplitdoublepageaspect", c.Options.Image.KeepSplitDoublePageAspect, "Keep aspect of split part of a double page (best for landscape rendering)")
 	c.AddReversibleBoolParam(&c.Options.Image.CombineSplitDoublePage, "combinesplitdoublepage", c.Options.Image.CombineSplitDoublePage, "Detect a double page split in 2 consecutive pages, and combine them (the facing edges must match)")
 	c.AddReversibleBoolParam(&c.Options.Image.NoBlankImage, "noblankimage", c.Options.Image.NoBlankImage, "Remove blank image")
-	c.AddReversibleBoolParam(&c.Options.Image.Manga, "manga", c.Options.Image.Manga, "Manga mode (right to left), not supported by all the devices (the reMarkable for example)")
+	c.AddIntParam(&c.Options.Image.Mode, "mode", c.Options.Image.Mode, "Reading mode\n0 = comic (left to right)\n1 = manga (right to left), not supported by all the devices (the reMarkable for example)\n2 = webtoon: the images of each directory are joined, and cut into pages of the size of the view, in the gaps between the panels\n    the options about the double pages, the crop and the blank images are ignored")
 	c.AddReversibleBoolParam(&c.Options.Image.Landscape, "landscape", c.Options.Image.Landscape, "Landscape only mode, Kindle Scribe only (an error with the other profiles): the pages are spread left and right, with a blank page to keep the double pages facing each other")
 	c.AddIntParam(&c.Options.LimitMb, "limitmb", c.Options.LimitMb, "Limit size of the EPUB: Default limit (200), Minimum 20, 0 for unlimited")
 	c.AddReversibleBoolParam(&c.Options.StripFirstDirectoryFromToc, "strip", c.Options.StripFirstDirectoryFromToc, "Strip first directory from the TOC if only 1")
@@ -169,7 +169,7 @@ func (c *Converter) InitParse() {
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddFloatParam(&c.Options.Image.Zoom, "zoom", c.Options.Image.Zoom, "Zoom of the images, between 1 and 3: they are stored bigger than the device for a better quality when you zoom\n  0 = zoom of the profile (1.5 for Apple Books, 1 for the others)\n  1 = size of the device\nThe size of the EPUB grows with the square of the zoom")
 	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), copy (no processing)")
-	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source\n1.6 = amazon advice for kindle")
+	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source, not supported by the webtoon mode\n1.6 = amazon advice for kindle")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 	c.AddReversibleBoolParam(&c.Options.CoverCaption, "covercaption", c.Options.CoverCaption, "Set cover caption when the epub is split")
 	c.AddStringParam(&c.Options.Font, "font", c.Options.Font, "Path to a TrueType font (.ttf) for the cover caption and title page. Default: embedded Literata")
@@ -302,14 +302,10 @@ func (c *Converter) Parse() {
 		os.Exit(0)
 	}
 
-	// The panel view and the device come only from the profile.
+	// The device and its features come only from the profile.
 	if p := c.Options.GetProfile(); p != nil {
-		c.Options.Image.AddPanelView = p.Features.PanelView
 		c.Options.Image.Device = p.Type
-		c.Options.Image.ProfileZoom = p.Features.Zoom
-		c.Options.Image.ProfileLandscape = p.Features.Landscape
-		c.Options.Image.ProfileManga = p.Features.Manga
-		c.Options.Image.ProfileColor = p.Features.Color
+		c.Options.Image.Features = p.Features
 	}
 
 	if c.Options.MaxQuality {
@@ -424,8 +420,11 @@ func (c *Converter) Validate() error {
 		return fmt.Errorf("profile %q doesn't support color, grayscale can't be turned off", c.Options.Profile)
 	}
 
-	// Manga
-	if c.Options.Image.Manga && !p.Features.Manga {
+	// Mode
+	if c.Options.Image.Mode < epuboptions.ModeComic || c.Options.Image.Mode > epuboptions.ModeWebtoon {
+		return errors.New("mode should be 0, 1 or 2")
+	}
+	if c.Options.Image.Mode == epuboptions.ModeManga && !p.Features.Manga {
 		return fmt.Errorf("profile %q doesn't support the manga mode", c.Options.Profile)
 	}
 
@@ -480,6 +479,17 @@ func (c *Converter) Validate() error {
 	// Format
 	if !slices.Contains([]string{"jpeg", "png", "copy"}, c.Options.Image.Format) {
 		return errors.New("format should be jpeg, png or copy")
+	}
+
+	// the webtoon is cut into pages: the images must be processed
+	if c.Options.Image.WebtoonMode() && c.Options.Image.Format == "copy" {
+		return errors.New("the webtoon mode doesn't support the copy format: use jpeg or png")
+	}
+
+	// the source of a webtoon is a long strip, its aspect ratio is not the one of a page
+	if c.Options.Image.WebtoonMode() && c.Options.Image.View.AspectRatio == 0 {
+		return fmt.Errorf("the webtoon mode doesn't support the aspect ratio of the source (0): use -1 for the device, or a ratio between %v and %v",
+			epuboptions.MinAspectRatio, epuboptions.MaxAspectRatio)
 	}
 
 	// Aspect Ratio

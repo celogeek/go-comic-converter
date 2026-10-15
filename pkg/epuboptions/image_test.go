@@ -46,7 +46,7 @@ func TestLandscapeMode(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{Landscape: c.landscape, ProfileLandscape: c.profile}).LandscapeMode(); got != c.want {
+		if got := (Image{Landscape: c.landscape, Features: Features{Landscape: c.profile}}).LandscapeMode(); got != c.want {
 			t.Errorf("LandscapeMode(%v, %v) = %v, want %v", c.landscape, c.profile, got, c.want)
 		}
 	}
@@ -62,7 +62,11 @@ func TestMangaMode(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{Manga: c.manga, ProfileManga: c.profile}).MangaMode(); got != c.want {
+		mode := ModeComic
+		if c.manga {
+			mode = ModeManga
+		}
+		if got := (Image{Mode: mode, Features: Features{Manga: c.profile}}).MangaMode(); got != c.want {
 			t.Errorf("MangaMode(%v, %v) = %v, want %v", c.manga, c.profile, got, c.want)
 		}
 	}
@@ -77,7 +81,7 @@ func TestIsGrayScale(t *testing.T) {
 		{false, true, false},
 		{true, true, true},
 	} {
-		if got := (Image{GrayScale: c.grayscale, ProfileColor: c.color}).IsGrayScale(); got != c.want {
+		if got := (Image{GrayScale: c.grayscale, Features: Features{Color: c.color}}).IsGrayScale(); got != c.want {
 			t.Errorf("IsGrayScale(%v, %v) = %v, want %v", c.grayscale, c.color, got, c.want)
 		}
 	}
@@ -86,7 +90,7 @@ func TestIsGrayScale(t *testing.T) {
 // the landscape only mode doesn't support the rotation: the double page is split, whatever the mode.
 func TestLandscapeModeSplitsDoublePage(t *testing.T) {
 	for _, mode := range []int{DoublePageSplit, DoublePageSplitRotate, DoublePageRotate} {
-		i := Image{DoublePageMode: mode, Landscape: true, ProfileLandscape: true}
+		i := Image{DoublePageMode: mode, Landscape: true, Features: Features{Landscape: true}}
 		if !i.SplitDoublePage() || i.RotateDoublePage() || i.KeepDoublePage() {
 			t.Errorf("mode %d in landscape: split=%v rotate=%v keep=%v", mode, i.SplitDoublePage(), i.RotateDoublePage(), i.KeepDoublePage())
 		}
@@ -96,5 +100,36 @@ func TestLandscapeModeSplitsDoublePage(t *testing.T) {
 	i := Image{DoublePageMode: DoublePageRotate}
 	if i.SplitDoublePage() || !i.RotateDoublePage() || !i.KeepDoublePage() {
 		t.Error("the rotate mode should be kept without the landscape mode")
+	}
+}
+
+// the webtoon ignores the options about the double pages, the crop and the blank pages.
+func TestWebtoonMode(t *testing.T) {
+	img := Image{Crop: Crop{Enabled: true}, NoBlankImage: true, CombineSplitDoublePage: true}
+	if !img.CropPages() || !img.RemoveBlankPages() || !img.CombineDoublePages() || img.WebtoonMode() {
+		t.Errorf("the options must apply to a comic: %+v", img)
+	}
+
+	img.Mode = ModeWebtoon
+	if img.CropPages() || img.RemoveBlankPages() || img.CombineDoublePages() || !img.WebtoonMode() {
+		t.Errorf("the options must not apply to a webtoon: %+v", img)
+	}
+}
+
+// the pages of a webtoon have the aspect ratio of the view when it is set, otherwise the one of the device.
+func TestWebtoonAspectRatio(t *testing.T) {
+	for _, c := range []struct {
+		aspectRatio float64
+		want        float64
+	}{
+		{-1, 2},
+		{0, 2},
+		{1.6, 1.6},
+		{10, MaxAspectRatio},
+	} {
+		img := Image{View: View{Width: 100, Height: 200, AspectRatio: c.aspectRatio}}
+		if got := img.WebtoonAspectRatio(); got != c.want {
+			t.Errorf("WebtoonAspectRatio(%v) = %v, want %v", c.aspectRatio, got, c.want)
+		}
 	}
 }

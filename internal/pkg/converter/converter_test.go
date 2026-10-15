@@ -39,9 +39,37 @@ func TestValidate(t *testing.T) {
 		{"landscape off with a profile that has not it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = false }, false},
 		{"landscape with a kindle without it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = true }, true},
 		{"landscape with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Landscape = true }, true},
-		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = true }, true},
-		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Manga = false }, false},
-		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Manga = true }, false},
+		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeManga }, true},
+		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeComic }, false},
+		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Mode = epuboptions.ModeManga }, false},
+		{"webtoon with a reMarkable", func(c *Converter) {
+			c.Options.Profile = "RM2"
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = -1
+		}, false},
+		{"webtoon with jpeg", func(c *Converter) {
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = -1
+			c.Options.Image.Format = "jpeg"
+		}, false},
+		{"webtoon with copy", func(c *Converter) {
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = -1
+			c.Options.Image.Format = "copy"
+		}, true},
+		{"webtoon with the aspect ratio of the device", func(c *Converter) {
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = -1
+		}, false},
+		{"webtoon with an aspect ratio", func(c *Converter) {
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = 1.6
+		}, false},
+		{"webtoon with the aspect ratio of the source", func(c *Converter) {
+			c.Options.Image.Mode = epuboptions.ModeWebtoon
+			c.Options.Image.View.AspectRatio = 0
+		}, true},
+		{"mode unknown", func(c *Converter) { c.Options.Image.Mode = 3 }, true},
 		{"landscape with the split", func(c *Converter) {
 			c.Options.Profile = "KS"
 			c.Options.Image.Landscape = true
@@ -120,7 +148,7 @@ func TestParsePanelView(t *testing.T) {
 			defer func() { os.Args = old }()
 			os.Args = append([]string{"go-comic-converter"}, c.args...)
 			conv.Parse()
-			if got := conv.Options.Image.AddPanelView; got != c.want {
+			if got := conv.Options.Image.Features.PanelView; got != c.want {
 				t.Errorf("got panel view %v, want %v", got, c.want)
 			}
 		})

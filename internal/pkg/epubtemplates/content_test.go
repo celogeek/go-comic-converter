@@ -34,7 +34,7 @@ func TestContentSpineRefersToManifest(t *testing.T) {
 							name := fmt.Sprintf("mode=%d manga=%v device=%v title=%v [%d:%d]", mode, manga, device, title, from, to)
 							c := Content{
 								HasTitlePage: title,
-								ImageOptions: epuboptions.Image{DoublePageMode: mode, Manga: manga, ProfileManga: true, Device: device},
+								ImageOptions: epuboptions.Image{DoublePageMode: mode, Mode: testMode(manga), Features: epuboptions.Features{Manga: true}, Device: device},
 								Images:       book[from:to],
 							}
 
@@ -107,7 +107,7 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 		{"kindle scribe landscape", epuboptions.Kindle, true, true, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
 	} {
-		content := Content{ImageOptions: epuboptions.Image{Manga: c.manga, ProfileManga: true, Landscape: c.landscape, ProfileLandscape: c.landscape, Device: c.device}, Images: c.book}
+		content := Content{ImageOptions: epuboptions.Image{Mode: testMode(c.manga), Landscape: c.landscape, Features: epuboptions.Features{Manga: true, Landscape: c.landscape}, Device: c.device}, Images: c.book}
 
 		ids := map[string]bool{}
 		for _, it := range content.getManifest() {
@@ -173,7 +173,7 @@ func TestContentOrientation(t *testing.T) {
 		{"profile without the feature", true, false, "auto"},
 	} {
 		content := Content{
-			ImageOptions: epuboptions.Image{Device: epuboptions.Kindle, Landscape: c.landscape, ProfileLandscape: c.profile},
+			ImageOptions: epuboptions.Image{Device: epuboptions.Kindle, Landscape: c.landscape, Features: epuboptions.Features{Landscape: c.profile}},
 			Images:       []epubimage.EPUBImage{{Format: "jpeg"}},
 		}
 		var got string
@@ -203,4 +203,12 @@ func TestContentSpread(t *testing.T) {
 		}
 		assert.Equal(t, want, got, device)
 	}
+}
+
+// testMode the reading mode for the manga flag of the cases.
+func testMode(manga bool) int {
+	if manga {
+		return epuboptions.ModeManga
+	}
+	return epuboptions.ModeComic
 }

@@ -100,7 +100,7 @@ func (e epub) writeImage(wz epubzip.EPUBZip, img epubimage.EPUBImage, imgStorage
 	}
 
 	var panel *epubtemplates.PanelView
-	if e.Image.AddPanelView {
+	if e.Image.Features.PanelView {
 		panel = e.panelView(img, images)
 	}
 
@@ -398,6 +398,10 @@ func (e epub) computeViewPort(epubParts []epubPart) (int, int) {
 	// readjusting view port
 	bestAspectRatio := e.Image.View.AspectRatio
 	if bestAspectRatio == 0 {
+		// the pages of a webtoon are cut with the aspect ratio of the device, every page has its own height
+		if e.Image.WebtoonMode() {
+			return e.Image.View.Width, e.Image.View.Height
+		}
 		bestAspectRatio = e.computeAspectRatio(epubParts)
 	}
 	// the ratio of the source can be extreme, as for a 1 pixel wide image
@@ -471,7 +475,7 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 		})},
 	}
 
-	if e.Image.AddPanelView {
+	if e.Image.Features.PanelView {
 		content = append(content, zipContent{"OEBPS/Text/panelview.css", epubtemplates.PanelViewStyle})
 	}
 
