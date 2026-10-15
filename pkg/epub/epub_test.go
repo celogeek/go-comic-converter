@@ -47,7 +47,6 @@ func testOptions(input, output string, coverCaption bool) epuboptions.EPUBOption
 		CoverCaption: coverCaption,
 		LimitMb:      1,
 		SortPathMode: 1,
-		Quiet:        true,
 		Workers:      2,
 		Image: epuboptions.Image{
 			Quality: 90,

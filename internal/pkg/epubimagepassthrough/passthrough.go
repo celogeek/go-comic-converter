@@ -19,7 +19,6 @@ import (
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/sortpath"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
@@ -95,15 +94,7 @@ func (e ePUBImagePassthrough) loadDir() (images []epubimage.EPUBImage, err error
 	defer imgStorage.Close()
 
 	// processing
-	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       e.Quiet,
-		Json:        e.Json,
-		Max:         len(imagesPath),
-		Description: "Copying",
-		CurrentJob:  1,
-		TotalJob:    2,
-	})
-	defer bar.Close()
+	total := len(imagesPath)
 
 	for i, imgPath := range imagesPath {
 
@@ -127,7 +118,7 @@ func (e ePUBImagePassthrough) loadDir() (images []epubimage.EPUBImage, err error
 		}
 
 		images = append(images, img)
-		_ = bar.Add(1)
+		e.Processed(len(images), total)
 	}
 
 	if len(images) == 0 {
@@ -180,15 +171,7 @@ func (e ePUBImagePassthrough) loadCbz() (images []epubimage.EPUBImage, err error
 	defer imgStorage.Close()
 
 	// processing
-	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       e.Quiet,
-		Json:        e.Json,
-		Max:         len(imagesZip),
-		Description: "Copying",
-		CurrentJob:  1,
-		TotalJob:    2,
-	})
-	defer bar.Close()
+	total := len(indexedNames)
 
 	for _, imgZip := range imagesZip {
 		if _, ok := indexedNames[imgZip.Name]; !ok {
@@ -217,7 +200,7 @@ func (e ePUBImagePassthrough) loadCbz() (images []epubimage.EPUBImage, err error
 		}
 
 		images = append(images, img)
-		_ = bar.Add(1)
+		e.Processed(len(images), total)
 	}
 
 	if len(images) == 0 {
@@ -266,15 +249,7 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 	defer imgStorage.Close()
 
 	// processing
-	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       e.Quiet,
-		Json:        e.Json,
-		Max:         len(names),
-		Description: "Copying",
-		CurrentJob:  1,
-		TotalJob:    2,
-	})
-	defer bar.Close()
+	total := len(names)
 
 	if isSolid {
 		var r *rardecode.ReadCloser
@@ -314,7 +289,7 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 			}
 
 			images = append(images, img)
-			_ = bar.Add(1)
+			e.Processed(len(images), total)
 		}
 	} else {
 		for _, file := range files {
@@ -340,7 +315,7 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 				}
 
 				images = append(images, img)
-				_ = bar.Add(1)
+				e.Processed(len(images), total)
 			}
 		}
 	}

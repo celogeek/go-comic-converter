@@ -7,12 +7,12 @@ import (
 	"image/color"
 	"image/draw"
 	"sync"
+	"sync/atomic"
 
 	"github.com/disintegration/gift"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
@@ -78,26 +78,19 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	imageOutput := make(chan epubimage.EPUBImage)
 
 	// processing
-	bar := epubprogress.New(epubprogress.Options{
-		Quiet:       e.Quiet,
-		Json:        e.Json,
-		Max:         imageCount,
-		Description: "Processing",
-		CurrentJob:  1,
-		TotalJob:    2,
-	})
+	var processed atomic.Int64
+	progress := func() { e.Processed(int(processed.Add(1)), imageCount) }
 	wg := &sync.WaitGroup{}
 
 	var source <-chan task = imageInput
 
 	// 2 pages merged count as 2 in the progress
 	if e.Image.CombineSplitDoublePage {
-		source = e.combineSplitDoublePages(imageInput, func() { _ = bar.Add(1) })
+		source = e.combineSplitDoublePages(imageInput, progress)
 	}
 
 	imgStorage, err := epubzip.NewStorageImageWriter(e.ImgStorage(), e.Image.Format)
 	if err != nil {
-		_ = bar.Close()
 		return nil, err
 	}
 
@@ -153,7 +146,7 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 	cover := -1
 	for img := range imageOutput {
 		if img.Part == 0 {
-			_ = bar.Add(1)
+			progress()
 		}
 		if e.Image.NoBlankImage && img.IsBlank {
 			continue
@@ -175,7 +168,6 @@ func (e ePUBImageProcessor) Load() (images []epubimage.EPUBImage, err error) {
 		images = append(images, img)
 		cover = len(images) - 1
 	}
-	_ = bar.Close()
 
 	if failure != nil {
 		return nil, failure

@@ -23,7 +23,6 @@ import (
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagefilters"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimagepassthrough"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimageprocessor"
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubprogress"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtemplates"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubtree"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
@@ -575,15 +574,6 @@ func (e epub) Write() error {
 
 	totalParts := len(epubParts)
 
-	bar := epubprogress.New(epubprogress.Options{
-		Max:         totalParts,
-		Description: "Writing Part",
-		CurrentJob:  2,
-		TotalJob:    2,
-		Quiet:       e.Quiet,
-		Json:        e.Json,
-	})
-
 	e.Image.View.Width, e.Image.View.Height = e.computeViewPort(epubParts)
 	for i, part := range epubParts {
 		ext := filepath.Ext(e.Output)
@@ -606,11 +596,7 @@ func (e epub) Write() error {
 		}
 
 		setWriting("")
-		_ = bar.Add(1)
-	}
-	_ = bar.Close()
-	if !e.Json {
-		utils.Println()
+		e.Written(i+1, totalParts)
 	}
 
 	// display corrupted images

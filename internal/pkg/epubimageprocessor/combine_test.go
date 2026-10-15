@@ -102,7 +102,6 @@ func TestCombineSplitDoublePage(t *testing.T) {
 				Input:        dir,
 				Output:       filepath.Join(t.TempDir(), "book.epub"),
 				Workers:      4,
-				Quiet:        true,
 				TrueTypeFont: fonts.Default,
 				Image: epuboptions.Image{
 					Format:                 "jpeg",
@@ -150,7 +149,6 @@ func TestCombineSplitDoublePageSplitMode(t *testing.T) {
 		Input:        dir,
 		Output:       filepath.Join(t.TempDir(), "book.epub"),
 		Workers:      4,
-		Quiet:        true,
 		TrueTypeFont: fonts.Default,
 		Image: epuboptions.Image{
 			Format:                    "jpeg",

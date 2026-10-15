@@ -134,6 +134,8 @@ func generate(cmd *converter.Converter) {
 		utils.Println(cmd.Options)
 	}
 
+	cmd.Options.BindProgress()
+
 	if err := epub.New(cmd.Options.EPUBOptions).Write(); err != nil {
 		utils.Fatalf("Error: %v\n", err)
 	}

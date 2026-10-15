@@ -26,9 +26,30 @@ type EPUBOptions struct {
 
 	// Other
 	Dry     bool `yaml:"-" json:"dry"`
-	Quiet   bool `yaml:"-" json:"-"`
-	Json    bool `yaml:"-" json:"-"`
 	Workers int  `yaml:"-" json:"workers"`
+
+	// Progress, both are optional
+	OnProcess Progress `yaml:"-" json:"-"`
+	OnWrite   Progress `yaml:"-" json:"-"`
+}
+
+// Progress is called each time an item is done, with the number of items done and the total of items.
+//
+// It can be called from several goroutines at the same time, so the done counts can reach it out of order.
+type Progress func(done, total int)
+
+// Processed reports the progress of the images processed.
+func (o EPUBOptions) Processed(done, total int) {
+	if o.OnProcess != nil {
+		o.OnProcess(done, total)
+	}
+}
+
+// Written reports the progress of the files written.
+func (o EPUBOptions) Written(done, total int) {
+	if o.OnWrite != nil {
+		o.OnWrite(done, total)
+	}
 }
 
 func (o EPUBOptions) WorkersRatio(pct int) (nbWorkers int) {

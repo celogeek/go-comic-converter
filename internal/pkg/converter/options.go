@@ -36,6 +36,8 @@ type Options struct {
 	GoodQuality  bool `yaml:"-" json:"-"`
 
 	// Other
+	Quiet   bool `yaml:"-" json:"-"`
+	Json    bool `yaml:"-" json:"-"`
 	Version bool `yaml:"-" json:"-"`
 	Help    bool `yaml:"-" json:"-"`
 
