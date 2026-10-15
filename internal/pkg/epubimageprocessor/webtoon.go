@@ -15,13 +15,13 @@ const (
 	webtoonCutWindow = 25
 	// without a gap there, the page can be shorter than the view (down to this ratio, in percent of its height),
 	// the end of the page is left blank
-	webtoonMinFill = 60
+	webtoonMinFill = 35
 	// or longer than the view (up to this ratio): the page is then shrunk to fit the view,
 	// better than a panel cut in 2 pages
 	webtoonMaxStretch = 300
 	// rows that differ by less than this (from 0 to 255) from end to end are a gap between 2 panels:
 	// the compression of the jpeg adds some noise to a flat background
-	webtoonGapTolerance = 12
+	webtoonGapTolerance = 20
 	// min rows of a gap, shorter ones are inside a drawing (a flat sky, a speech bubble)
 	webtoonGapMinRows = 6
 	// without any gap, the cut goes through the drawing: the pages overlap (in percent of the page height)
