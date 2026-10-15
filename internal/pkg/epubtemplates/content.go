@@ -250,7 +250,7 @@ func (o Content) getSpine() []tag {
 }
 
 // getSpineKindle Kindle is centered by default, and a side on every page shows the "Preview double page" on every page:
-// only the double page is centered, and the 2 parts of a split double page are facing each other.
+// only the 2 parts of a split double page have a side, facing each other.
 func (o Content) getSpineKindle() []tag {
 	first, second := "page-spread-left", "page-spread-right"
 	if o.ImageOptions.MangaMode() {
@@ -261,8 +261,6 @@ func (o Content) getSpineKindle() []tag {
 	for _, img := range o.Images {
 		attrs := tagAttrs{"idref": img.PageKey()}
 		switch {
-		case img.DoublePage:
-			attrs["properties"] = "page-spread-center"
 		case img.Part == 1:
 			attrs["properties"] = first
 		case img.Part == 2:
@@ -335,16 +333,16 @@ func (o Content) getSpineTitle() []tag {
 }
 
 // getSpineKindleLandscape the pages are spread left and right, alternately, with a blank page when needed:
-// the double page is centered, then the pages start back on the first side (right for manga).
+// the double page has no side (centered by default), then the pages start back on the first side (right for manga).
 // It is a Kindle Scribe only mode. The blank pages are not layout-blank, it only hides them in portrait.
 func (o Content) getSpineKindleLandscape() []tag {
 	isOnTheRight := !o.ImageOptions.MangaMode()
 	getSpread := func(isDoublePage bool) string {
 		isOnTheRight = !isOnTheRight
 		if isDoublePage {
-			// Center the double page then start back to comic mode (manga/normal)
+			// No side for the double page, then start back to comic mode (manga/normal)
 			isOnTheRight = !o.ImageOptions.MangaMode()
-			return "page-spread-center"
+			return ""
 		}
 		if isOnTheRight {
 			return "page-spread-right"
@@ -363,7 +361,11 @@ func (o Content) getSpineKindleLandscape() []tag {
 		if (img.DoublePage || img.Part == 1) && o.ImageOptions.MangaMode() == isOnTheRight {
 			spine = append(spine, tag{"itemref", tagAttrs{"idref": img.SpaceKey(), "properties": getSpread(false)}, ""})
 		}
-		spine = append(spine, tag{"itemref", tagAttrs{"idref": img.PageKey(), "properties": getSpread(img.DoublePage)}, ""})
+		attrs := tagAttrs{"idref": img.PageKey()}
+		if spread := getSpread(img.DoublePage); spread != "" {
+			attrs["properties"] = spread
+		}
+		spine = append(spine, tag{"itemref", attrs, ""})
 	}
 	if o.ImageOptions.MangaMode() == isOnTheRight {
 		spine = append(spine, tag{"itemref", tagAttrs{"idref": o.Images[len(o.Images)-1].SpaceKey(), "properties": getSpread(false)}, ""})

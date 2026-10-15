@@ -59,13 +59,13 @@ The way to spread the pages depends on the device, because they don't read the E
 
 | Device | Normal page | Double page | Split double page | Blank page |
 |---|---|---|---|---|
-| Kindle | no side (centered by default) | centered | 2 parts facing each other | never |
-| Kindle Scribe with `-landscape` | left / right, alternately | centered | 2 parts facing each other | when a double page would start on the wrong side |
+| Kindle | no side (centered by default) | no side (centered by default) | 2 parts facing each other | never |
+| Kindle Scribe with `-landscape` | left / right, alternately | no side (centered by default) | 2 parts facing each other | when a double page would start on the wrong side |
 | Apple Books | no hint, balanced by the reader | no hint | no hint | before a double page, or a split, that would start on the wrong side |
 | Kobo and the other devices | no hint, balanced by the reader | no hint | no hint | same as Apple Books |
 | reMarkable | no spread | no spread | no spread | never |
 
-- Kindle: a side on every page makes the Kindle show the "Preview double page" on every page, so only the double pages have one.
+- Kindle: a side on every page makes the Kindle show the "Preview double page" on every page, so only the 2 parts of a split double page have one.
 - The landscape only mode forces the orientation to landscape. It is only available for the Kindle Scribe profiles.
 - Apple Books: the title page is alone, so the first page is on the first side of the spread (right for manga).
   Without a title page the first page is the cover, alone on the second side.

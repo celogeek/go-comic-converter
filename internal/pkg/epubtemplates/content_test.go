@@ -85,7 +85,7 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 		{"kindle split manga", epuboptions.Kindle, true, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0"}},
 		{"kindle double page", epuboptions.Kindle, true, false, join(one(page(0)), one(double(1)), one(page(2))),
-			[]string{"page_0_p0", "page_1_p0:page-spread-center", "page_2_p0"}},
+			[]string{"page_0_p0", "page_1_p0", "page_2_p0"}},
 		// Kobo: the first page is on the first side of the spread, Apple on the second side
 		{"kobo split on the second side", epuboptions.Kobo, true, false, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0", "space_1", "page_1_p1", "page_1_p2", "page_2_p0"}},
@@ -106,6 +106,8 @@ func TestContentSideOnlyDoublePage(t *testing.T) {
 			[]string{"page_0_p0", "page_1_p0", "space_2", "page_2_p0"}},
 		{"kindle scribe landscape", epuboptions.Kindle, true, true, join(one(page(0)), split(1), one(page(2))),
 			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left", "page_1_p1:page-spread-right", "page_1_p2:page-spread-left", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
+		{"kindle scribe landscape double page", epuboptions.Kindle, true, true, join(one(page(0)), one(double(1)), one(page(2))),
+			[]string{"page_0_p0:page-spread-right", "space_1:page-spread-left", "page_1_p0", "page_2_p0:page-spread-right", "space_2:page-spread-left"}},
 	} {
 		content := Content{ImageOptions: epuboptions.Image{Mode: testMode(c.manga), Landscape: c.landscape, Features: epuboptions.Features{Manga: true, Landscape: c.landscape}, Device: c.device}, Images: c.book}
 
