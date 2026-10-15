@@ -22,8 +22,11 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Optionally detect a double page split in 2 consecutive pages, and combine them (`-combinesplitdoublepage`, off by default)
 - Remove blank image (empty image is removed)
 - One reading mode (`-mode`): comic (left to right), manga (right to left, a feature of the profile: not supported by the reMarkable) or webtoon (long vertical strips, cut into pages; the double page, crop and blank image options are ignored)
-- Webtoon (`-mode 2`): the images of each directory are joined into a chapter, then cut into pages with the aspect ratio of the view (`-aspect-ratio`, or the device), in the gaps between the panels.
-  A large panel is kept on one page and shrunk to fit (up to 3 times the height of the view), the long blank or black stretches are trimmed. The `copy` format is not supported
+- Webtoon (`-mode 2`): the images of each directory are joined into a chapter, then cut into pages with the aspect ratio of the view (`-aspect-ratio`, or the device when it is 0 or -1), in the gaps between the panels.
+  - A large panel is kept on one page and shrunk to fit (up to 3 times the height of the view). A taller one is cut in pages that overlap the same, so no line of the text is lost
+  - A change of background (a black scene after a white one) starts a new page, even a bit after the end of the view: the scenes are not mixed on a page
+  - A page shorter than the view takes the real background around it, and is filled with the color of its background
+  - The blank at the top of a page and at the end of a chapter is trimmed. The `copy` format is not supported
 - Landscape only mode for the Kindle Scribe profiles (`-landscape`, off by default): the orientation is forced to landscape, and the pages are spread left and right with a blank page to keep the double pages facing each other.
   The double pages are split, the rotation is not supported. It is an error with the other profiles
 - Embedded panel view for the older devices that need it (set by the profile)
