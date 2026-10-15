@@ -5,8 +5,11 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"slices"
 
 	"github.com/disintegration/gift"
+
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 )
 
 // Thresholds used to cut a webtoon into pages.
@@ -30,6 +33,8 @@ const (
 	// a page doesn't start with more blank than this (in percent of the page height):
 	// the webtoons use a lot of blank to pace the story, that is only a waste of pages on a reader
 	webtoonMargin = 3
+	// the edge of a page has a main color when this ratio of its pixels has it (in percent)
+	webtoonEdgeMainColor = 75
 )
 
 // webtoonStrip a piece of the webtoon, with its position in the chapter.
@@ -148,7 +153,7 @@ func (p *webtoonPager) cut(last bool) (y int, hard, ok bool) {
 }
 
 // page copy the rows [y0, y1) of the chapter.
-func (p *webtoonPager) page(y0, y1 int) image.Image {
+func (p *webtoonPager) page(y0, y1 int) *image.RGBA {
 	dst := image.NewRGBA(image.Rect(0, 0, p.width, y1-y0))
 	for _, s := range p.strips {
 		b := s.img.Bounds()
@@ -192,7 +197,7 @@ func (p *webtoonPager) trim() (blank bool) {
 }
 
 // next the next page of the chapter, when there is enough to fill it, or when it is the end (last).
-func (p *webtoonPager) next(last bool) (image.Image, bool) {
+func (p *webtoonPager) next(last bool) (*image.RGBA, bool) {
 	// a blank end is not a page
 	if blank := p.trim(); blank && last {
 		p.top = p.end
@@ -228,12 +233,64 @@ func (p *webtoonPager) next(last bool) (image.Image, bool) {
 	return page, true
 }
 
+// padWebtoonPage fills a page shorter than the view (pageH) up to it, with the page centered.
+//
+// The rows added above and below take the color of the edge of the page, when most of it has this color:
+// a dark scene stays dark on the whole page, instead of a black strip in the middle of the background of the view,
+// and a cut through a text on a white background stays white.
+// Otherwise the edge takes the color of the other one, or the background when none has a main color.
+func padWebtoonPage(page *image.RGBA, pageH int, background color.Color) image.Image {
+	b := page.Bounds()
+	if b.Dy() >= pageH || b.Dy() == 0 {
+		return page
+	}
+
+	edge := func(y int) (color.Color, bool) {
+		grays := make([]int, b.Dx())
+		for x := range grays {
+			grays[x] = int(color.GrayModel.Convert(page.At(b.Min.X+x, y)).(color.Gray).Y)
+		}
+		sorted := slices.Clone(grays)
+		slices.Sort(sorted)
+		median := sorted[len(sorted)/2]
+
+		near := 0
+		for _, v := range grays {
+			if abs(v-median) <= webtoonGapTolerance {
+				near++
+			}
+		}
+		if near*100 < len(grays)*webtoonEdgeMainColor {
+			return nil, false
+		}
+		return page.At(b.Min.X+slices.Index(grays, median), y), true
+	}
+	top, topFlat := edge(b.Min.Y)
+	bottom, bottomFlat := edge(b.Max.Y - 1)
+	switch {
+	case !topFlat && !bottomFlat:
+		top, bottom = background, background
+	case !topFlat:
+		top = bottom
+	case !bottomFlat:
+		bottom = top
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, b.Dx(), pageH))
+	offset := (pageH - b.Dy()) / 2
+	draw.Draw(dst, image.Rect(0, 0, b.Dx(), offset), image.NewUniform(top), image.Point{}, draw.Src)
+	draw.Draw(dst, image.Rect(0, offset, b.Dx(), offset+b.Dy()), page, b.Min, draw.Src)
+	draw.Draw(dst, image.Rect(0, offset+b.Dy(), b.Dx(), pageH), image.NewUniform(bottom), image.Point{}, draw.Src)
+	return dst
+}
+
 // webtoonPages cuts the webtoon into pages of the size of the view.
 //
 // The images of a directory are the pieces of a long vertical strip: they are put back in order and
 // joined, then cut into pages with the aspect ratio of the view (see WebtoonAspectRatio), in the gaps between the panels when possible.
 // Each directory is a chapter, the pages keep the path of the directory, and are named after the first image
-// they come from. progress is called for each source image read.
+// they come from. A page shorter than the view is filled up to it (see padWebtoonPage).
+// progress is called for each source image read.
 func (e ePUBImageProcessor) webtoonPages(in <-chan task, progress func()) <-chan task {
 	out := make(chan task, e.Workers)
 
@@ -250,11 +307,12 @@ func (e ePUBImageProcessor) webtoonPages(in <-chan task, progress func()) <-chan
 			count int
 		)
 
-		send := func(img image.Image) {
+		background := utils.StyleColor(e.Image.IsGrayScale(), e.Image.GrayScaleMode, e.Image.View.Color.Background)
+		send := func(img *image.RGBA) {
 			count++
 			out <- task{
 				Id:    id,
-				Image: img,
+				Image: padWebtoonPage(img, pager.pageH, background),
 				Path:  path,
 				Name:  fmt.Sprintf("%s-%04d", name, count),
 			}

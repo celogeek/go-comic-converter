@@ -132,13 +132,74 @@ func TestWebtoonPages(t *testing.T) {
 		got = append(got, fmt.Sprintf("%d %s/%s %d %v", p.Id, p.Path, p.Name, p.Image.Bounds().Dy(), p.Error))
 	}
 
-	// pages of 200 rows, without gap: cut through the drawing with an overlap of 8 rows.
+	// pages of 200 rows, without gap: cut through the drawing with an overlap of 8 rows,
+	// the last one (108 rows) is filled up to the height of the view.
 	// The corrupted image is a page of its own, with its error.
 	assert.Equal(t, []string{
 		"0 a/1.jpg-0001 200 <nil>",
-		"1 a/1.jpg-0002 108 <nil>",
+		"1 a/1.jpg-0002 200 <nil>",
 		"2 a/2.jpg 10 corrupted",
 		"3 b/1.jpg-0001 200 <nil>",
-		"4 b/1.jpg-0002 108 <nil>",
+		"4 b/1.jpg-0002 200 <nil>",
 	}, got)
+}
+
+func TestPadWebtoonPage(t *testing.T) {
+	gray := func(img image.Image, y int) uint8 {
+		return color.GrayModel.Convert(img.At(50, y)).(color.Gray).Y
+	}
+	// a page of 40 rows: [0, 10) top edge, [10, 30) content, [30, 40) bottom edge
+	page := func(top, bottom color.Color) *image.RGBA {
+		img := image.NewRGBA(image.Rect(0, 0, 100, 40))
+		draw.Draw(img, image.Rect(0, 0, 100, 10), image.NewUniform(top), image.Point{}, draw.Src)
+		draw.Draw(img, image.Rect(0, 30, 100, 40), image.NewUniform(bottom), image.Point{}, draw.Src)
+		for x := 0; x < 100; x += 2 {
+			draw.Draw(img, image.Rect(x, 10, x+1, 30), image.NewUniform(color.White), image.Point{}, draw.Src)
+		}
+		return img
+	}
+	gray128 := color.Gray{Y: 128}
+
+	for _, c := range []struct {
+		name        string
+		page        *image.RGBA
+		top, bottom uint8
+	}{
+		{"black scene", page(color.Black, color.Black), 0, 0},
+		{"white gutter above a black scene", page(color.White, color.Black), 255, 0},
+		{"the bottom is not flat", func() *image.RGBA {
+			img := page(color.Black, color.Black)
+			for x := 0; x < 100; x += 2 {
+				draw.Draw(img, image.Rect(x, 39, x+1, 40), image.NewUniform(color.White), image.Point{}, draw.Src)
+			}
+			return img
+		}(), 0, 0},
+		{"a cut through a text on white", func() *image.RGBA {
+			img := page(color.Black, color.White)
+			// 10% of the bottom edge is the text
+			draw.Draw(img, image.Rect(0, 39, 10, 40), image.NewUniform(color.Black), image.Point{}, draw.Src)
+			return img
+		}(), 0, 255},
+		{"no flat edge: the background", func() *image.RGBA {
+			img := page(color.Black, color.Black)
+			for x := 0; x < 100; x += 2 {
+				draw.Draw(img, image.Rect(x, 0, x+1, 1), image.NewUniform(gray128), image.Point{}, draw.Src)
+				draw.Draw(img, image.Rect(x, 39, x+1, 40), image.NewUniform(color.White), image.Point{}, draw.Src)
+			}
+			return img
+		}(), 128, 128},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got := padWebtoonPage(c.page, 100, gray128)
+			// centered: 30 rows added above, 30 below
+			assert.Equal(t, image.Rect(0, 0, 100, 100), got.Bounds())
+			assert.Equal(t, c.top, gray(got, 0), "top")
+			assert.Equal(t, c.bottom, gray(got, 99), "bottom")
+			assert.Equal(t, gray(c.page, 20), gray(got, 50), "content")
+		})
+	}
+
+	// a page as high as the view is kept
+	full := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	assert.Same(t, full, padWebtoonPage(full, 100, gray128))
 }
