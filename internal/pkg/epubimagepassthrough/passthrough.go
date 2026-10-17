@@ -375,6 +375,11 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		decodeConfig = jpeg.DecodeConfig
 		decode = jpeg.Decode
 	case ".jxl":
+		// the image is stored as is: the device must display it
+		if err = e.Image.CheckFormat("jxl"); err != nil {
+			err = fmt.Errorf("%w, it can't be kept in the copy mode: %s", err, fn)
+			return
+		}
 		format = "jxl"
 		decodeConfig = jxl.DecodeConfig
 		decode = func(r io.Reader) (image.Image, error) { return jxl.Decode(r) }

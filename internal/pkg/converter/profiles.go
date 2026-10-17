@@ -90,14 +90,14 @@ func NewProfiles() Profiles {
 		{"RM2", epuboptions.ReMarkable, 2020, 1404, 1872, "reMarkable 2", epuboptions.Features{}},
 		{"RM1", epuboptions.ReMarkable, 2017, 1404, 1872, "reMarkable 1", epuboptions.Features{}},
 		// Apple, the standard resolution first, then by year of the latest device of the profile, newest first. The panel view is handled by Apple Books
-		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
+		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
 		// TODO: provisional size taken from the leaks of the inner display (2713 x 1920), Apple has not published
 		// the resolution of the iPhone Duo yet (on sale 2026-10-23). To update once it is released.
-		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
+		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
 	}
 
 	for i := range profiles {
@@ -112,7 +112,7 @@ func NewProfiles() Profiles {
 // String table of the profiles: a row per profile, with the features of the device.
 func (p Profiles) String() string {
 	rows := make([][]string, 0, len(p)+2)
-	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "Description"})
+	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "JXL", "Description"})
 	rows = append(rows, nil) // separator
 	for _, v := range p {
 		year := ""
@@ -129,6 +129,7 @@ func (p Profiles) String() string {
 			yesOrNot(v.Features.PanelView),
 			yesOrNot(v.Features.Manga),
 			yesOrNot(v.Features.Landscape),
+			yesOrNot(v.Features.JXL),
 			v.Description,
 		})
 	}

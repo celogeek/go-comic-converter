@@ -43,6 +43,10 @@ func TestValidate(t *testing.T) {
 		{"landscape off with a profile that has not it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = false }, false},
 		{"landscape with a kindle without it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = true }, true},
 		{"landscape with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Landscape = true }, true},
+		{"jxl with apple books", func(c *Converter) { c.Options.Profile = "AB"; c.Options.Image.Format = "jxl" }, false},
+		{"jxl with a kindle", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Format = "jxl" }, true},
+		{"jxl with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Format = "jxl" }, true},
+		{"jxl with a remarkable", func(c *Converter) { c.Options.Profile = "RMP"; c.Options.Image.Format = "jxl" }, true},
 		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeManga }, true},
 		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeComic }, false},
 		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Mode = epuboptions.ModeManga }, false},
@@ -264,7 +268,7 @@ func TestProfilesString(t *testing.T) {
 	if want := len(NewProfiles()) + 2; len(lines) != want {
 		t.Fatalf("got %d lines, want %d", len(lines), want)
 	}
-	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "Description"} {
+	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "JXL", "Description"} {
 		if !strings.Contains(lines[0], h) {
 			t.Errorf("header %q missing: %q", h, lines[0])
 		}

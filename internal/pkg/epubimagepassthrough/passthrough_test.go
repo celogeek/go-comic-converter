@@ -64,8 +64,16 @@ func TestCopyRawDataToStorage(t *testing.T) {
 		if err := jxl.Encode(&jbuf, image.NewGray(image.Rect(0, 0, 30, 20))); err != nil {
 			t.Fatal(err)
 		}
+		getData := func() ([]byte, error) { return jbuf.Bytes(), nil }
+
+		// the image is kept as is: the device must display it
+		if _, err := e.copyRawDataToStorage(storage, getData, 0, "", "ch1/000.JXL"); !errors.Is(err, epuboptions.ErrJXLNotSupported) {
+			t.Fatalf("got %v, want %v", err, epuboptions.ErrJXLNotSupported)
+		}
+
 		// the cover (id 0) is also decoded
-		img, err := e.copyRawDataToStorage(storage, func() ([]byte, error) { return jbuf.Bytes(), nil }, 0, "", "ch1/000.JXL")
+		ej := ePUBImagePassthrough{epuboptions.EPUBOptions{Image: epuboptions.Image{Features: epuboptions.Features{JXL: true}}}}
+		img, err := ej.copyRawDataToStorage(storage, getData, 0, "", "ch1/000.JXL")
 		if err != nil {
 			t.Fatal(err)
 		}

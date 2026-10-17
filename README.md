@@ -38,7 +38,7 @@ EPUB is now support by Amazon through [SendToKindle](https://www.amazon.com/gp/s
 - Save and reuse your own perfect settings
 - Multi tasks for fast conversion
 - Apple Books mode, set by the profile: the double page is split and keeps its aspect, the pages are balanced by Apple Books with a blank page when needed, and the tile size follows its limit (`AB` profile)
-- The features of the profile (color, panel view, zoom, manga, landscape) are checked where the options are used, so they also apply when the converter is called without the checks of the command line
+- The features of the profile (color, panel view, zoom, manga, landscape, jxl) are checked where the options are used, so they also apply when the converter is called without the checks of the command line
 - reMarkable: one image per page, no spread, no tile and no manga mode
 - JSON output for programmatic usage
 - Support cover caption with the part number when the EPUB is split
@@ -147,9 +147,9 @@ The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`, `jxl`.
 
 The case for extensions doesn't matter.
 
-The `jxl` output format (JPEG XL) is lossless with `-quality 100`. `-jxl-effort` trades the encoding time for smaller files. Few readers can display it: check that yours supports `image/jxl` (Apple Books on recent systems does, the Kindle and Kobo don't).
+The `jxl` output format (JPEG XL) is lossless with `-quality 100`. `-jxl-effort` trades the encoding time for smaller files. It is a feature of the profile: only the Apple Books profiles support it, the Kindle, Kobo and reMarkable can't display it.
 
-For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`, `jxl`
+For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`, `jxl` (the jxl images are kept as they are: only with a profile that supports jxl)
 
 # Usage
 
@@ -539,72 +539,72 @@ Output:
 Config:
   -profile=string (default "SR")
     	Profile to use: 
-    	Device      Code     Year  Resolution   Zoom  Color  Panel view  Manga  Landscape  Description
-    	----------  -------  ----  -----------  ----  -----  ----------  -----  ---------  --------------------------------------
-    	Kindle      HR             2400 x 3840  x1    yes                yes               Kindle High Resolution
-    	Kindle      SR             1200 x 1920  x1    yes                yes               Kindle Standard Resolution
-    	Kindle      KS3      2025  1980 x 2640  x1                       yes    yes        Kindle Scribe 3
-    	Kindle      KSC      2025  1980 x 2640  x1    yes                yes    yes        Kindle Scribe Colorsoft
-    	Kindle      K12      2024  1072 x 1448  x1                       yes               Kindle 12
-    	Kindle      KPW12    2024  1264 x 1680  x1                       yes               Kindle Paperwhite 12/Signature Edition
-    	Kindle      KCS      2024  1264 x 1680  x1    yes                yes               Kindle Colorsoft
-    	Kindle      KS2      2024  1860 x 2480  x1                       yes    yes        Kindle Scribe 2
-    	Kindle      K11      2022  1072 x 1448  x1                       yes               Kindle 11
-    	Kindle      KS       2022  1860 x 2480  x1                       yes    yes        Kindle Scribe
-    	Kindle      KPW5     2021  1236 x 1648  x1           yes         yes               Kindle Paperwhite 5/Signature Edition
-    	Kindle      K10      2019   600 x 800   x1           yes         yes               Kindle 10
-    	Kindle      KO3      2019  1264 x 1680  x1           yes         yes               Kindle Oasis 3
-    	Kindle      KPW4     2018  1072 x 1448  x1           yes         yes               Kindle Paperwhite 4
-    	Kindle      KO2      2017  1264 x 1680  x1           yes         yes               Kindle Oasis 2
-    	Kindle      KO1      2016  1072 x 1448  x1           yes         yes               Kindle Oasis 1
-    	Kindle      K8       2016   600 x 800   x1           yes         yes               Kindle 8
-    	Kindle      KPW3     2015  1072 x 1448  x1           yes         yes               Kindle Paperwhite 3
-    	Kindle      K7       2014   600 x 800   x1           yes         yes               Kindle 7
-    	Kindle      KV       2014  1072 x 1448  x1           yes         yes               Kindle Voyage
-    	Kindle      KPW2     2013   758 x 1024  x1           yes         yes               Kindle Paperwhite 2
-    	Kindle      K5       2012   600 x 800   x1           yes         yes               Kindle 5
-    	Kindle      KPW1     2012   758 x 1024  x1           yes         yes               Kindle Paperwhite 1
-    	Kindle      K4       2011   600 x 800   x1           yes         yes               Kindle 4
-    	Kindle      KT       2011   600 x 800   x1           yes         yes               Kindle Touch
-    	Kindle      K3       2010   600 x 800   x1           yes         yes               Kindle Keyboard
-    	Kindle      K2       2009   600 x 800   x1           yes         yes               Kindle 2
-    	Kindle      KDX      2009   824 x 1200  x1           yes         yes               Kindle DX/DXG
-    	Kindle      K1       2007   600 x 800   x1           yes         yes               Kindle 1
-    	Kobo        KoCBW    2024  1072 x 1448  x1                       yes               Kobo Clara BW
-    	Kobo        KoCC     2024  1072 x 1448  x1    yes                yes               Kobo Clara Colour
-    	Kobo        KoLC     2024  1264 x 1680  x1    yes                yes               Kobo Libra Colour
-    	Kobo        KoE2     2023  1404 x 1872  x1                       yes               Kobo Elipsa 2E
-    	Kobo        KoC2E    2022  1072 x 1448  x1                       yes               Kobo Clara 2E
-    	Kobo        KoE      2021  1404 x 1872  x1                       yes               Kobo Elipsa
-    	Kobo        KoS      2021  1440 x 1920  x1                       yes               Kobo Sage
-    	Kobo        KoL2     2021  1264 x 1680  x1                       yes               Kobo Libra 2
-    	Kobo        KoN      2020   758 x 1024  x1                       yes               Kobo Nia
-    	Kobo        KoLH2O   2019  1264 x 1680  x1                       yes               Kobo Libra H2O
-    	Kobo        KoCHD    2018  1072 x 1448  x1                       yes               Kobo Clara HD
-    	Kobo        KoF      2018  1440 x 1920  x1                       yes               Kobo Forma
-    	Kobo        KoAH2O2  2017  1080 x 1430  x1                       yes               Kobo Aura H2O Edition 2
-    	Kobo        KoAO     2016  1404 x 1872  x1                       yes               Kobo Aura One
-    	Kobo        KoA2     2016   758 x 1024  x1                       yes               Kobo Aura Edition 2
-    	Kobo        KoGHD    2015  1072 x 1448  x1                       yes               Kobo Glo HD
-    	Kobo        KoT2     2015   600 x 800   x1                       yes               Kobo Touch 2.0
-    	Kobo        KoAH2O   2014  1080 x 1430  x1                       yes               Kobo Aura H2O
-    	Kobo        KoA      2013   758 x 1024  x1                       yes               Kobo Aura
-    	Kobo        KoAHD    2013  1080 x 1440  x1                       yes               Kobo Aura HD
-    	Kobo        KoM      2012   600 x 800   x1                       yes               Kobo Mini
-    	Kobo        KoG      2012   758 x 1024  x1                       yes               Kobo Glo
-    	Kobo        KoT      2011   600 x 800   x1                       yes               Kobo Touch
-    	Kobo        KoR      2010   600 x 800   x1                       yes               Kobo eReader
-    	reMarkable  RMPU     2026  1404 x 1872  x1                                         reMarkable Paper Pure
-    	reMarkable  RMPM     2025   954 x 1696  x1    yes                                  reMarkable Paper Pro Move
-    	reMarkable  RMP      2024  1620 x 2160  x1    yes                                  reMarkable Paper Pro
-    	reMarkable  RM2      2020  1404 x 1872  x1                                         reMarkable 2
-    	reMarkable  RM1      2017  1404 x 1872  x1                                         reMarkable 1
-    	Apple       AB             1640 x 2360  x1.5  yes                yes               Apple Books Standard Resolution
-    	Apple       ABD      2026  1920 x 2713  x1.5  yes                yes               Apple Books on iPhone Duo
-    	Apple       ABP11    2025  1668 x 2420  x1.5  yes                yes               Apple Books on iPad Pro 11"
-    	Apple       ABP13    2025  2064 x 2752  x1.5  yes                yes               Apple Books on iPad Pro 13"
-    	Apple       ABI      2025  1320 x 2868  x1.5  yes                yes               Apple Books on iPhone
-    	Apple       ABM      2024  1488 x 2266  x1.5  yes                yes               Apple Books on iPad mini
+    	Device      Code     Year  Resolution   Zoom  Color  Panel view  Manga  Landscape  JXL  Description
+    	----------  -------  ----  -----------  ----  -----  ----------  -----  ---------  ---  --------------------------------------
+    	Kindle      HR             2400 x 3840  x1    yes                yes                    Kindle High Resolution
+    	Kindle      SR             1200 x 1920  x1    yes                yes                    Kindle Standard Resolution
+    	Kindle      KS3      2025  1980 x 2640  x1                       yes    yes             Kindle Scribe 3
+    	Kindle      KSC      2025  1980 x 2640  x1    yes                yes    yes             Kindle Scribe Colorsoft
+    	Kindle      K12      2024  1072 x 1448  x1                       yes                    Kindle 12
+    	Kindle      KPW12    2024  1264 x 1680  x1                       yes                    Kindle Paperwhite 12/Signature Edition
+    	Kindle      KCS      2024  1264 x 1680  x1    yes                yes                    Kindle Colorsoft
+    	Kindle      KS2      2024  1860 x 2480  x1                       yes    yes             Kindle Scribe 2
+    	Kindle      K11      2022  1072 x 1448  x1                       yes                    Kindle 11
+    	Kindle      KS       2022  1860 x 2480  x1                       yes    yes             Kindle Scribe
+    	Kindle      KPW5     2021  1236 x 1648  x1           yes         yes                    Kindle Paperwhite 5/Signature Edition
+    	Kindle      K10      2019   600 x 800   x1           yes         yes                    Kindle 10
+    	Kindle      KO3      2019  1264 x 1680  x1           yes         yes                    Kindle Oasis 3
+    	Kindle      KPW4     2018  1072 x 1448  x1           yes         yes                    Kindle Paperwhite 4
+    	Kindle      KO2      2017  1264 x 1680  x1           yes         yes                    Kindle Oasis 2
+    	Kindle      KO1      2016  1072 x 1448  x1           yes         yes                    Kindle Oasis 1
+    	Kindle      K8       2016   600 x 800   x1           yes         yes                    Kindle 8
+    	Kindle      KPW3     2015  1072 x 1448  x1           yes         yes                    Kindle Paperwhite 3
+    	Kindle      K7       2014   600 x 800   x1           yes         yes                    Kindle 7
+    	Kindle      KV       2014  1072 x 1448  x1           yes         yes                    Kindle Voyage
+    	Kindle      KPW2     2013   758 x 1024  x1           yes         yes                    Kindle Paperwhite 2
+    	Kindle      K5       2012   600 x 800   x1           yes         yes                    Kindle 5
+    	Kindle      KPW1     2012   758 x 1024  x1           yes         yes                    Kindle Paperwhite 1
+    	Kindle      K4       2011   600 x 800   x1           yes         yes                    Kindle 4
+    	Kindle      KT       2011   600 x 800   x1           yes         yes                    Kindle Touch
+    	Kindle      K3       2010   600 x 800   x1           yes         yes                    Kindle Keyboard
+    	Kindle      K2       2009   600 x 800   x1           yes         yes                    Kindle 2
+    	Kindle      KDX      2009   824 x 1200  x1           yes         yes                    Kindle DX/DXG
+    	Kindle      K1       2007   600 x 800   x1           yes         yes                    Kindle 1
+    	Kobo        KoCBW    2024  1072 x 1448  x1                       yes                    Kobo Clara BW
+    	Kobo        KoCC     2024  1072 x 1448  x1    yes                yes                    Kobo Clara Colour
+    	Kobo        KoLC     2024  1264 x 1680  x1    yes                yes                    Kobo Libra Colour
+    	Kobo        KoE2     2023  1404 x 1872  x1                       yes                    Kobo Elipsa 2E
+    	Kobo        KoC2E    2022  1072 x 1448  x1                       yes                    Kobo Clara 2E
+    	Kobo        KoE      2021  1404 x 1872  x1                       yes                    Kobo Elipsa
+    	Kobo        KoS      2021  1440 x 1920  x1                       yes                    Kobo Sage
+    	Kobo        KoL2     2021  1264 x 1680  x1                       yes                    Kobo Libra 2
+    	Kobo        KoN      2020   758 x 1024  x1                       yes                    Kobo Nia
+    	Kobo        KoLH2O   2019  1264 x 1680  x1                       yes                    Kobo Libra H2O
+    	Kobo        KoCHD    2018  1072 x 1448  x1                       yes                    Kobo Clara HD
+    	Kobo        KoF      2018  1440 x 1920  x1                       yes                    Kobo Forma
+    	Kobo        KoAH2O2  2017  1080 x 1430  x1                       yes                    Kobo Aura H2O Edition 2
+    	Kobo        KoAO     2016  1404 x 1872  x1                       yes                    Kobo Aura One
+    	Kobo        KoA2     2016   758 x 1024  x1                       yes                    Kobo Aura Edition 2
+    	Kobo        KoGHD    2015  1072 x 1448  x1                       yes                    Kobo Glo HD
+    	Kobo        KoT2     2015   600 x 800   x1                       yes                    Kobo Touch 2.0
+    	Kobo        KoAH2O   2014  1080 x 1430  x1                       yes                    Kobo Aura H2O
+    	Kobo        KoA      2013   758 x 1024  x1                       yes                    Kobo Aura
+    	Kobo        KoAHD    2013  1080 x 1440  x1                       yes                    Kobo Aura HD
+    	Kobo        KoM      2012   600 x 800   x1                       yes                    Kobo Mini
+    	Kobo        KoG      2012   758 x 1024  x1                       yes                    Kobo Glo
+    	Kobo        KoT      2011   600 x 800   x1                       yes                    Kobo Touch
+    	Kobo        KoR      2010   600 x 800   x1                       yes                    Kobo eReader
+    	reMarkable  RMPU     2026  1404 x 1872  x1                                              reMarkable Paper Pure
+    	reMarkable  RMPM     2025   954 x 1696  x1    yes                                       reMarkable Paper Pro Move
+    	reMarkable  RMP      2024  1620 x 2160  x1    yes                                       reMarkable Paper Pro
+    	reMarkable  RM2      2020  1404 x 1872  x1                                              reMarkable 2
+    	reMarkable  RM1      2017  1404 x 1872  x1                                              reMarkable 1
+    	Apple       AB             1640 x 2360  x1.5  yes                yes               yes  Apple Books Standard Resolution
+    	Apple       ABD      2026  1920 x 2713  x1.5  yes                yes               yes  Apple Books on iPhone Duo
+    	Apple       ABP11    2025  1668 x 2420  x1.5  yes                yes               yes  Apple Books on iPad Pro 11"
+    	Apple       ABP13    2025  2064 x 2752  x1.5  yes                yes               yes  Apple Books on iPad Pro 13"
+    	Apple       ABI      2025  1320 x 2868  x1.5  yes                yes               yes  Apple Books on iPhone
+    	Apple       ABM      2024  1488 x 2266  x1.5  yes                yes               yes  Apple Books on iPad mini
   -quality=int (default 85)
     	Quality of the image
   -jxl-effort=int (default 4)
@@ -676,7 +676,7 @@ Config:
     	  1 = size of the device
     	The size of the EPUB grows with the square of the zoom
   -format=string (default "jpeg")
-    	Format of output images: jpeg (lossy), png (lossless), jxl (lossy, lossless with quality 100), copy (no processing)
+    	Format of output images: jpeg (lossy), png (lossless), jxl (lossy, lossless with quality 100, Apple Books only), copy (no processing)
   -aspect-ratio=float
     	Aspect ratio (height/width) of the output, between 0.5 and 3
     	 -1 = same as device

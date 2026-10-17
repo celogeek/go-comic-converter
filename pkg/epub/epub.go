@@ -526,6 +526,10 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 // create the zip
 func (e epub) Write() error {
+	if err := e.Image.CheckFormat(e.Image.Format); err != nil {
+		return err
+	}
+
 	// the epub being written, removed on an interruption
 	var (
 		writingMu sync.Mutex
