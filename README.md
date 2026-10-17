@@ -147,6 +147,9 @@ The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`.
 
 The case for extensions doesn't matter.
 
+The `jxl` output format (JPEG XL) needs the `cjxl` tool of [libjxl](https://github.com/libjxl/libjxl) in the `PATH` (`brew install jpeg-xl`).
+`-quality 100` is lossless. Few readers can display it: check that yours supports `image/jxl` (Apple Books on recent systems does, the Kindle and Kobo don't).
+
 For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`
 
 # Usage
@@ -672,7 +675,7 @@ Config:
     	  1 = size of the device
     	The size of the EPUB grows with the square of the zoom
   -format=string (default "jpeg")
-    	Format of output images: jpeg (lossy), png (lossless), copy (no processing)
+    	Format of output images: jpeg (lossy), png (lossless), jxl (lossy or lossless, needs cjxl), copy (no processing)
   -aspect-ratio=float
     	Aspect ratio (height/width) of the output, between 0.5 and 3
     	 -1 = same as device

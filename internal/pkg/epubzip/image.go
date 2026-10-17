@@ -9,6 +9,8 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"os/exec"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,8 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 		err = png.Encode(&data, img)
 	case "jpeg":
 		err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+	case "jxl":
+		err = encodeJXL(&data, img, quality)
 	default:
 		err = fmt.Errorf("unknown format %q", format)
 	}
@@ -65,6 +69,47 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 		},
 		cdata.Bytes(),
 	}, nil
+}
+
+// LookJXL path of the cjxl tool of libjxl, needed by the jxl format.
+func LookJXL() (string, error) {
+	cjxl, err := exec.LookPath("cjxl")
+	if err != nil {
+		return "", fmt.Errorf("the jxl format needs the cjxl tool of libjxl: %w", err)
+	}
+	return cjxl, nil
+}
+
+// encodeJXL encodes the image with the cjxl tool of libjxl (there is no JPEG XL encoder in Go).
+//
+// The image goes to cjxl as a fast png, and the quality 100 is lossless.
+func encodeJXL(w *bytes.Buffer, img image.Image, quality int) error {
+	cjxl, err := LookJXL()
+	if err != nil {
+		return err
+	}
+
+	var in bytes.Buffer
+	if err = (&png.Encoder{CompressionLevel: png.BestSpeed}).Encode(&in, img); err != nil {
+		return err
+	}
+
+	args := []string{"-", "-", "--quiet", "--num_threads=2"}
+	if quality >= 100 {
+		args = append(args, "--distance=0")
+	} else {
+		args = append(args, "--quality="+strconv.Itoa(quality))
+	}
+
+	var stderr bytes.Buffer
+	cmd := exec.Command(cjxl, args...)
+	cmd.Stdin = &in
+	cmd.Stdout = w
+	cmd.Stderr = &stderr
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("cjxl: %w: %s", err, stderr.String())
+	}
+	return nil
 }
 
 func CompressRaw(filename string, uncompressedData []byte) (Image, error) {
