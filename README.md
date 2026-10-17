@@ -141,15 +141,15 @@ $ go install github.com/celogeek/go-comic-converter/v3@v3.0.0
 
 # Supported image files
 
-The supported image files are jpeg, png, webp and tiff from the sources.
+The supported image files are jpeg, png, webp, tiff and jxl from the sources.
 
-The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`.
+The extensions can be: `jpg`, `jpeg`, `png`, `webp`, `tiff`, `jxl`.
 
 The case for extensions doesn't matter.
 
 The `jxl` output format (JPEG XL) is lossless with `-quality 100`. `-jxl-effort` trades the encoding time for smaller files. Few readers can display it: check that yours supports `image/jxl` (Apple Books on recent systems does, the Kindle and Kobo don't).
 
-For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`
+For the passthrough mode (format=copy), the supported extensions are: `jpg`, `jpeg`, `png`, `jxl`
 
 # Usage
 
