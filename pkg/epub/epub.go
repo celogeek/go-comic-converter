@@ -193,7 +193,7 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 	styles := img.ImgStyles(e.Image.View.Width, e.Image.View.Height)
 	images := make([]epubtemplates.Image, len(styles))
 	for idx, style := range styles {
-		images[idx] = epubtemplates.Image{Path: "Images/" + epubimage.TileName(name, idx) + ".jpeg", Style: style}
+		images[idx] = epubtemplates.Image{Path: "Images/" + epubimage.TileName(name, idx) + "." + e.Image.GeneratedFormat(), Style: style}
 	}
 
 	return images

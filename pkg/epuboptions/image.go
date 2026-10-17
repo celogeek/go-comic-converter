@@ -164,6 +164,15 @@ func (i Image) Tile() epubimage.TileSize {
 	return deviceTiles[i.Device]
 }
 
+// GeneratedFormat format of the images drawn by the converter (the cover and the title): the output format,
+// or jpeg in the copy mode, where the pages keep the format of their source.
+func (i Image) GeneratedFormat() string {
+	if i.Format == "copy" {
+		return "jpeg"
+	}
+	return i.Format
+}
+
 // ZoomFactor zoom of the stored images: the option, or the zoom of the profile, or 1.
 func (i Image) ZoomFactor() float64 {
 	if i.Zoom > 0 {
