@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gen2brain/jxl"
 	"github.com/nwaples/rardecode/v2"
 
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
@@ -329,7 +330,7 @@ func (e ePUBImagePassthrough) loadCbr() (images []epubimage.EPUBImage, err error
 
 func (e ePUBImagePassthrough) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png":
+	case ".jpg", ".jpeg", ".png", ".jxl":
 		{
 			return !strings.HasPrefix(filepath.Base(path), ".")
 		}
@@ -373,6 +374,15 @@ func (e ePUBImagePassthrough) copyRawDataToStorage(
 		format = "jpeg"
 		decodeConfig = jpeg.DecodeConfig
 		decode = jpeg.Decode
+	case ".jxl":
+		// the image is stored as is: the device must display it
+		if err = e.Image.CheckFormat("jxl"); err != nil {
+			err = fmt.Errorf("%w, it can't be kept in the copy mode: %s", err, fn)
+			return
+		}
+		format = "jxl"
+		decodeConfig = jxl.DecodeConfig
+		decode = func(r io.Reader) (image.Image, error) { return jxl.Decode(r) }
 	default:
 		err = fmt.Errorf("unsupported image format (%s): %s", ext, fn)
 		return

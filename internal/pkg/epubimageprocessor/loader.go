@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/gen2brain/go-fitz"
+	_ "github.com/gen2brain/jxl"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
 
@@ -47,10 +48,10 @@ type task struct {
 
 var errNoImagesFound = errors.New("no images found")
 
-// only accept jpg, png and webp as source file
+// only accept jpg, png, webp, tiff and jxl as source file
 func (e ePUBImageProcessor) isSupportedImage(path string) bool {
 	switch strings.ToLower(filepath.Ext(path)) {
-	case ".jpg", ".jpeg", ".png", ".webp", ".tiff":
+	case ".jpg", ".jpeg", ".png", ".webp", ".tiff", ".jxl":
 		{
 			return !strings.HasPrefix(filepath.Base(path), ".")
 		}

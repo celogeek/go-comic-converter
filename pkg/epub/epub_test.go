@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	_ "github.com/gen2brain/jxl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -113,6 +114,49 @@ func TestWriteSplitTitlePageAndCoverCaption(t *testing.T) {
 			)
 		})
 	}
+}
+
+// the cover and the title are in the output format, jpeg in the copy mode.
+func TestWriteCoverTitleFormat(t *testing.T) {
+	input := t.TempDir()
+	writeNoisyImages(t, input, 2)
+
+	for format, want := range map[string]string{"jpeg": "jpeg", "png": "png", "jxl": "jxl", "copy": "jpeg"} {
+		t.Run(format, func(t *testing.T) {
+			o := testOptions(input, filepath.Join(t.TempDir(), "comic.epub"), true)
+			o.LimitMb = 0
+			o.Image.Format = format
+			o.Image.Features.JXL = format == "jxl"
+			require.NoError(t, New(o).Write())
+
+			z, err := zip.OpenReader(o.Output)
+			require.NoError(t, err)
+			defer func() { _ = z.Close() }()
+
+			for _, name := range []string{"cover", "title"} {
+				img, decoded, err := image.Decode(bytes.NewReader(readZipFile(t, z, "OEBPS/Images/"+name+"."+want)))
+				require.NoError(t, err, name)
+				assert.Equal(t, want, decoded, name)
+				assert.False(t, img.Bounds().Empty(), name)
+			}
+			opf := string(readZipFile(t, z, "OEBPS/content.opf"))
+			assert.Contains(t, opf, `href="Images/cover.`+want+`" id="img_cover" media-type="image/`+want+`"`)
+			assert.Contains(t, opf, `href="Images/title.`+want+`" id="img_title" media-type="image/`+want+`"`)
+			assert.Contains(t, string(readZipFile(t, z, "OEBPS/Text/title.xhtml")), `src="../Images/title.`+want+`"`)
+		})
+	}
+}
+
+// only the profiles with the feature support the jxl format.
+func TestWriteJXLNeedsTheFeature(t *testing.T) {
+	input := t.TempDir()
+	writeNoisyImages(t, input, 1)
+
+	o := testOptions(input, filepath.Join(t.TempDir(), "comic.epub"), false)
+	o.Image.Format = "jxl"
+	require.ErrorIs(t, New(o).Write(), epuboptions.ErrJXLNotSupported)
+	_, err := os.Stat(o.Output)
+	assert.True(t, os.IsNotExist(err), "no epub written: %v", err)
 }
 
 // the temporary image storage must be removed whatever the outcome.

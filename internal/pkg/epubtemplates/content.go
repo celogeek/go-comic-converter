@@ -129,14 +129,14 @@ func (o Content) getMeta() []tag {
 	return metas
 }
 
-// imageItems manifest items of the jpeg tiles of the cover or the title image
-func imageItems(key, path string, img epubimage.EPUBImage) []tag {
+// imageItems manifest items of the tiles of the cover or the title image, in the generated format
+func imageItems(key, path, format string, img epubimage.EPUBImage) []tag {
 	items := make([]tag, 0, img.Tiles())
 	for idx := range img.Tiles() {
 		items = append(items, tag{"item", tagAttrs{
 			"id":         epubimage.TileName(key, idx),
-			"href":       epubimage.TileName(path, idx) + ".jpeg",
-			"media-type": "image/jpeg",
+			"href":       epubimage.TileName(path, idx) + "." + format,
+			"media-type": "image/" + format,
 		}, ""})
 	}
 
@@ -156,12 +156,13 @@ func (o Content) getManifest() []tag {
 		)
 	}
 
+	generated := o.ImageOptions.GeneratedFormat()
 	items := []tag{
 		{"item", tagAttrs{"id": "toc", "href": "toc.xhtml", "properties": "nav", "media-type": "application/xhtml+xml"}, ""},
 		{"item", tagAttrs{"id": "ncx", "href": "toc.ncx", "media-type": "application/x-dtbncx+xml"}, ""},
 		{"item", tagAttrs{"id": "css", "href": "Text/style.css", "media-type": "text/css"}, ""},
 		// The cover is only the thumbnail of the book, it has no page.
-		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover.jpeg", "media-type": "image/jpeg", "properties": "cover-image"}, ""},
+		{"item", tagAttrs{"id": "img_cover", "href": "Images/cover." + generated, "media-type": "image/" + generated, "properties": "cover-image"}, ""},
 	}
 
 	if o.ImageOptions.Features.PanelView {
@@ -172,7 +173,7 @@ func (o Content) getManifest() []tag {
 		items = append(items,
 			tag{"item", tagAttrs{"id": "page_title", "href": "Text/title.xhtml", "media-type": "application/xhtml+xml"}, ""},
 		)
-		items = append(items, imageItems("img_title", "Images/title", o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
+		items = append(items, imageItems("img_title", "Images/title", generated, o.ImageOptions.Tile().Tiled(o.ImageOptions.View.Width, o.ImageOptions.View.Height))...)
 
 		if o.ImageOptions.LandscapeMode() {
 			items = append(items, tag{"item", tagAttrs{"id": "space_title", "href": "Text/space_title.xhtml", "media-type": "application/xhtml+xml"}, ""})

@@ -193,7 +193,7 @@ func (e epub) tileImages(name string, img epubimage.EPUBImage) []epubtemplates.I
 	styles := img.ImgStyles(e.Image.View.Width, e.Image.View.Height)
 	images := make([]epubtemplates.Image, len(styles))
 	for idx, style := range styles {
-		images[idx] = epubtemplates.Image{Path: "Images/" + epubimage.TileName(name, idx) + ".jpeg", Style: style}
+		images[idx] = epubtemplates.Image{Path: "Images/" + epubimage.TileName(name, idx) + "." + e.Image.GeneratedFormat(), Style: style}
 	}
 
 	return images
@@ -526,6 +526,10 @@ func (e epub) writePart(path string, currentPart, totalParts int, part epubPart,
 
 // create the zip
 func (e epub) Write() error {
+	if err := e.Image.CheckFormat(e.Image.Format); err != nil {
+		return err
+	}
+
 	// the epub being written, removed on an interruption
 	var (
 		writingMu sync.Mutex

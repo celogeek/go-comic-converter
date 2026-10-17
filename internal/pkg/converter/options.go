@@ -52,6 +52,7 @@ func NewOptions() *Options {
 		EPUBOptions: epuboptions.EPUBOptions{
 			Image: epuboptions.Image{
 				Quality:   85,
+				JXLEffort: 4,
 				GrayScale: true,
 				Crop: epuboptions.Crop{
 					Enabled: true,
@@ -210,7 +211,8 @@ func (o *Options) ShowConfig() string {
 	}{
 		{"Profile", profileDesc, true},
 		{"Format", o.Image.Format, true},
-		{"Quality", o.Image.Quality, o.Image.Format == "jpeg"},
+		{"Quality", o.Image.Quality, o.Image.Format == "jpeg" || o.Image.Format == "jxl"},
+		{"JXL effort", o.Image.JXLEffort, o.Image.Format == "jxl"},
 		{"Grayscale", o.Image.IsGrayScale(), o.Image.Format != "copy"},
 		{"Grayscale mode", grayscaleMode, o.Image.Format != "copy" && o.Image.IsGrayScale()},
 		{"Crop", o.Image.Crop.Enabled, o.Image.Format != "copy" && !o.Image.WebtoonMode()},

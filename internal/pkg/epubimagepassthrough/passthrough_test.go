@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gen2brain/jxl"
+
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/fonts"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
@@ -56,6 +58,32 @@ func TestCopyRawDataToStorage(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("jxl", func(t *testing.T) {
+		var jbuf bytes.Buffer
+		if err := jxl.Encode(&jbuf, image.NewGray(image.Rect(0, 0, 30, 20))); err != nil {
+			t.Fatal(err)
+		}
+		getData := func() ([]byte, error) { return jbuf.Bytes(), nil }
+
+		// the image is kept as is: the device must display it
+		if _, err := e.copyRawDataToStorage(storage, getData, 0, "", "ch1/000.JXL"); !errors.Is(err, epuboptions.ErrJXLNotSupported) {
+			t.Fatalf("got %v, want %v", err, epuboptions.ErrJXLNotSupported)
+		}
+
+		// the cover (id 0) is also decoded
+		ej := ePUBImagePassthrough{epuboptions.EPUBOptions{Image: epuboptions.Image{Features: epuboptions.Features{JXL: true}}}}
+		img, err := ej.copyRawDataToStorage(storage, getData, 0, "", "ch1/000.JXL")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if img.Format != "jxl" || img.Width != 30 || img.Height != 20 || !img.DoublePage || img.Raw == nil {
+			t.Errorf("got %s %dx%d double %v raw %v", img.Format, img.Width, img.Height, img.DoublePage, img.Raw != nil)
+		}
+		if img.MediaType() != "image/jxl" || img.EPUBImgPath() != "OEBPS/Images/img_0_p0.jxl" {
+			t.Errorf("got %s %s", img.MediaType(), img.EPUBImgPath())
+		}
+	})
 
 	t.Run("unsupported extension", func(t *testing.T) {
 		if _, err := e.copyRawDataToStorage(storage, func() ([]byte, error) { return data, nil }, 1, "", "a.gif"); err == nil {

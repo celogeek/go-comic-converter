@@ -10,6 +10,8 @@ import (
 	"image/jpeg"
 	"image/png"
 	"time"
+
+	"github.com/gen2brain/jxl"
 )
 
 type Image struct {
@@ -18,7 +20,9 @@ type Image struct {
 }
 
 // CompressImage create gzip encoded jpeg
-func CompressImage(filename string, format string, img image.Image, quality int) (Image, error) {
+//
+// The effort only applies to the jxl format.
+func CompressImage(filename string, format string, img image.Image, quality int, effort int) (Image, error) {
 	var (
 		data, cdata bytes.Buffer
 		err         error
@@ -29,6 +33,9 @@ func CompressImage(filename string, format string, img image.Image, quality int)
 		err = png.Encode(&data, img)
 	case "jpeg":
 		err = jpeg.Encode(&data, img, &jpeg.Options{Quality: quality})
+	case "jxl":
+		// the workers already encode the images in parallel
+		err = jxl.Encode(&data, img, jxl.EncodeOptions{Quality: quality, Lossless: quality >= 100, Threads: 2, Effort: effort})
 	default:
 		err = fmt.Errorf("unknown format %q", format)
 	}

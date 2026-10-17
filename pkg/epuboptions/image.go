@@ -1,6 +1,10 @@
 package epuboptions
 
-import "github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+import (
+	"errors"
+
+	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubimage"
+)
 
 // Limits of the zoom of the stored images, relative to the size of the view.
 const (
@@ -35,6 +39,8 @@ type Features struct {
 	Manga bool `json:"manga"`
 	// Landscape is true when the device has the landscape only mode (Kindle Scribe).
 	Landscape bool `json:"landscape"`
+	// JXL is true when the reader displays the JPEG XL images (Apple Books): the jxl format is refused otherwise.
+	JXL bool `json:"jxl"`
 	// Zoom is the default zoom of the images: they are stored bigger than the view (1 = the size of the view).
 	// It is 1 when unset.
 	Zoom float64 `json:"zoom"`
@@ -48,8 +54,10 @@ const (
 )
 
 type Image struct {
-	Crop                      Crop `yaml:"crop" json:"crop"`
-	Quality                   int  `yaml:"quality" json:"quality"`
+	Crop    Crop `yaml:"crop" json:"crop"`
+	Quality int  `yaml:"quality" json:"quality"`
+	// JXLEffort is the effort of the jxl encoder, from 1 (fast) to 7 (smaller files).
+	JXLEffort                 int  `yaml:"jxl_effort" json:"jxl_effort"`
 	Brightness                int  `yaml:"brightness" json:"brightness"`
 	Contrast                  int  `yaml:"contrast" json:"contrast"`
 	AutoContrast              bool `yaml:"auto_contrast" json:"auto_contrast"`
@@ -160,6 +168,26 @@ var deviceTiles = map[DeviceType]epubimage.TileSize{
 // Only the devices with a constraint have one, the other devices get no tile (the zero value).
 func (i Image) Tile() epubimage.TileSize {
 	return deviceTiles[i.Device]
+}
+
+// ErrJXLNotSupported the profile can't display the JPEG XL images.
+var ErrJXLNotSupported = errors.New("the profile doesn't support the jxl format")
+
+// CheckFormat tells if the device can display the images in the format: only the profiles with the feature support jxl.
+func (i Image) CheckFormat(format string) error {
+	if format == "jxl" && !i.Features.JXL {
+		return ErrJXLNotSupported
+	}
+	return nil
+}
+
+// GeneratedFormat format of the images drawn by the converter (the cover and the title): the output format,
+// or jpeg in the copy mode, where the pages keep the format of their source.
+func (i Image) GeneratedFormat() string {
+	if i.Format == "copy" {
+		return "jpeg"
+	}
+	return i.Format
 }
 
 // ZoomFactor zoom of the stored images: the option, or the zoom of the profile, or 1.

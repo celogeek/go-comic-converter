@@ -250,12 +250,12 @@ func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimag
 		img.Cols, img.Rows = img.Tile.Grid(img.Width, img.Height)
 	}
 	if !ok || img.Tiles() == 1 {
-		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
+		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality, e.Image.JXLEffort)
 	}
 
 	b := img.Raw.Bounds()
 	for idx := range img.Tiles() {
-		if err := s.Add(img.EPUBTileImgPath(idx), sub.SubImage(img.TileBounds(idx, b)), e.Image.Quality); err != nil {
+		if err := s.Add(img.EPUBTileImgPath(idx), sub.SubImage(img.TileBounds(idx, b)), e.Image.Quality, e.Image.JXLEffort); err != nil {
 			return err
 		}
 	}
@@ -424,7 +424,7 @@ func (e ePUBImageProcessor) cover16LevelOfGray(bounds image.Rectangle) draw.Imag
 	})
 }
 
-// CoverTitleData draws the title box on the source image (the cover or the title page background) and compresses it to jpeg.
+// CoverTitleData draws the title box on the source image (the cover or the title page background) and compresses it in the generated format.
 //
 // The title image bigger than the tile size of the device is stored as a grid of tiles, like the pages.
 // The cover is only used as thumbnail, so it is never tiled, but it is always reduced to the max size,
@@ -462,10 +462,11 @@ func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.I
 		}
 
 		img, err := epubzip.CompressImage(
-			"OEBPS/Images/"+epubimage.TileName(o.Name, idx)+".jpeg",
-			"jpeg",
+			"OEBPS/Images/"+epubimage.TileName(o.Name, idx)+"."+e.Image.GeneratedFormat(),
+			e.Image.GeneratedFormat(),
 			part,
 			e.Image.Quality,
+			e.Image.JXLEffort,
 		)
 		if err != nil {
 			return nil, err

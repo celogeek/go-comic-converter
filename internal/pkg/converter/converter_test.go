@@ -23,6 +23,10 @@ func TestValidate(t *testing.T) {
 		{"quality 100", func(c *Converter) { c.Options.Image.Quality = 100 }, false},
 		{"quality 0", func(c *Converter) { c.Options.Image.Quality = 0 }, true},
 		{"quality 101", func(c *Converter) { c.Options.Image.Quality = 101 }, true},
+		{"jxl effort 1", func(c *Converter) { c.Options.Image.JXLEffort = 1 }, false},
+		{"jxl effort 7", func(c *Converter) { c.Options.Image.JXLEffort = 7 }, false},
+		{"jxl effort 0", func(c *Converter) { c.Options.Image.JXLEffort = 0 }, true},
+		{"jxl effort 8", func(c *Converter) { c.Options.Image.JXLEffort = 8 }, true},
 		{"aspect ratio device", func(c *Converter) { c.Options.Image.View.AspectRatio = -1 }, false},
 		{"aspect ratio source", func(c *Converter) { c.Options.Image.View.AspectRatio = 0 }, false},
 		{"aspect ratio 1.6", func(c *Converter) { c.Options.Image.View.AspectRatio = 1.6 }, false},
@@ -39,6 +43,10 @@ func TestValidate(t *testing.T) {
 		{"landscape off with a profile that has not it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = false }, false},
 		{"landscape with a kindle without it", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Landscape = true }, true},
 		{"landscape with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Landscape = true }, true},
+		{"jxl with apple books", func(c *Converter) { c.Options.Profile = "AB"; c.Options.Image.Format = "jxl" }, false},
+		{"jxl with a kindle", func(c *Converter) { c.Options.Profile = "SR"; c.Options.Image.Format = "jxl" }, true},
+		{"jxl with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Format = "jxl" }, true},
+		{"jxl with a remarkable", func(c *Converter) { c.Options.Profile = "RMP"; c.Options.Image.Format = "jxl" }, true},
 		{"manga with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeManga }, true},
 		{"normal with a reMarkable", func(c *Converter) { c.Options.Profile = "RM2"; c.Options.Image.Mode = epuboptions.ModeComic }, false},
 		{"manga with a kobo", func(c *Converter) { c.Options.Profile = "KoE"; c.Options.Image.Mode = epuboptions.ModeManga }, false},
@@ -260,9 +268,14 @@ func TestProfilesString(t *testing.T) {
 	if want := len(NewProfiles()) + 2; len(lines) != want {
 		t.Fatalf("got %d lines, want %d", len(lines), want)
 	}
-	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "Description"} {
+	for _, h := range []string{"Device", "Code", "Year", "Resolution", "Zoom", "Description", "Features"} {
 		if !strings.Contains(lines[0], h) {
 			t.Errorf("header %q missing: %q", h, lines[0])
+		}
+	}
+	for _, l := range lines {
+		if strings.TrimRight(l, " ") != l {
+			t.Errorf("trailing spaces: %q", l)
 		}
 	}
 	if strings.Trim(lines[1], "- ") != "" {
@@ -272,8 +285,10 @@ func TestProfilesString(t *testing.T) {
 		code string
 		want []string
 	}{
-		{"K1", []string{"Kindle", "2007", "600 x 800", "x1", "Kindle 1"}},
-		{"AB", []string{"Apple", "1640 x 2360", "x1.5", "yes", "Apple Books Standard Resolution"}},
+		{"K1", []string{"Kindle", "2007", "600 x 800", "x1", "Kindle 1", "panel view, manga"}},
+		{"KSC", []string{"Kindle", "2025", "1980 x 2640", "x1", "Kindle Scribe Colorsoft", "color, manga, landscape"}},
+		{"AB", []string{"Apple", "1640 x 2360", "x1.5", "Apple Books Standard Resolution", "color, manga, jxl"}},
+		{"RM1", []string{"reMarkable", "2017", "1404 x 1872", "x1", "reMarkable 1"}},
 	} {
 		var row string
 		for _, l := range lines[2:] {

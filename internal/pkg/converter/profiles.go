@@ -90,14 +90,14 @@ func NewProfiles() Profiles {
 		{"RM2", epuboptions.ReMarkable, 2020, 1404, 1872, "reMarkable 2", epuboptions.Features{}},
 		{"RM1", epuboptions.ReMarkable, 2017, 1404, 1872, "reMarkable 1", epuboptions.Features{}},
 		// Apple, the standard resolution first, then by year of the latest device of the profile, newest first. The panel view is handled by Apple Books
-		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
+		{"AB", epuboptions.Apple, 0, 1640, 2360, "Apple Books Standard Resolution", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
 		// TODO: provisional size taken from the leaks of the inner display (2713 x 1920), Apple has not published
 		// the resolution of the iPhone Duo yet (on sale 2026-10-23). To update once it is released.
-		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
-		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", epuboptions.Features{Manga: true, Color: true, Zoom: 1.5}},
+		{"ABD", epuboptions.Apple, 2026, 1920, 2713, "Apple Books on iPhone Duo", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABP11", epuboptions.Apple, 2025, 1668, 2420, "Apple Books on iPad Pro 11\"", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABP13", epuboptions.Apple, 2025, 2064, 2752, "Apple Books on iPad Pro 13\"", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABI", epuboptions.Apple, 2025, 1320, 2868, "Apple Books on iPhone", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
+		{"ABM", epuboptions.Apple, 2024, 1488, 2266, "Apple Books on iPad mini", epuboptions.Features{Manga: true, Color: true, JXL: true, Zoom: 1.5}},
 	}
 
 	for i := range profiles {
@@ -109,10 +109,10 @@ func NewProfiles() Profiles {
 	return profiles
 }
 
-// String table of the profiles: a row per profile, with the features of the device.
+// String table of the profiles: a row per profile, with the features of the device in the last column.
 func (p Profiles) String() string {
 	rows := make([][]string, 0, len(p)+2)
-	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "Description"})
+	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Description", "Features"})
 	rows = append(rows, nil) // separator
 	for _, v := range p {
 		year := ""
@@ -125,11 +125,8 @@ func (p Profiles) String() string {
 			year,
 			fmt.Sprintf("%4d x %-4d", v.Width, v.Height),
 			"x" + utils.FloatToString(v.Features.Zoom, -1),
-			yesOrNot(v.Features.Color),
-			yesOrNot(v.Features.PanelView),
-			yesOrNot(v.Features.Manga),
-			yesOrNot(v.Features.Landscape),
 			v.Description,
+			featureList(v.Features),
 		})
 	}
 
@@ -153,15 +150,29 @@ func (p Profiles) String() string {
 				cells[i] = fmt.Sprintf("%-*s", widths[i], r[i])
 			}
 		}
-		lines = append(lines, strings.Join(cells, "  "))
+		// a device without feature leaves the padding of the description
+		lines = append(lines, strings.TrimRight(strings.Join(cells, "  "), " "))
 	}
 
 	return strings.Join(lines, "\n")
 }
 
-func yesOrNot(b bool) string {
-	if b {
-		return "yes"
+// featureList the features of the device, in one column.
+func featureList(f epuboptions.Features) string {
+	features := make([]string, 0, 5)
+	for _, v := range []struct {
+		name    string
+		enabled bool
+	}{
+		{"color", f.Color},
+		{"panel view", f.PanelView},
+		{"manga", f.Manga},
+		{"landscape", f.Landscape},
+		{"jxl", f.JXL},
+	} {
+		if v.enabled {
+			features = append(features, v.name)
+		}
 	}
-	return ""
+	return strings.Join(features, ", ")
 }
