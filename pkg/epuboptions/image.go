@@ -48,8 +48,10 @@ const (
 )
 
 type Image struct {
-	Crop                      Crop `yaml:"crop" json:"crop"`
-	Quality                   int  `yaml:"quality" json:"quality"`
+	Crop    Crop `yaml:"crop" json:"crop"`
+	Quality int  `yaml:"quality" json:"quality"`
+	// JXLEffort is the effort of the jxl encoder, from 1 (fast) to 7 (smaller files).
+	JXLEffort                 int  `yaml:"jxl_effort" json:"jxl_effort"`
 	Brightness                int  `yaml:"brightness" json:"brightness"`
 	Contrast                  int  `yaml:"contrast" json:"contrast"`
 	AutoContrast              bool `yaml:"auto_contrast" json:"auto_contrast"`

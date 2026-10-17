@@ -20,7 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celogeek/go-comic-converter/v3/internal/pkg/epubzip"
+	"github.com/gen2brain/jxl"
+
 	"github.com/celogeek/go-comic-converter/v3/internal/pkg/utils"
 	"github.com/celogeek/go-comic-converter/v3/pkg/epuboptions"
 )
@@ -144,6 +145,7 @@ func (c *Converter) InitParse() {
 	c.AddSection(sectionConfig)
 	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
 	c.AddIntParam(&c.Options.Image.Quality, "quality", c.Options.Image.Quality, "Quality of the image")
+	c.AddIntParam(&c.Options.Image.JXLEffort, "jxl-effort", c.Options.Image.JXLEffort, "Effort of the jxl encoder, between 1 (fast) and 7 (smaller files)")
 	c.AddReversibleBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")
 	c.AddIntParam(&c.Options.Image.GrayScaleMode, "grayscale-mode", c.Options.Image.GrayScaleMode, "Grayscale Mode\n0 = normal\n1 = average\n2 = luminance")
 	c.AddReversibleBoolParam(&c.Options.Image.Crop.Enabled, "crop", c.Options.Image.Crop.Enabled, "Crop images")
@@ -169,7 +171,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Image.View.Color.Background, "background-color", c.Options.Image.View.Color.Background, "Background color in hexadecimal format RGB. Black=000000, White=FFFFFF, Light Gray=DDDDDD, Dark Gray=777777")
 	c.AddReversibleBoolParam(&c.Options.Image.Resize, "resize", c.Options.Image.Resize, "Reduce image size if exceed device size")
 	c.AddFloatParam(&c.Options.Image.Zoom, "zoom", c.Options.Image.Zoom, "Zoom of the images, between 1 and 3: they are stored bigger than the device for a better quality when you zoom\n  0 = zoom of the profile (1.5 for Apple Books, 1 for the others)\n  1 = size of the device\nThe size of the EPUB grows with the square of the zoom")
-	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), jxl (lossy or lossless, needs cjxl), copy (no processing)")
+	c.AddStringParam(&c.Options.Image.Format, "format", c.Options.Image.Format, "Format of output images: jpeg (lossy), png (lossless), jxl (lossy, lossless with quality 100), copy (no processing)")
 	c.AddFloatParam(&c.Options.Image.View.AspectRatio, "aspect-ratio", c.Options.Image.View.AspectRatio, "Aspect ratio (height/width) of the output, between 0.5 and 3\n -1 = same as device\n  0 = same as source, not supported by the webtoon mode\n1.6 = amazon advice for kindle")
 	c.AddIntParam(&c.Options.TitlePage, "titlepage", c.Options.TitlePage, "Title page\n0 = never\n1 = always\n2 = only if epub is split")
 	c.AddReversibleBoolParam(&c.Options.CoverCaption, "covercaption", c.Options.CoverCaption, "Set cover caption when the epub is split")
@@ -447,6 +449,11 @@ func (c *Converter) Validate() error {
 		return errors.New("quality should be between 1 and 100")
 	}
 
+	// JXL effort
+	if c.Options.Image.JXLEffort < 1 || c.Options.Image.JXLEffort > jxl.MaxEffort {
+		return fmt.Errorf("jxl effort should be between 1 and %d", jxl.MaxEffort)
+	}
+
 	// Workers
 	if c.Options.Workers < 1 {
 		return errors.New("workers should be at least 1")
@@ -480,12 +487,6 @@ func (c *Converter) Validate() error {
 	// Format
 	if !slices.Contains([]string{"jpeg", "png", "jxl", "copy"}, c.Options.Image.Format) {
 		return errors.New("format should be jpeg, png, jxl or copy")
-	}
-
-	if c.Options.Image.Format == "jxl" {
-		if _, err := epubzip.LookJXL(); err != nil {
-			return err
-		}
 	}
 
 	// the webtoon is cut into pages: the images must be processed

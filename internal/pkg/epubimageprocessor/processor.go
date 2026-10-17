@@ -250,12 +250,12 @@ func (e ePUBImageProcessor) addImage(s epubzip.StorageImageWriter, img *epubimag
 		img.Cols, img.Rows = img.Tile.Grid(img.Width, img.Height)
 	}
 	if !ok || img.Tiles() == 1 {
-		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality)
+		return s.Add(img.EPUBImgPath(), img.Raw, e.Image.Quality, e.Image.JXLEffort)
 	}
 
 	b := img.Raw.Bounds()
 	for idx := range img.Tiles() {
-		if err := s.Add(img.EPUBTileImgPath(idx), sub.SubImage(img.TileBounds(idx, b)), e.Image.Quality); err != nil {
+		if err := s.Add(img.EPUBTileImgPath(idx), sub.SubImage(img.TileBounds(idx, b)), e.Image.Quality, e.Image.JXLEffort); err != nil {
 			return err
 		}
 	}
@@ -466,6 +466,7 @@ func (e ePUBImageProcessor) CoverTitleData(o CoverTitleDataOptions) ([]epubzip.I
 			"jpeg",
 			part,
 			e.Image.Quality,
+			e.Image.JXLEffort,
 		)
 		if err != nil {
 			return nil, err

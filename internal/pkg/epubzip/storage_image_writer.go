@@ -31,8 +31,8 @@ func (e StorageImageWriter) Close() error {
 	return e.fh.Close()
 }
 
-func (e StorageImageWriter) Add(filename string, img image.Image, quality int) error {
-	zipImage, err := CompressImage(filename, e.format, img, quality)
+func (e StorageImageWriter) Add(filename string, img image.Image, quality int, effort int) error {
+	zipImage, err := CompressImage(filename, e.format, img, quality, effort)
 	if err != nil {
 		return err
 	}

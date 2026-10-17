@@ -7,6 +7,7 @@ require (
 	github.com/disintegration/gift v1.2.1
 	github.com/fogleman/gg v1.3.0
 	github.com/gen2brain/go-fitz v1.28.2
+	github.com/gen2brain/jxl v0.2.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/nwaples/rardecode/v2 v2.4.1
