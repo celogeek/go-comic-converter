@@ -109,10 +109,10 @@ func NewProfiles() Profiles {
 	return profiles
 }
 
-// String table of the profiles: a row per profile, with the features of the device.
+// String table of the profiles: a row per profile, with the features of the device in the last column.
 func (p Profiles) String() string {
 	rows := make([][]string, 0, len(p)+2)
-	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Color", "Panel view", "Manga", "Landscape", "JXL", "Description"})
+	rows = append(rows, []string{"Device", "Code", "Year", "Resolution", "Zoom", "Description", "Features"})
 	rows = append(rows, nil) // separator
 	for _, v := range p {
 		year := ""
@@ -125,12 +125,8 @@ func (p Profiles) String() string {
 			year,
 			fmt.Sprintf("%4d x %-4d", v.Width, v.Height),
 			"x" + utils.FloatToString(v.Features.Zoom, -1),
-			yesOrNot(v.Features.Color),
-			yesOrNot(v.Features.PanelView),
-			yesOrNot(v.Features.Manga),
-			yesOrNot(v.Features.Landscape),
-			yesOrNot(v.Features.JXL),
 			v.Description,
+			featureList(v.Features),
 		})
 	}
 
@@ -154,15 +150,29 @@ func (p Profiles) String() string {
 				cells[i] = fmt.Sprintf("%-*s", widths[i], r[i])
 			}
 		}
-		lines = append(lines, strings.Join(cells, "  "))
+		// a device without feature leaves the padding of the description
+		lines = append(lines, strings.TrimRight(strings.Join(cells, "  "), " "))
 	}
 
 	return strings.Join(lines, "\n")
 }
 
-func yesOrNot(b bool) string {
-	if b {
-		return "yes"
+// featureList the features of the device, in one column.
+func featureList(f epuboptions.Features) string {
+	features := make([]string, 0, 5)
+	for _, v := range []struct {
+		name    string
+		enabled bool
+	}{
+		{"color", f.Color},
+		{"panel view", f.PanelView},
+		{"manga", f.Manga},
+		{"landscape", f.Landscape},
+		{"jxl", f.JXL},
+	} {
+		if v.enabled {
+			features = append(features, v.name)
+		}
 	}
-	return ""
+	return strings.Join(features, ", ")
 }
