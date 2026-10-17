@@ -60,6 +60,11 @@ func New() *Converter {
 				utils.Println(conv.Usage(v.isString, cmd.Lookup(v.Value())))
 			}
 		}
+		// the table of the profiles is too wide for the help of -profile
+		utils.Printf("\n%s:\n", sectionProfiles)
+		for _, l := range strings.Split(o.AvailableProfiles(), "\n") {
+			utils.Println("  " + l)
+		}
 		if cmdOutput.Len() > 0 {
 			utils.Printf("\nError: %s", cmdOutput.String())
 		}
@@ -143,7 +148,7 @@ func (c *Converter) InitParse() {
 	c.AddStringParam(&c.Options.Title, "title", "", "Title of the EPUB")
 
 	c.AddSection(sectionConfig)
-	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use: \n"+c.Options.AvailableProfiles())
+	c.AddStringParam(&c.Options.Profile, "profile", c.Options.Profile, "Profile to use, the codes are listed in the "+sectionProfiles+" section")
 	c.AddIntParam(&c.Options.Image.Quality, "quality", c.Options.Image.Quality, "Quality of the image")
 	c.AddIntParam(&c.Options.Image.JXLEffort, "jxl-effort", c.Options.Image.JXLEffort, "Effort of the jxl encoder, between 1 (fast) and 7 (smaller files)")
 	c.AddReversibleBoolParam(&c.Options.Image.GrayScale, "grayscale", c.Options.Image.GrayScale, "Grayscale image. Ideal for eInk devices.")

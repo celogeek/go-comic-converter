@@ -13,6 +13,8 @@ import (
 const (
 	sectionOutput = "Output"
 	sectionConfig = "Config"
+	// sectionProfiles is only the table of the profiles at the end of the help, it has no parameter.
+	sectionProfiles = "Profiles"
 )
 
 // commandName name of the program in the command line.
